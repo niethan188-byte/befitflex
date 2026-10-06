@@ -1,0 +1,11 @@
+{
+    "require": {
+        "dompdf/dompdf": "^3.1",
+        "chillerlan/php-qrcode": "4.3"
+    },
+    "scripts": {
+        "smoke": "php tests/smoke.php",
+        "health": "php tools/health-check.php",
+        "encrypt-contacts": "php tools/encrypt-contacts.php"
+    }
+}

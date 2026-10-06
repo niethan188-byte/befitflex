@@ -1,0 +1,21 @@
+{
+  "name": "Be Fit Flex Gym — Laguna",
+  "short_name": "Be Fit Flex",
+  "description": "Membership, training and payments for Be Fit Flex Gym, Laguna.",
+  "start_url": "./index.php",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["fitness", "health"],
+  "prefer_related_applications": false,
+  "background_color": "#121212",
+  "theme_color": "#E53935",
+  "icons": [
+    { "src": "assets/img/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/img/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "short_name": "Home", "url": "./index.php", "icons": [{ "src": "assets/img/logo.png", "sizes": "192x192" }] },
+    { "name": "Check-in Station", "short_name": "Check-in", "url": "./kiosk.php", "icons": [{ "src": "assets/img/logo.png", "sizes": "192x192" }] }
+  ]
+}

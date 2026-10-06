@@ -1,0 +1,17 @@
+vendor/
+node_modules/
+.env
+.env.*
+!.env.example
+
+.idea/
+.vs/
+.vscode/
+
+assets/uploads/*
+!assets/uploads/.gitignore
+
+cache/*
+!cache/.gitignore
+
+public/storage/
