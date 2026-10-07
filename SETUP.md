@@ -22,10 +22,18 @@ Open <http://localhost/phpmyadmin>, click **Import**, choose
 `befitflex_gym`, so re-importing is always safe — it resets you to a clean
 demo state.
 
-Command line alternative:
+Command line alternatives:
 
 ```bash
 mysql -u root -p < database/befitflex_gym.sql
+```
+
+```bash
+php tools/rebuild-database.php
+```
+
+```bash
+composer db:reset
 ```
 
 ## 3. Check the connection

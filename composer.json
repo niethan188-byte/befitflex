@@ -6,6 +6,7 @@
     "scripts": {
         "smoke": "php tests/smoke.php",
         "health": "php tools/health-check.php",
-        "encrypt-contacts": "php tools/encrypt-contacts.php"
+        "encrypt-contacts": "php tools/encrypt-contacts.php",
+        "db:reset": "php tools/rebuild-database.php"
     }
 }

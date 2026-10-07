@@ -17,8 +17,14 @@ drifting light field behind everything.
 
 1. Copy the `befitflex` folder into `C:\\xampp\\htdocs\\`
 2. Start **Apache** and **MySQL** in the XAMPP Control Panel
-3. Open <http://localhost/phpmyadmin> → **Import** → choose
-   `database/befitflex_gym.sql` → **Go**
+3. Import the schema from `database/befitflex_gym.sql` either by opening
+   <http://localhost/phpmyadmin> → **Import** → choose the file → **Go**,
+   or by running:
+
+   ```powershell
+   php tools/rebuild-database.php
+   ```
+
 4. Open <http://localhost/befitflex/>
 
 5. Install the server dependency used for PDF invoices:
