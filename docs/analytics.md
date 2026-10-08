@@ -6,7 +6,6 @@
 |---|---|---|
 | `admin/analytics.php` | Admin | Is revenue growing, are members staying, when is the floor busy, who is about to leave, which classes and trainers are pulling their weight |
 | `trainer/analytics.php` | Trainer | Which of my members are picking up, slowing down, or have gone quiet |
-| `member/progress.php` | Member | Am I actually training more than last month, and when is the gym quiet |
 | `api/analytics-export.php` | Admin | Any of it as CSV, including a ready-to-dial call list |
 
 ## The eleven metric sets
@@ -46,8 +45,8 @@ ceiling on what acquiring a member is worth.
 outstanding total, because a large gym with a large balance may still be collecting
 well.
 
-**Class fill rate, trainer scorecard, member progress.** Utilisation and per-person
-performance, each ranked so the outlier is the first thing you see.
+**Class fill rate and trainer scorecard.** Utilisation and per-person performance,
+each ranked so the outlier is the first thing you see.
 
 ## Why the charts are server-rendered SVG
 

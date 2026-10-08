@@ -15,7 +15,7 @@ $goto = [
     'd' => $root . 'dashboard.php',
     'n' => $root . 'notifications.php',
     'a' => $u['type'] === 'member' ? 'member/attendance.php' : 'admin/analytics.php',
-    'm' => $u['type'] === 'admin' ? 'admin/members.php' : 'member/workout-plan.php',
+    'm' => $u['type'] === 'admin' ? 'admin/members.php' : 'member/attendance.php',
     'p' => $u['type'] === 'member' ? 'member/payments.php' : 'admin/payments.php',
 ];
 
@@ -29,9 +29,9 @@ $tabs = match ($u['type']) {
     ],
     default => [
         ['member/dashboard.php',   'Home',     'gauge-high',      'dashboard'],
-        ['member/workout-plan.php','Plan',     'list-check',      'plan'],
         ['member/classes.php',     'Classes',  'people-group',    'classes'],
-        ['member/progress.php',    'Progress', 'chart-line',      'progress'],
+        ['member/reservations.php','Bookings', 'calendar-check',  'reservations'],
+        ['member/attendance.php',  'Visits',   'clipboard-user',  'attendance'],
     ],
 };
 ?>

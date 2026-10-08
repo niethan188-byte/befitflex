@@ -40,12 +40,11 @@ Every file, what it does, and which tables it touches.
 | `classes.php` | Classes they lead; record class attendance. | trainer_id |
 | `reservations.php` | Complete or cancel bookings; notifies the member. | trainer_id |
 
-## Member — 8 screens
+## Member — 7 screens
 
 | File | Purpose | Scoped by |
 |---|---|---|
-| `dashboard.php` | Membership, visits, balance, trainer, current plan, what's coming up. | member_id |
-| `workout-plan.php` | Full plan with schedule and details, plus the program library. Printable. | member_id |
+| `dashboard.php` | Membership, visits, balance, trainer, what's coming up. | member_id |
 | `classes.php` | Browse the weekly schedule and enroll; own history. | member_id |
 | `reservations.php` | Book a trainer — refuses double-booked slots; notifies the trainer. | member_id |
 | `attendance.php` | Self check-in / check-out, visit stats and history. | member_id |

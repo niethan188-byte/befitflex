@@ -77,7 +77,8 @@ include __DIR__ . '/../includes/header.php';
 <div class="panel glass">
   <h2><i class="fa-solid fa-clipboard-user"></i> Today · <?= date('l, M j') ?>
     <span class="spacer"></span>
-    <button class="btn red sm" onclick="openModal('mIn')"><i class="fa-solid fa-right-to-bracket"></i> Check a member in</button>
+    <a class="btn red sm" href="qr-attendance.php"><i class="fa-solid fa-qrcode"></i> Scan QR</a>
+    <button class="btn sm" onclick="openModal('mIn')"><i class="fa-solid fa-right-to-bracket"></i> Check a member in</button>
   </h2>
 
   <?php if (!$today): ?>

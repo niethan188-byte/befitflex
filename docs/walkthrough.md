@@ -47,10 +47,9 @@ filter in the SQL. There is no URL you can type to see another trainer's members
 
 ## 6 · Switch to the member (3 min)
 
-Sign in as **anna@example.com**. The dashboard shows her plan, her balance, her
-trainer, and the notification the trainer just generated.
+Sign in as **anna@example.com**. The dashboard shows her balance, her trainer,
+and the notification the trainer just generated.
 
-- **My Workout Plan** — the plan written thirty seconds ago, printable.
 - **Book a Trainer** — book Miguel. Try the same slot twice: the second attempt
   is refused, because the check is a query, not a disabled button.
 - **My Attendance** — self check-in, then check out.

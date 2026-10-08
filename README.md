@@ -11,7 +11,7 @@ drifting light field behind everything.
 |---|---|
 | **Admin** | Members, trainers, classes, payments, sessions, reservations, attendance, gyms, workout templates, reports, activity log |
 | **Trainer** | Their own members, classes, sessions, reservations, and the workout plans they author |
-| **Member** | Their plan, classes, payments, attendance, reservations, notifications, profile |
+| **Member** | Classes, payments, attendance, reservations, notifications, profile |
 
 ## Install on XAMPP (5 minutes)
 
@@ -102,7 +102,7 @@ includes/            auth guard, helpers, header/sidebar/footer
 assets/css/glass.css the liquid-glass design system
 admin/               13 management screens
 trainer/             6 screens
-member/              8 screens
+member/              7 screens
 api/                 check-in, notification read/clear endpoints
 database/            the SQL file to import
 docs/                walkthrough, screen map, theme notes
@@ -149,7 +149,6 @@ screens, all computed from live records with no external service.
 |---|---|
 | **Admin → Analytics** | Recurring revenue, twelve-month trend with a three-month projection, cohort retention grid, churn-risk board, peak-hours heatmap, class fill rates, trainer scorecard |
 | **Trainer → My Analytics** | Roster attendance trend, who is picking up, who is slowing down, who has gone quiet |
-| **Member → My Progress** | Visit streak, month-on-month trend, consistency score, quiet hours |
 
 Everything exports to CSV, including a ready-to-dial call list of at-risk members.
 

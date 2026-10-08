@@ -17,8 +17,6 @@ $paid      = (float) scalar("SELECT COALESCE(SUM(amount),0) FROM payments WHERE 
 
 $openVisit = row('SELECT * FROM attendance WHERE member_id = ? AND check_out_time IS NULL ORDER BY check_in_time DESC LIMIT 1', [$mid]);
 
-$plan = row('SELECT w.* FROM workout_plans w WHERE w.member_id = ? ORDER BY w.updated_at DESC LIMIT 1', [$mid]);
-
 $upcoming = rows(
     "SELECT s.* FROM sessions s
       WHERE s.member_id = ? AND s.session_status = 'Scheduled' AND s.session_date >= CURDATE()
@@ -42,7 +40,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="note"><?= badge($me['status'] ?? '') ?> · <a href="id-card.php" style="color:var(--red-hot)">member card</a></div></div>
   <div class="stat glass hover"><div class="ico"><i class="fa-solid fa-fire"></i></div>
     <div class="label">Gym visits</div><div class="value"><?= $visits ?></div>
-    <div class="note"><?= $thisMonth ?> this month · <a href="progress.php" style="color:var(--red-hot)">progress</a></div></div>
+    <div class="note"><?= $thisMonth ?> this month</div></div>
   <div class="stat glass hover"><div class="ico"><i class="fa-solid fa-peso-sign"></i></div>
     <div class="label">Balance</div>
     <div class="value" style="font-size:25px;color:<?= $owed > 0 ? '#FBBF24' : '#4ADE80' ?>"><?= money($owed) ?></div>
@@ -69,18 +67,6 @@ include __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <div class="grid c2">
-  <div class="panel glass">
-    <h2><i class="fa-solid fa-list-check"></i> Current plan
-      <span class="spacer"></span><a class="btn sm" href="workout-plan.php">Open</a></h2>
-    <?php if (!$plan): ?>
-      <div class="empty"><i class="fa-solid fa-clipboard"></i>No plan yet. Your next plan will appear here.</div>
-    <?php else: ?>
-      <b style="font-size:15px"><?= e($plan['plan_name']) ?></b>
-      <div class="mono" style="margin:4px 0 12px">Updated <?= dt($plan['updated_at']) ?></div>
-      <p class="note" style="white-space:pre-line"><?= e(str_replace('\\n', "\n", $plan['weekly_schedule'])) ?></p>
-    <?php endif; ?>
-  </div>
-
   <div class="panel glass">
     <h2><i class="fa-solid fa-calendar-day"></i> Coming up
       <span class="spacer"></span><a class="btn sm" href="reservations.php">View bookings</a></h2>

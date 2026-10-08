@@ -30,11 +30,6 @@ if ($action === 'roster' && $type === 'admin') {
     foreach ($head as $key => $value) {
         $items[] = ['title' => ucwords($key), 'subtitle' => (string) $value, 'status' => '', 'icon' => 'insights'];
     }
-} elseif ($action === 'plan' && $type === 'member') {
-    $member = row('SELECT member_id FROM members WHERE user_id = ?', [$user['user_id']]);
-    foreach (rows('SELECT plan_name, plan_details, updated_at FROM workout_plans WHERE member_id = ? ORDER BY updated_at DESC LIMIT 10', [$member['member_id'] ?? '']) as $item) {
-        $items[] = ['title' => $item['plan_name'], 'subtitle' => 'Updated ' . date('M j, Y', strtotime($item['updated_at'])), 'status' => $item['plan_details'], 'icon' => 'fitness'];
-    }
 } elseif ($action === 'classes' && $type === 'member') {
     foreach (rows('SELECT class_name, schedule_day, schedule_time, class_status FROM classes WHERE class_status = "Active" ORDER BY schedule_day, schedule_time LIMIT 30') as $item) {
         $items[] = ['title' => $item['class_name'], 'subtitle' => $item['schedule_day'] . ' · ' . date('g:i A', strtotime($item['schedule_time'])), 'status' => $item['class_status'], 'icon' => 'calendar'];

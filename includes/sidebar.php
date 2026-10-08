@@ -35,11 +35,9 @@ $menus = [
   ],
   'member' => [
     'Training' => [
-      ['dashboard',   'Dashboard',        'fa-gauge-high',        'member/dashboard.php'],
-      ['plan',        'My Workout Plan',  'fa-list-check',        'member/workout-plan.php'],
-      ['progress',    'My Progress',      'fa-chart-line',        'member/progress.php'],
-      ['classes',     'Classes',          'fa-people-group',      'member/classes.php'],
-      ['reservations','Reservations',      'fa-calendar-check',    'member/reservations.php'],
+    ['dashboard',   'Dashboard',        'fa-gauge-high',        'member/dashboard.php'],
+    ['classes',     'Classes',          'fa-people-group',      'member/classes.php'],
+    ['reservations','Reservations',      'fa-calendar-check',    'member/reservations.php'],
     ],
     'Records' => [
       ['attendance',  'My Attendance',    'fa-clipboard-user',    'member/attendance.php'],
