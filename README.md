@@ -128,10 +128,33 @@ docs/                walkthrough, screen map, theme notes
 
 ### Implementation boundaries
 
-The Maya checkout client and signed webhook receiver are present, but remain
-disabled until `MAYA_SECRET_KEY`,
-`MAYA_PUBLIC_KEY`, `MAYA_WEBHOOK_SECRET`, and a publicly reachable webhook URL
-are configured. Payments remain manual records until checkout creation is enabled.
+The Maya Checkout integration uses the sandbox by default. Members can start
+hosted checkout from their payment history; GCash is available there only if it
+is enabled for the Maya merchant account. A signed webhook marks a payment paid
+after Maya reports success; returning from checkout alone does not settle it.
+
+To test online payments:
+
+1. Obtain sandbox API credentials from the Maya Business Manager and configure
+   `MAYA_PUBLIC_KEY`, `MAYA_SECRET_KEY`, and `MAYA_WEBHOOK_SECRET` as environment
+   variables for the PHP/Apache process. Do not put credentials in source files.
+2. Make the application reachable over HTTPS (for local testing, use a trusted
+   tunnel) and set `BEFITFLEX_APP_URL` to its public base URL, including the app
+   path if applicable (for example, `https://your-public-host/befitflex`). Set
+   Maya's payment notification URL to
+   `https://your-public-host/befitflex/api/maya-webhook.php`.
+3. Ensure GCash is enabled for the sandbox merchant account. The hosted checkout
+   displays the payment methods enabled for that account; this integration does
+   not force GCash or guarantee it is available in every sandbox account.
+4. Restart Apache, check `php tools/health-check.php` for Maya configuration,
+   then use **Pay with GCash** on a pending member payment and complete a sandbox
+   transaction. Confirm that the signed webhook updates the payment to `Paid`.
+
+The default checkout endpoint is Maya's sandbox. `MAYA_CHECKOUT_URL` can override
+it when needed; use Maya's production endpoint and production credentials only
+when deliberately moving to live payments. Maya Checkout remains subject to
+merchant approval and enabled payment methods.
+
 Mailtrap email uses its HTTPS API rather than SMTP. AES-256 still requires a
 production key-management policy and a tested data migration before it can be
 enabled safely.

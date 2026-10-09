@@ -21,7 +21,13 @@ if (!$payment || ($u['type'] === 'member' && $payment['member_id'] !== ($_SESSIO
     exit('Payment not found.');
 }
 
-$base = rtrim('http://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . dirname(dirname($_SERVER['SCRIPT_NAME'])), '/');
+$configuredBase = getenv('BEFITFLEX_APP_URL');
+if (is_string($configuredBase) && trim($configuredBase) !== '') {
+    $base = rtrim(trim($configuredBase), '/');
+} else {
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $base = rtrim($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . dirname(dirname($_SERVER['SCRIPT_NAME'])), '/');
+}
 $result = maya_create_checkout($payment, $base . '/member/payments.php?maya=success', $base . '/member/payments.php?maya=failed');
 if (!$result['ok']) {
     flash($result['error'], 'err');
@@ -29,7 +35,8 @@ if (!$result['ok']) {
 }
 
 $redirect = $result['data']['redirectUrl'] ?? $result['data']['checkoutUrl'] ?? null;
-if (!is_string($redirect) || $redirect === '') {
+if (!is_string($redirect) || filter_var($redirect, FILTER_VALIDATE_URL) === false
+    || strtolower((string) parse_url($redirect, PHP_URL_SCHEME)) !== 'https') {
     flash('Maya returned no checkout URL.', 'err');
     redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
 }

@@ -10,8 +10,8 @@ function maya_create_checkout(array $payment, string $successUrl, string $failur
 {
     $secret = getenv('MAYA_SECRET_KEY');
     $endpoint = getenv('MAYA_CHECKOUT_URL') ?: MAYA_CHECKOUT_URL;
-    if (!$secret || !function_exists('curl_init')) {
-        return ['ok' => false, 'error' => 'Maya is not configured.'];
+    if (!maya_configured() || !$secret || !function_exists('curl_init')) {
+        return ['ok' => false, 'error' => 'GCash checkout is not configured.'];
     }
 
     $payload = json_encode([
