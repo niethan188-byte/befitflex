@@ -7,7 +7,7 @@ declare(strict_types=1);
  */
 final class AIInsights
 {
-    public static function generate(array $snapshot, array $risk, array $classes, array $coaches): array
+    public static function generate(array $snapshot, array $risk, array $classes): array
     {
         $insights = [];
         $highRisk = array_values(array_filter($risk, static fn(array $item): bool => (int) $item['score'] >= 60));

@@ -95,7 +95,7 @@ function csrf_check(): void
 }
 
 /**
- * Next id in the schema's own format, e.g. MEM0005, TRN0004, PAY00006.
+ * Next id in the schema's own format, e.g. MEM0005, WP00001, PAY00006.
  * Reads the current maximum and increments, keeping the zero padding.
  */
 function next_id(string $table, string $col, string $prefix, int $digits): string

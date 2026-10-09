@@ -26,10 +26,9 @@ $cohorts  = Analytics::cohorts(6);
 $risk     = Analytics::churnRisk(12);
 $peak     = Analytics::peakGrid();
 $classes  = Analytics::classUtilisation();
-$coaches  = [];
 $mix      = Analytics::membershipMix();
 $paymix   = Analytics::paymentMix();
-$insights = AIInsights::generate($s, $risk, $classes, $coaches);
+$insights = AIInsights::generate($s, $risk, $classes);
 
 $elapsed = round((microtime(true) - $t0) * 1000);
 

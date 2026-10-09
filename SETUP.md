@@ -134,4 +134,5 @@ Both are optional — an inline SVG mark stands in until you add them.
 
 Re-import `database/befitflex_gym.sql`. It begins with
 `DROP DATABASE IF EXISTS befitflex_gym`, so everything returns to the seeded
-state — four members, three trainers, two branches, five payments.
+state — four members, two branches, and five payments. The application has
+admin and member accounts.

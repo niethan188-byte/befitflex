@@ -2,10 +2,9 @@
 
 ## What a person can now do faster
 
-**Ctrl+K opens everything.** One box searches members, trainers, classes and
+**Ctrl+K opens everything.** One box searches members, classes and
 payments, and doubles as a command list — switch theme, print, sign out. Results
-are scoped by role in SQL, so a trainer searching a name only ever gets their own
-roster back. Arrow keys move, Enter opens, Escape closes.
+are scoped by account type in SQL. Arrow keys move, Enter opens, Escape closes.
 
 **Keyboard shortcuts** for the things done twenty times a day: `/` jumps to the
 filter box, `n` opens the add dialog on whatever screen you are on, `g` then a
@@ -16,7 +15,7 @@ layer finds each table, makes the headers clickable, adds pagination past 25 row
 and wires any existing filter box to keep the count in step. Numbers, dates and
 text each sort correctly.
 
-**Bulk actions on members.** Tick several, then set status, reassign a trainer, or
+**Bulk actions on members.** Tick several, then set status or
 send them all the same message. The confirm step names how many records are about
 to change.
 
@@ -35,8 +34,8 @@ card using the column headings, so nothing needs horizontal scrolling. Modals
 become bottom sheets, because a dialog pinned to the middle of a phone screen is
 hard to reach with a thumb.
 
-**Bottom tab bar on mobile.** Four destinations per role, chosen by what each one
-actually opens most. The sidebar still exists behind a menu button with a scrim.
+**Bottom tab bar on mobile.** Four destinations per account type, chosen by what
+each one actually opens most. The sidebar still exists behind a menu button with a scrim.
 
 ## Accessibility
 
@@ -63,7 +62,7 @@ same path, shows who is currently on the floor, and refuses expired memberships
 with wording the member can read.
 
 **Announcements (`admin/announcements.php`)** — one message to a whole group.
-Audiences are queries, not lists: everyone, members, trainers, active members only,
+Audiences are queries, not lists: everyone, active members only,
 anyone carrying a balance, or anyone not seen in three weeks. Sent broadcasts show
 their open rate. The whole send is one prepared statement inside one transaction.
 

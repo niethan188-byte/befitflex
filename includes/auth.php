@@ -44,6 +44,10 @@ function attempt_login(string $email, string $password): ?array
         return null;
     }
 
+    if (!in_array($user['user_type'], ['admin', 'member'], true)) {
+        return null;
+    }
+
     if ($user['email_verified_at'] === null) {
         return null;
     }
@@ -95,14 +99,15 @@ function home_for(string $type): string
 
 function current_user(): ?array
 {
-    if (empty($_SESSION['user_id'])) {
+    $type = $_SESSION['user_type'] ?? '';
+    if (empty($_SESSION['user_id']) || !in_array($type, ['admin', 'member'], true)) {
         return null;
     }
     return [
         'id'    => (int) $_SESSION['user_id'],
         'name'  => $_SESSION['name'] ?? '',
         'email' => $_SESSION['email'] ?? '',
-        'type'  => $_SESSION['user_type'] ?? '',
+        'type'  => $type,
     ];
 }
 

@@ -11,11 +11,18 @@ $columnNames = array_column($columns, 'Field');
 $checks['email verification schema'] = count(array_intersect([
     'email_verified_at', 'email_verification_token', 'email_verification_expires_at',
 ], $columnNames)) === 3;
-$checks['roles'] = (int) scalar("SELECT COUNT(*) FROM users WHERE user_type IN ('admin','member')") > 0;
+$checks['admin/member roles only'] = (int) scalar(
+    "SELECT COUNT(*) FROM users WHERE user_type NOT IN ('admin','member')"
+) === 0 && (int) scalar("SELECT COUNT(*) FROM users WHERE user_type IN ('admin','member')") > 0;
 $checks['prepared statements'] = !(bool) db()->getAttribute(PDO::ATTR_EMULATE_PREPARES);
 $checks['maya webhook rejects missing secret'] = maya_webhook_valid('{}', '') === false;
 $checks['pdf dependency'] = class_exists('Dompdf\\Dompdf');
-$checks['AI insights'] = class_exists('AIInsights') && AIInsights::generate([], [], [], []);
+$checks['AI insights'] = class_exists('AIInsights') && AIInsights::generate([], [], []);
+$memberId = scalar('SELECT member_id FROM members ORDER BY member_id LIMIT 1');
+$progress = $memberId ? Analytics::memberProgress((string) $memberId) : [];
+$checks['member progress metrics'] = count($progress['monthly'] ?? []) === 12
+    && array_key_exists('visits', $progress)
+    && array_key_exists('consistency', $progress);
 $checks['pii encryption round trip'] = getenv('BEFITFLEX_ENCRYPTION_KEY')
     ? decrypt_pii(encrypt_pii('09171234567')) === '09171234567'
     : false;

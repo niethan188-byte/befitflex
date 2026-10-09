@@ -4,8 +4,8 @@
 
 | Screen | Who sees it | What it answers |
 |---|---|---|
-| `admin/analytics.php` | Admin | Is revenue growing, are members staying, when is the floor busy, who is about to leave, which classes and trainers are pulling their weight |
-| `trainer/analytics.php` | Trainer | Which of my members are picking up, slowing down, or have gone quiet |
+| `admin/analytics.php` | Admin | Is revenue growing, are members staying, when is the floor busy, who is about to leave, and which classes are filling |
+| `member/progress.php` | Member | How often have I visited, and how consistent have I been? |
 | `api/analytics-export.php` | Admin | Any of it as CSV, including a ready-to-dial call list |
 
 ## The eleven metric sets
@@ -26,13 +26,13 @@ A column that collapses tells you exactly when onboarding loses people, which a
 single "retention: 78%" figure never can.
 
 **Churn risk.** An additive score per member: silence since the last visit, a
-halving visit trend, overdue balance, expired membership, no assigned trainer,
-and a new joiner who has not settled in. Every point added appears in the reasons
+halving visit trend, overdue balance, expired membership, and a new joiner who
+has not settled in. Every point added appears in the reasons
 column — nothing is hidden behind a model, so the front desk knows what to say
 before they pick up the phone.
 
 **Peak-hours heatmap.** Ninety days of check-ins as a day × hour grid. Pale bands
-are where a new class fits; dark ones are where a second trainer is needed on shift.
+show quieter times where a new class may fit.
 
 **Engagement versus retention.** Retention is who has not cancelled. Engagement is
 who actually trained in the last thirty days. The gap between them is the churn
@@ -45,8 +45,7 @@ ceiling on what acquiring a member is worth.
 outstanding total, because a large gym with a large balance may still be collecting
 well.
 
-**Class fill rate and trainer scorecard.** Utilisation and per-person performance,
-each ranked so the outlier is the first thing you see.
+**Class fill rate.** Utilisation is ranked so underfilled classes are easy to spot.
 
 ## Why the charts are server-rendered SVG
 
@@ -81,8 +80,8 @@ so the numbers never lag behind what the operator just did.
 **Indexes for the queries that actually run.** `database/optimize.sql` adds
 fifteen composite indexes chosen from the analytics workload — `attendance
 (member_id, attendance_date)` for per-member windows, `payments (payment_status,
-payment_date)` for the revenue series, `reservations (trainer_id,
-reservation_date, reservation_time)` for the double-booking check. It is
+payment_date)` for the revenue series, and `reservations (member_id, status)` for
+member reservation lookups. It is
 idempotent: a helper procedure checks for each index first, because MySQL has no
 `CREATE INDEX IF NOT EXISTS`.
 

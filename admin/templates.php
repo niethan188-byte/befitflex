@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $page = 'templates';
 $title = 'Workout Templates';
-$subtitle = 'Reusable programs trainers build member plans from.';
+$subtitle = 'Reusable programs for member workout plans.';
 
 $templates = rows(
     'SELECT t.*, (SELECT COUNT(*) FROM workout_plans w WHERE w.template_id = t.template_id) AS in_use
