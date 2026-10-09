@@ -36,20 +36,11 @@ notification lands in Ben's account.
 **Reports** — revenue by month, retention and top members. Hit **Print report**
 to show the stylesheet stripping the glass for paper.
 
-## 5 · Assign a workout plan (3 min)
+## 5 · Switch to the member (3 min)
 
-Open **Workout Plans → Assign plan**, select Anna, and save a schedule and plan
-details. Anna receives a notification and can see the new plan from her member
-account. Admins manage all workout plans directly; the application has admin
-and member accounts.
+Sign in as **anna@example.com**. The dashboard shows her balance and current
+notifications.
 
-## 6 · Switch to the member (3 min)
-
-Sign in as **anna@example.com**. The dashboard shows her balance and the
-notification about the workout plan.
-
-- **Workout Plan** — review the schedule and exercise details assigned by admin.
-- **My Progress** — review attendance history, visit trends and consistency.
 - **Reservations** — try the same slot twice: the second attempt
   is refused, because the check is a query, not a disabled button.
 - **My Attendance** — self check-in, then check out.

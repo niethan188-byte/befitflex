@@ -9,8 +9,8 @@ drifting light field behind everything.
 
 | Role | Sees |
 |---|---|
-| **Admin** | Members, classes, payments, sessions, reservations, attendance, workout plans and templates, reports, activity log |
-| **Member** | Classes, workout plan, progress, payments, attendance, reservations, notifications, profile |
+| **Admin** | Members, classes, payments, sessions, reservations, attendance, reports, activity log |
+| **Member** | Classes, payments, attendance, reservations, notifications, profile |
 
 ## Install on XAMPP (5 minutes)
 
@@ -43,7 +43,7 @@ There is no front-end build step.
 ## Email notifications
 
 Email delivery uses the Mailtrap Email Sending API. The application sends email for payments,
-reservations, account messages, workout plans, bulk member messages, and admin
+reservations, account messages, bulk member messages, and admin
 announcements. In-app notifications continue to work if email is not configured.
 
 1. Create a Mailtrap account and an API token at <https://mailtrap.io>.
@@ -98,8 +98,8 @@ privacy.php          RA 10173 data privacy notice
 config/              database connection + app constants
 includes/            auth guard, helpers, header/sidebar/footer
 assets/css/glass.css the liquid-glass design system
-admin/               management screens, including member workout-plan management
-member/              member dashboard, workout plan, progress and account screens
+admin/               management screens
+member/              member dashboard and account screens
 api/                 check-in, notification read/clear endpoints
 database/            the SQL file to import
 docs/                walkthrough, screen map, theme notes
@@ -145,7 +145,6 @@ screens, all computed from live records with no external service.
 | Screen | Covers |
 |---|---|
 | **Admin → Analytics** | Recurring revenue, twelve-month trend with a three-month projection, cohort retention grid, churn-risk board, peak-hours heatmap and class fill rates |
-| **Member → My Progress** | Visit totals, attendance trend, weekly streak, consistency and average visit duration |
 
 Everything exports to CSV, including a ready-to-dial call list of at-risk members.
 

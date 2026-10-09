@@ -24,8 +24,6 @@ $menus = [
     ],
     'Business' => [
       ['payments',    'Payments',         'fa-money-bill-wave',   'admin/payments.php'],
-      ['workout-plans','Workout Plans',    'fa-dumbbell',          'admin/workout-plans.php'],
-      ['templates',   'Workout Templates','fa-list-check',        'admin/templates.php'],
       ['gyms',        'Branches',         'fa-location-dot',      'admin/gyms.php'],
     ],
     'System' => [
@@ -39,8 +37,6 @@ $menus = [
     ['dashboard',   'Dashboard',        'fa-gauge-high',        'member/dashboard.php'],
     ['classes',     'Classes',          'fa-people-group',      'member/classes.php'],
     ['reservations','Reservations',      'fa-calendar-check',    'member/reservations.php'],
-    ['workout-plan','Workout Plan',     'fa-dumbbell',          'member/workout-plan.php'],
-    ['progress',    'My Progress',      'fa-chart-line',        'member/progress.php'],
     ],
     'Records' => [
       ['attendance',  'My Attendance',    'fa-clipboard-user',    'member/attendance.php'],

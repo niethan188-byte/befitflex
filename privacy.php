@@ -25,7 +25,7 @@ $u = current_user();
 
     <h3 style="font-size:14px;margin:20px 0 8px">What we collect</h3>
     <p class="note">Your name, email address, contact number, membership type and dates,
-    attendance records, class enrollments, payment records, and your assigned workout plans.</p>
+    attendance records, class enrollments, and payment records.</p>
 
     <h3 style="font-size:14px;margin:20px 0 8px">Why we collect it</h3>
     <p class="note">To administer your membership, schedule sessions and classes,

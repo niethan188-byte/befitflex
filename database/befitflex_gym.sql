@@ -67,37 +67,6 @@ CREATE TABLE day_passes (
     INDEX idx_day_pass_date (visit_date), INDEX idx_day_pass_status (pass_status)
 ) ENGINE=InnoDB;
 
-CREATE TABLE workout_templates (
-    template_id VARCHAR(50) PRIMARY KEY,
-    template_name VARCHAR(255) NOT NULL,
-    template_type VARCHAR(100) NOT NULL,
-    difficulty_level VARCHAR(50) NOT NULL,
-    description LONGTEXT NOT NULL,
-    goal VARCHAR(255) NOT NULL,
-    duration_weeks INT NOT NULL,
-    exercises_count INT NOT NULL,
-    equipment_required VARCHAR(255),
-    popularity_score INT DEFAULT 0,
-    is_active TINYINT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_difficulty_level (difficulty_level), INDEX idx_template_type (template_type), INDEX idx_is_active (is_active)
-) ENGINE=InnoDB;
-
-CREATE TABLE workout_plans (
-    workout_plan_id VARCHAR(50) PRIMARY KEY,
-    template_id VARCHAR(50),
-    member_id VARCHAR(50) NOT NULL,
-    plan_name VARCHAR(255) NOT NULL,
-    weekly_schedule LONGTEXT NOT NULL,
-    plan_details LONGTEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (template_id) REFERENCES workout_templates(template_id) ON DELETE SET NULL,
-    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
-    INDEX idx_member_id (member_id), INDEX idx_template_id (template_id)
-) ENGINE=InnoDB;
-
 CREATE TABLE sessions (
     session_id VARCHAR(50) PRIMARY KEY,
     session_name VARCHAR(255) NOT NULL,
@@ -275,23 +244,11 @@ INSERT INTO gyms (gym_id,gym_branch,gym_name,location,description,contact_number
 ('GYM001','Santa Rosa','Be Fit Flex Gym — Santa Rosa','Brgy. Dita, City of Santa Rosa, Laguna','Main branch: complete free-weight area, personal training and physique coaching.','09171234567'),
 ('GYM002','Cabuyao','Be Fit Flex Gym — Cabuyao','Brgy. Marinig, City of Cabuyao, Laguna','Functional training and conditioning focused branch.','09181234567');
 
-INSERT INTO workout_templates (template_id,template_name,template_type,difficulty_level,description,goal,duration_weeks,exercises_count,equipment_required,popularity_score) VALUES
-('TPL0001','Beginner Full Body','Strength','Beginner','Three full-body sessions per week built around the main compound lifts.','General fitness',8,10,'Barbell, dumbbells',85),
-('TPL0002','Fat Loss Program','Conditioning','Intermediate','Interval circuits paired with two lifting days to retain lean mass while cutting.','Fat loss',6,12,'Kettlebell, rower',92),
-('TPL0003','Functional Training Base','Functional','Beginner','Movement quality, core stability and mobility work for everyday strength.','Mobility & conditioning',4,8,'Mat, bands',70),
-('TPL0004','Physique / Body Building Split','Physique','Advanced','Six-day push-pull-legs split with progressive overload targets per movement.','Muscle gain',12,18,'Full gym',88),
-('TPL0005','Weight Gain Program','Strength','Intermediate','Heavy compound focus with structured surplus guidance for lean mass.','Weight gain',10,14,'Barbell, dumbbells',76);
-
 INSERT INTO classes (class_id,class_name,class_description,schedule_day,start_time,end_time,max_capacity,class_status) VALUES
 ('CLS0001','Morning Bootcamp','High-energy circuit training to start the day.','Monday','06:00:00','07:00:00',20,'Active'),
 ('CLS0002','Functional Flow','Mobility, core and movement drills for all levels.','Wednesday','07:00:00','08:00:00',15,'Active'),
 ('CLS0003','Fat Loss Express','45-minute conditioning intervals.','Friday','18:00:00','18:45:00',25,'Active'),
 ('CLS0004','Weekend Strength Lab','Technique clinic for squat, bench and deadlift.','Saturday','10:00:00','11:30:00',12,'Active');
-
-INSERT INTO workout_plans (workout_plan_id,template_id,member_id,plan_name,weekly_schedule,plan_details) VALUES
-('WP00001','TPL0001','MEM0001','Anna — Strength Base','Mon: Lower body\nWed: Upper body\nFri: Full body\nSat: Light cardio','Squat 3x8, Bench 3x8, Row 3x10, Plank 3x45s. Add 2.5kg when all sets are clean.'),
-('WP00002','TPL0002','MEM0002','Ben — Fat Loss Phase','Mon: Intervals\nTue: Upper\nThu: Intervals\nSat: Lower','Rower 10x250m, DB press 4x10, Goblet squat 4x12. Keep rest under 60 seconds.'),
-('WP00003','TPL0003','MEM0003','Carla — Functional Reset','Daily 25-minute session, longer flow on Sunday','Hip openers, thoracic rotations, carries, dead bugs, 5-minute breathing cooldown.');
 
 INSERT INTO payments (payment_id,member_id,amount,payment_method,payment_status,payment_date,notes) VALUES
 ('PAY00001','MEM0001',12000.00,'Card','Paid','2026-01-15','Annual membership'),

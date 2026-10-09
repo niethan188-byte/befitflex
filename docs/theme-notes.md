@@ -40,7 +40,7 @@ properties so a sheen can follow the cursor.
 - Body text is `#F3F4F6` on near-black, well past AA contrast. Muted text is
   reserved for secondary labels, never for anything you must read.
 - A print stylesheet strips the glass, the blobs and the sidebar, so the reports
-  and workout plans print as clean black-on-white.
+  print as clean black-on-white.
 
 ## Reusing the primitives
 

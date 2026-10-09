@@ -47,7 +47,6 @@ CALL add_index_if_missing('sessions',         'idx_member_date',    'member_id, 
 CALL add_index_if_missing('reservations',     'idx_member_status',  'member_id, status');
 CALL add_index_if_missing('class_attendance', 'idx_class_date',     'class_id, attendance_date');
 CALL add_index_if_missing('class_attendance', 'idx_member_date',    'member_id, attendance_date');
-CALL add_index_if_missing('workout_plans',    'idx_member_updated', 'member_id, updated_at');
 CALL add_index_if_missing('notifications',    'idx_user_created',   'user_id, created_at');
 CALL add_index_if_missing('activity_log',     'idx_module_created', 'module, created_at');
 
