@@ -44,6 +44,43 @@
   window.toggleDensity = () =>
     applyDensity(document.documentElement.dataset.density === 'compact' ? 'comfortable' : 'compact');
 
+  const notificationMenu = $('#notificationMenu');
+  const notificationTrigger = $('#notificationTrigger');
+  const notificationPopover = $('#notificationPopover');
+  if (notificationMenu && notificationTrigger && notificationPopover) {
+    const positionNotifications = () => {
+      if (notificationPopover.hidden) return;
+      const triggerRect = notificationTrigger.getBoundingClientRect();
+      const panelWidth = notificationPopover.getBoundingClientRect().width;
+      const left = Math.max(12, Math.min(window.innerWidth - panelWidth - 12, triggerRect.right - panelWidth));
+      notificationPopover.style.left = left + 'px';
+      notificationPopover.style.setProperty('--notification-popover-top', (triggerRect.bottom + 12) + 'px');
+    };
+    const closeNotifications = () => {
+      notificationPopover.hidden = true;
+      notificationTrigger.setAttribute('aria-expanded', 'false');
+      notificationPopover.style.left = '';
+      notificationPopover.style.removeProperty('--notification-popover-top');
+    };
+    notificationTrigger.addEventListener('click', () => {
+      const isOpening = notificationPopover.hidden;
+      notificationPopover.hidden = !isOpening;
+      notificationTrigger.setAttribute('aria-expanded', String(isOpening));
+      if (isOpening) positionNotifications();
+    });
+    document.addEventListener('click', (event) => {
+      if (!notificationMenu.contains(event.target)) closeNotifications();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !notificationPopover.hidden) {
+        closeNotifications();
+        notificationTrigger.focus();
+      }
+    });
+    window.addEventListener('resize', positionNotifications);
+    window.addEventListener('scroll', closeNotifications, { passive: true });
+  }
+
   /* ==========================================================
      Navigation progress bar
      ========================================================== */

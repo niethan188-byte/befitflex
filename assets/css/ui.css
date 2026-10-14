@@ -117,6 +117,72 @@ kbd {
   box-shadow: 0 0 0 2px var(--ink);
 }
 
+.notification-menu { position: relative; }
+.notification-trigger { position: relative; }
+.notification-badge {
+  position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px;
+  padding: 0 4px; border: 2px solid var(--ink); border-radius: 999px;
+  background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+  line-height: 14px; text-align: center;
+}
+.notification-popover[hidden] { display: none; }
+.notification-popover {
+  position: fixed; z-index: 120; top: var(--notification-popover-top, 0); left: 0;
+  width: min(370px, calc(100vw - 24px)); overflow: hidden;
+  display: flex; flex-direction: column; max-height: calc(100vh - var(--notification-popover-top, 0px) - 12px);
+  border: 1px solid var(--stroke); border-radius: 16px;
+  background: linear-gradient(150deg, rgba(30,30,35,.98), rgba(14,14,17,.99));
+  box-shadow: 0 24px 60px rgba(0,0,0,.42), var(--edge);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+}
+[data-theme="light"] .notification-popover {
+  background: linear-gradient(150deg, rgba(255,255,255,.99), rgba(246,247,249,.99));
+}
+.notification-popover-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 16px; border-bottom: 1px solid var(--stroke);
+}
+.notification-popover-head strong { color: var(--text); font-size: 14px; }
+.notification-popover-head > span { color: var(--muted); font-size: 11px; }
+.notification-preview-list { flex: 1; min-height: 0; max-height: 390px; overflow-y: auto; }
+.notification-preview {
+  display: flex; align-items: flex-start; gap: 11px; padding: 13px 15px;
+  color: var(--text); text-decoration: none; border-bottom: 1px solid var(--stroke);
+  transition: background .15s;
+}
+.notification-preview:hover, .notification-preview:focus-visible { background: var(--glass-2); }
+.notification-preview.unread { background: rgba(225,6,0,.055); }
+.notification-preview-icon {
+  display: grid; place-items: center; flex: 0 0 34px; height: 34px;
+  border: 1px solid rgba(225,6,0,.24); border-radius: 10px;
+  background: rgba(225,6,0,.1); color: var(--red-hot); font-size: 13px;
+}
+.notification-preview-copy { display: block; min-width: 0; flex: 1; }
+.notification-preview-copy strong {
+  display: block; overflow: hidden; color: var(--text); font-size: 12px;
+  font-weight: 600; text-overflow: ellipsis; white-space: nowrap;
+}
+.notification-preview-message {
+  display: -webkit-box; overflow: hidden; margin-top: 3px;
+  color: var(--muted); font-size: 11px; line-height: 1.45;
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.notification-preview-copy time { display: block; margin-top: 5px; color: var(--dim); font-size: 10px; }
+.notification-unread-dot {
+  flex: 0 0 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: var(--red-hot);
+}
+.notification-empty {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 28px 16px; color: var(--muted); font-size: 12px;
+}
+.notification-empty i { color: var(--dim); }
+.notification-view-all {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px; color: var(--red-hot); font-size: 12px; font-weight: 600;
+  text-decoration: none;
+}
+.notification-view-all:hover { background: var(--glass-2); }
+
 /* ---------- command palette ---------- */
 
 .cmd { position: fixed; inset: 0; z-index: 200; display: none; }
@@ -498,5 +564,151 @@ body.member-payments .payment-history-table .payment-action {
   body.member-payments .payment-history-table tbody td:last-child .payment-action {
     display: inline-flex;
     margin: 4px 0;
+  }
+}
+
+/* ---------- admin analytics responsive layout ---------- */
+
+body.admin-analytics .main {
+  width: 100%;
+  min-width: 0;
+}
+
+body.admin-analytics .tabs {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+body.admin-analytics .analytics-tabs-links,
+body.admin-analytics .analytics-tabs-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.admin-analytics .analytics-tabs-links {
+  flex-wrap: wrap;
+}
+
+body.admin-analytics .analytics-tabs-actions form {
+  display: inline-flex;
+}
+
+body.admin-analytics .analytics-heatmap-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 4px 2px 8px;
+}
+
+body.admin-analytics .analytics-heatmap-scroll .heat {
+  min-width: 620px;
+}
+
+body.admin-analytics .panel > h2 {
+  flex-wrap: wrap;
+}
+
+body.admin-analytics .grid,
+body.admin-analytics .grid.c2,
+body.admin-analytics .grid.c3 {
+  min-width: 0;
+}
+
+body.admin-analytics .grid > .panel {
+  min-width: 0;
+}
+
+@media (max-width: 980px) {
+  body.admin-analytics .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.admin-analytics .tabs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.admin-analytics .panel:has(.heat) {
+    overflow-x: visible;
+  }
+
+  body.admin-analytics .analytics-tabs-links {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-bottom: 4px;
+  }
+
+  body.admin-analytics .analytics-tabs-links a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  body.admin-analytics .analytics-tabs-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 720px) {
+  body.admin-analytics .grid.c2,
+  body.admin-analytics .grid.c3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.admin-analytics .stat .label {
+    max-width: calc(100% - 44px);
+  }
+
+  body.admin-analytics .panel > h2 .spacer {
+    display: none;
+  }
+
+  body.admin-analytics .panel > h2 .chip {
+    white-space: normal;
+  }
+
+  body.admin-analytics .donut-row {
+    justify-content: center;
+    gap: 14px;
+  }
+
+  body.admin-analytics .donut-row .legend {
+    min-width: min(200px, 100%);
+  }
+
+  body.admin-analytics .table-wrap {
+    max-width: calc(100vw - 64px);
+  }
+}
+
+@media (max-width: 420px) {
+  body.admin-analytics .analytics-tabs-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  body.admin-analytics .analytics-tabs-actions > *,
+  body.admin-analytics .analytics-tabs-actions form,
+  body.admin-analytics .analytics-tabs-actions .btn {
+    width: 100%;
+  }
+
+  body.admin-analytics .analytics-tabs-actions .btn {
+    justify-content: center;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+
+  body.admin-analytics .rank-row {
+    grid-template-columns: minmax(0, 1fr) 1fr 42px;
+    gap: 8px;
+  }
+
+  body.admin-analytics .rank-l {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }

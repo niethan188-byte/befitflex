@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page = 'analytics';
+$bodyClass = 'admin-analytics';
 $title = 'Analytics';
 $subtitle = 'Revenue, retention, traffic and risk — computed from live records.';
 
@@ -67,19 +68,22 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="tabs">
-  <a href="#revenue" class="on">Revenue</a>
-  <a href="#retention">Retention</a>
-  <a href="#traffic">Traffic</a>
-  <a href="#risk">Churn risk</a>
-  <a href="#utilisation">Utilisation</a>
-  <span style="flex:1"></span>
-  <form method="post" style="display:inline">
-    <?= csrf_field() ?>
-    <input type="hidden" name="action" value="refresh">
-    <button class="btn sm"><i class="fa-solid fa-rotate"></i> Recalculate</button>
-  </form>
-  <a class="btn sm" href="../api/analytics-export.php?report=summary"><i class="fa-solid fa-download"></i> Export CSV</a>
-  <button class="btn sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+  <nav class="analytics-tabs-links" aria-label="Analytics sections">
+    <a href="#revenue" class="on">Revenue</a>
+    <a href="#retention">Retention</a>
+    <a href="#traffic">Traffic</a>
+    <a href="#risk">Churn risk</a>
+    <a href="#utilisation">Utilisation</a>
+  </nav>
+  <div class="analytics-tabs-actions">
+    <form method="post">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="refresh">
+      <button class="btn sm"><i class="fa-solid fa-rotate"></i> Recalculate</button>
+    </form>
+    <a class="btn sm" href="../api/analytics-export.php?report=summary"><i class="fa-solid fa-download"></i> Export CSV</a>
+    <button class="btn sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+  </div>
 </div>
 
 <!-- ============ HEADLINE ============ -->
@@ -260,7 +264,9 @@ include __DIR__ . '/../includes/header.php';
     <?php endif; ?>
   </h2>
 
-  <?= Chart::heatmap($peak['grid'], $peak['max'], ['interactive' => true]) ?>
+  <div class="analytics-heatmap-scroll">
+    <?= Chart::heatmap($peak['grid'], $peak['max'], ['interactive' => true]) ?>
+  </div>
 
   <p class="note" style="margin-top:14px">
     Ninety days of check-ins, by day and hour. Darker is busier. Use the pale bands to place new

@@ -26,6 +26,15 @@ $logo = __DIR__ . '/../assets/img/logo.png';
 $hasLogo = is_file($logo);
 $flashes = take_flash();
 $unread  = $u ? unread_count($u['id']) : 0;
+$recentNotifications = $u ? rows(
+    'SELECT notification_id, notification_title, notification_message, notification_icon, is_read, created_at
+       FROM notifications
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+      LIMIT 5',
+    [$u['id']]
+) : [];
+$notificationsUrl = $b . ($u['type'] === 'member' ? 'member' : 'admin') . '/notifications.php';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -95,10 +104,39 @@ try {
         <i id="densityIcon" class="fa-solid fa-bars"></i>
       </button>
 
-      <a class="btn icon" href="<?= $b ?><?= $u['type'] === 'member' ? 'member' : 'admin' ?>/notifications.php" title="Notifications">
-        <i class="fa-solid fa-bell"></i>
-        <?php if ($unread): ?><span class="chip bad" style="margin-left:4px"><?= $unread ?></span><?php endif; ?>
-      </a>
+      <div class="notification-menu" id="notificationMenu">
+        <button class="btn icon notification-trigger" id="notificationTrigger" type="button"
+                aria-label="Notifications<?= $unread ? ', ' . $unread . ' unread' : '' ?>"
+                aria-expanded="false" aria-controls="notificationPopover">
+          <i class="fa-solid fa-bell" aria-hidden="true"></i>
+          <?php if ($unread): ?><span class="notification-badge"><?= $unread > 99 ? '99+' : $unread ?></span><?php endif; ?>
+        </button>
+        <section class="notification-popover" id="notificationPopover" aria-label="Recent notifications" hidden>
+          <div class="notification-popover-head">
+            <strong>Notifications</strong>
+            <?php if ($unread): ?><span><?= $unread ?> unread</span><?php endif; ?>
+          </div>
+          <div class="notification-preview-list">
+            <?php if (!$recentNotifications): ?>
+              <div class="notification-empty"><i class="fa-regular fa-bell-slash"></i><span>You're all caught up.</span></div>
+            <?php else: ?>
+              <?php foreach ($recentNotifications as $notification): ?>
+                <a class="notification-preview <?= $notification['is_read'] ? '' : 'unread' ?>"
+                   href="<?= e($notificationsUrl) ?>#notification-<?= (int) $notification['notification_id'] ?>">
+                  <span class="notification-preview-icon"><i class="fa-solid fa-<?= e($notification['notification_icon'] ?: 'bell') ?>"></i></span>
+                  <span class="notification-preview-copy">
+                    <strong><?= e($notification['notification_title']) ?></strong>
+                    <span class="notification-preview-message"><?= e($notification['notification_message']) ?></span>
+                    <time><?= e(dt($notification['created_at'], 'M j, g:i A')) ?></time>
+                  </span>
+                  <?php if (!$notification['is_read']): ?><span class="notification-unread-dot" aria-label="Unread"></span><?php endif; ?>
+                </a>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+          <a class="notification-view-all" href="<?= e($notificationsUrl) ?>">View all notifications <i class="fa-solid fa-arrow-right"></i></a>
+        </section>
+      </div>
       <div class="pill-user">
         <span class="avatar"><?= e(strtoupper(substr($u['name'] ?: 'U', 0, 1))) ?></span>
         <span><?= e($u['name']) ?></span>

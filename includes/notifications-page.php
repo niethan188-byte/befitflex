@@ -52,7 +52,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="empty"><i class="fa-solid fa-bell-slash"></i>Nothing here yet.</div>
   <?php else: ?>
     <?php foreach ($notes as $n): ?>
-      <div class="notif <?= $n['is_read'] ? '' : 'unread' ?>">
+      <div class="notif <?= $n['is_read'] ? '' : 'unread' ?>" id="notification-<?= (int) $n['notification_id'] ?>">
         <div class="dot"><i class="fa-solid fa-<?= e($n['notification_icon'] ?: 'bell') ?>"></i></div>
         <div class="body" style="flex:1">
           <b><?= e($n['notification_title']) ?>
