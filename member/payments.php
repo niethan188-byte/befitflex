@@ -37,9 +37,12 @@ include __DIR__ . '/../includes/header.php';
 <?php if ($pending + $overdue > 0): ?>
 <div class="panel glass" style="border-color:rgba(245,158,11,.4)">
   <h2><i class="fa-solid fa-circle-info"></i> How to settle</h2>
-  <p class="note">Pay at the front desk in cash or by card, or use GCash through the secure Maya
-  checkout below when it is enabled for this merchant account. Online payments are recorded after
-  Maya confirms the transaction.</p>
+  <p class="note">Pay at the front desk in cash or by card, or use Maya's secure online checkout
+  below. Online payments are recorded after Maya confirms the transaction.</p>
+  <?php if (maya_configured() && !getenv('MAYA_SECRET_KEY')): ?>
+  <p class="note">Online checkout is enabled, but automatic payment verification needs the Maya
+  secret API key to be configured.</p>
+  <?php endif; ?>
 </div>
 <?php endif; ?>
 
@@ -63,10 +66,13 @@ include __DIR__ . '/../includes/header.php';
         <td data-label="Actions">
           <a class="btn sm" href="../invoice.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-file-invoice"></i> View invoice</a>
           <?php if ($p['payment_status'] !== 'Paid'): ?>
+            <?php if (!empty($p['maya_checkout_id'])): ?>
+            <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-rotate"></i> Check Maya status</a>
+            <?php endif; ?>
             <?php if (maya_configured()): ?>
             <form method="post" action="../api/maya-checkout.php" class="payment-action">
               <?= csrf_field() ?><input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
-              <button class="btn sm red" type="submit"><i class="fa-solid fa-wallet"></i> Pay with GCash</button>
+              <button class="btn sm red" type="submit"><i class="fa-solid fa-wallet"></i> Pay online with Maya</button>
             </form>
             <?php else: ?>
             <span class="note">Online checkout unavailable</span>

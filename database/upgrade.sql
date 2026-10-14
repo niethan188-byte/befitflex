@@ -54,6 +54,15 @@ ALTER TABLE payments
 
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'payments' AND column_name = 'maya_checkout_id'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE payments ADD COLUMN maya_checkout_id VARCHAR(100) NULL AFTER payment_date',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
      WHERE table_schema = DATABASE() AND table_name = 'members' AND column_name = 'contact_number_encrypted'
 );
 SET @sql = IF(@column_exists = 0,

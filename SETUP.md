@@ -82,8 +82,10 @@ Keep both secrets outside the project and back them up securely. Existing member
 contact numbers are backfilled into `members.contact_number_encrypted` when the
 upgrade is applied; the legacy column remains temporarily for compatibility.
 
-After setting environment variables on Windows, restart Laragon completely so
-Apache inherits them. Verify from the application environment with:
+After setting environment variables on Windows, fully exit the XAMPP Control
+Panel (including its notification-area process), then reopen it and start
+Apache. Restarting Apache from an already-open control panel may leave Apache
+with the old environment. Verify from the application environment with:
 
 ```powershell
 composer health
@@ -102,9 +104,12 @@ composer smoke
 composer health
 ```
 
-The health check should report the live PHP and database versions. Maya will
-remain `not configured` until merchant credentials and a public webhook endpoint
-are supplied. Do not use the default mobile API secret outside local development.
+The health check should report the live PHP and database versions. Maya checkout
+requires the public API key; return-page status verification also requires the
+secret API key. Webhook notifications additionally require the webhook secret
+and a publicly reachable HTTPS webhook endpoint. Apply `database/upgrade.sql`
+to add the Maya checkout reference column before testing online payments. Do not
+use the default mobile API secret outside local development.
 
 ## 5. Open it
 

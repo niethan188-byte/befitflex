@@ -106,6 +106,9 @@ include __DIR__ . '/../includes/header.php';
         <td><?= badge($p['payment_status']) ?></td>
         <td style="white-space:nowrap">
           <?php if ($p['payment_status'] !== 'Paid'): ?>
+            <?php if (!empty($p['maya_checkout_id'])): ?>
+              <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i></a>
+            <?php endif; ?>
             <form method="post" style="display:inline">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="mark_paid">

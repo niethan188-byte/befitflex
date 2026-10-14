@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
-require __DIR__ . '/../includes/maya.php';
+require_once __DIR__ . '/../includes/maya.php';
 
 $u = require_role('admin', 'member');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -28,17 +28,25 @@ if (is_string($configuredBase) && trim($configuredBase) !== '') {
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $base = rtrim($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . dirname(dirname($_SERVER['SCRIPT_NAME'])), '/');
 }
-$result = maya_create_checkout($payment, $base . '/member/payments.php?maya=success', $base . '/member/payments.php?maya=failed');
+$returnUrl = $base . '/api/maya-return.php?payment_id=' . rawurlencode($paymentId);
+$result = maya_create_checkout($payment, $returnUrl, $returnUrl . '&result=failed');
 if (!$result['ok']) {
     flash($result['error'], 'err');
     redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
 }
 
 $redirect = $result['data']['redirectUrl'] ?? $result['data']['checkoutUrl'] ?? null;
+$checkoutId = $result['data']['checkoutId'] ?? $result['data']['id'] ?? null;
 if (!is_string($redirect) || filter_var($redirect, FILTER_VALIDATE_URL) === false
     || strtolower((string) parse_url($redirect, PHP_URL_SCHEME)) !== 'https') {
     flash('Maya returned no checkout URL.', 'err');
     redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
 }
+if (!is_string($checkoutId) || trim($checkoutId) === '') {
+    flash('Maya returned no checkout reference. Please try again.', 'err');
+    redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
+}
+db()->prepare('UPDATE payments SET maya_checkout_id = ? WHERE payment_id = ?')
+    ->execute([$checkoutId, $paymentId]);
 header('Location: ' . $redirect);
 exit;

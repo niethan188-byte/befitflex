@@ -9,7 +9,9 @@ $checks = [
     'cURL' => function_exists('curl_init') ? 'enabled' : 'missing',
     'OpenSSL' => extension_loaded('openssl') ? 'enabled' : 'missing',
     'Mailtrap' => getenv('MAILTRAP_API_TOKEN') ? 'configured' : 'not configured',
-    'Maya' => maya_configured() ? 'configured' : 'not configured',
+    'Maya checkout' => maya_configured() ? 'configured' : 'not configured',
+    'Maya status lookup' => getenv('MAYA_SECRET_KEY') ? 'configured' : 'not configured',
+    'Maya webhook' => getenv('MAYA_WEBHOOK_SECRET') ? 'configured' : 'not configured',
     'Mobile secret' => getenv('BEFITFLEX_API_SECRET') ? 'configured' : 'not configured',
     'PII encryption' => encryption_available() ? 'configured' : 'not configured for this process',
 ];

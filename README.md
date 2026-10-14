@@ -129,15 +129,19 @@ docs/                walkthrough, screen map, theme notes
 ### Implementation boundaries
 
 The Maya Checkout integration uses the sandbox by default. Members can start
-hosted checkout from their payment history; GCash is available there only if it
-is enabled for the Maya merchant account. A signed webhook marks a payment paid
-after Maya reports success; returning from checkout alone does not settle it.
+hosted checkout from their payment history when the Maya public API key is
+configured. On return, the app retrieves the checkout from Maya and marks it paid
+only when the server confirms its successful status, payment reference, amount,
+and currency. A publicly reachable signed webhook can also confirm payments.
+Available payment methods depend on the Maya merchant account.
 
 To test online payments:
 
-1. Obtain sandbox API credentials from the Maya Business Manager and configure
-   `MAYA_PUBLIC_KEY`, `MAYA_SECRET_KEY`, and `MAYA_WEBHOOK_SECRET` as environment
-   variables for the PHP/Apache process. Do not put credentials in source files.
+1. Obtain Maya Checkout public and secret API keys from the Maya Business
+   Manager (or use the published sandbox keys) and configure `MAYA_PUBLIC_KEY`
+   and `MAYA_SECRET_KEY` as environment variables for the PHP/Apache process.
+   Configure `MAYA_WEBHOOK_SECRET` too if you will receive webhook notifications.
+   Do not put credentials in source files.
 2. Make the application reachable over HTTPS (for local testing, use a trusted
    tunnel) and set `BEFITFLEX_APP_URL` to its public base URL, including the app
    path if applicable (for example, `https://your-public-host/befitflex`). Set
@@ -146,9 +150,12 @@ To test online payments:
 3. Ensure GCash is enabled for the sandbox merchant account. The hosted checkout
    displays the payment methods enabled for that account; this integration does
    not force GCash or guarantee it is available in every sandbox account.
-4. Restart Apache, check `php tools/health-check.php` for Maya configuration,
-   then use **Pay with GCash** on a pending member payment and complete a sandbox
-   transaction. Confirm that the signed webhook updates the payment to `Paid`.
+4. Fully exit and reopen the XAMPP Control Panel, then start Apache so it
+   inherits the configured environment variables. Check `php tools/health-check.php`
+   for Maya configuration, then use **Pay online with Maya** on a pending member
+   payment and complete a sandbox transaction. The return page checks the
+   transaction directly with Maya; webhooks additionally require a configured
+   signed notification endpoint.
 
 The default checkout endpoint is Maya's sandbox. `MAYA_CHECKOUT_URL` can override
 it when needed; use Maya's production endpoint and production credentials only

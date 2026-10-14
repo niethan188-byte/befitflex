@@ -90,6 +90,7 @@ CREATE TABLE payments (
     payment_method ENUM('Cash','Card','GCash','Bank Transfer','Maya') NOT NULL,
     payment_status ENUM('Paid','Pending','Overdue') NOT NULL DEFAULT 'Pending',
     payment_date DATE,
+    maya_checkout_id VARCHAR(100) NULL,
     notes LONGTEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
