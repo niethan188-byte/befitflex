@@ -5,6 +5,7 @@ $u = require_role('member');
 $mid = $_SESSION['member_id'] ?? '';
 
 $page = 'idcard';
+$bodyClass = 'member-id-card';
 $title = 'My Member Card';
 $subtitle = 'Show this at the desk, or use the number at the check-in station.';
 
@@ -24,14 +25,14 @@ $b = base_url();
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="grid c2">
-  <div class="panel glass">
+<div class="grid c2 idcard-page">
+  <div class="panel glass idcard-panel">
     <h2><i class="fa-solid fa-id-card"></i> Your card
       <span class="spacer"></span>
       <button class="btn sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
     </h2>
 
-    <div style="display:grid;place-items:center;padding:10px 0 4px">
+    <div class="idcard-stage">
       <div class="idcard">
         <div class="brandline">
           <?php if ($hasLogo): ?><img src="<?= $b ?>assets/img/logo.png" alt="">
@@ -48,7 +49,7 @@ include __DIR__ . '/../includes/header.php';
           <div>STATUS<b><?= e($me['status']) ?></b></div>
         </div>
 
-        <div style="display:grid;place-items:center;width:132px;height:132px;margin:18px auto 0;padding:6px;background:#fff;border-radius:4px;position:relative">
+        <div class="idcard-qr-frame">
           <?php if ($qrAvailable): ?>
             <img src="<?= $b ?>api/qr.php?type=member&amp;id=<?= rawurlencode((string) $mid) ?>" alt="Member check-in QR code" width="120" height="120">
           <?php else: ?>

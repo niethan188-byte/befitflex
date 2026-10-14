@@ -371,7 +371,7 @@ tr.picked { background: rgba(225,6,0,.08) !important; }
 /* ---------- member ID card ---------- */
 
 .idcard {
-  width: 340px; padding: 26px; border-radius: 20px; position: relative; overflow: hidden;
+  width: min(340px, 100%); padding: 26px; border-radius: 20px; position: relative; overflow: hidden;
   background: linear-gradient(145deg, #17171B, #0A0A0C 60%, #2A0301);
   border: 1px solid rgba(225,6,0,.4);
   box-shadow: 0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.14);
@@ -388,6 +388,13 @@ tr.picked { background: rgba(225,6,0,.08) !important; }
 .idcard .mid { font: 600 13px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .18em; color: #FCA5A5; }
 .idcard .rowline { display: flex; justify-content: space-between; margin-top: 22px; font-size: 11px; color: #9BA1A9; position: relative; }
 .idcard .rowline b { display: block; color: #fff; font-size: 12.5px; margin-top: 2px; }
+.idcard-stage { display: grid; place-items: center; padding: 10px 0 4px; }
+.idcard-qr-frame {
+  display: grid; place-items: center; width: 132px; height: 132px;
+  margin: 18px auto 0; padding: 5px; position: relative;
+  background: #fff; border-radius: 4px;
+}
+.idcard-qr-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .barcode { display: flex; gap: 1.5px; height: 44px; margin-top: 20px; align-items: flex-end; position: relative; }
 .barcode span { flex: 1; background: #fff; border-radius: 1px; }
 
@@ -395,6 +402,32 @@ tr.picked { background: rgba(225,6,0,.08) !important; }
   .idcard { box-shadow: none; break-inside: avoid; }
   .cmd, .flash-stack, .tabbar, .drawer-scrim, #nprog, .table-foot, .bulk-bar { display: none !important; }
   table.stackable tbody tr { display: table-row; }
+
+  body.member-id-card { background: #fff !important; color: #111 !important; }
+  body.member-id-card .sidebar,
+  body.member-id-card .field,
+  body.member-id-card .topbar,
+  body.member-id-card .idcard-page > :not(.idcard-panel) { display: none !important; }
+  body.member-id-card .shell { display: block; min-height: 0; }
+  body.member-id-card .main { max-width: none; padding: 0; }
+  body.member-id-card .idcard-page { display: block; }
+  body.member-id-card .idcard-panel {
+    margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none;
+  }
+  body.member-id-card .idcard-panel > h2,
+  body.member-id-card .idcard-panel > .note { display: none; }
+  body.member-id-card .idcard-stage { display: grid; place-items: center; }
+  body.member-id-card .idcard {
+    background: #fff; border: 1px solid #555; box-shadow: none;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  body.member-id-card .idcard::before { display: none; }
+  body.member-id-card .idcard .brandline b,
+  body.member-id-card .idcard .who,
+  body.member-id-card .idcard .rowline b { color: #111; }
+  body.member-id-card .idcard .brandline span { color: #9F2522; }
+  body.member-id-card .idcard .mid { color: #9F2522; }
+  body.member-id-card .idcard .rowline { color: #555; }
 }
 
 /* ---------- mobile app finish ---------- */
@@ -440,4 +473,30 @@ tr.picked { background: rgba(225,6,0,.08) !important; }
 @media (hover: none) and (pointer: coarse) {
   .btn:hover, .icon-btn:hover, .nav a:hover, .keypad button:hover { transform: none; }
   .btn, .icon-btn, .nav a, .keypad button, .tabbar a { touch-action: manipulation; }
+}
+
+/* ---------- member payment history ---------- */
+
+body.member-payments .payment-history-table .payment-action {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+@media (max-width: 620px) {
+  body.member-payments .payment-history-panel > h2 { flex-wrap: wrap; }
+  body.member-payments .payment-history-panel > h2 .spacer { flex: 1; }
+  body.member-payments .payment-history-table tbody td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  body.member-payments .payment-history-table tbody td:last-child {
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    white-space: normal;
+  }
+  body.member-payments .payment-history-table tbody td:last-child .payment-action {
+    display: inline-flex;
+    margin: 4px 0;
+  }
 }

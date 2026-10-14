@@ -5,6 +5,7 @@ $u = require_role('member');
 $mid = $_SESSION['member_id'] ?? '';
 
 $page = 'payments';
+$bodyClass = 'member-payments';
 $title = 'Payments';
 $subtitle = 'Your dues and payment history.';
 
@@ -42,30 +43,28 @@ include __DIR__ . '/../includes/header.php';
 </div>
 <?php endif; ?>
 
-<div class="panel glass">
+<div class="panel glass payment-history-panel">
   <h2><i class="fa-solid fa-receipt"></i> Payment history
-    <span class="spacer"></span>
-    <button class="btn sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
   </h2>
   <?php if (!$payments): ?>
     <div class="empty"><i class="fa-solid fa-receipt"></i>No payment records yet.</div>
   <?php else: ?>
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table class="stackable payment-history-table" aria-label="Payment history">
     <thead><tr><th>Reference</th><th>For</th><th>Method</th><th class="num">Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($payments as $p): ?>
       <tr>
-        <td class="mono"><?= e($p['payment_id']) ?></td>
-        <td><?= e($p['notes'] ?: 'Membership dues') ?></td>
-        <td><?= e($p['payment_method']) ?></td>
-        <td class="num"><b><?= money($p['amount']) ?></b></td>
-        <td><?= dt($p['payment_date']) ?></td>
-        <td><?= badge($p['payment_status']) ?></td>
-        <td style="white-space:nowrap">
-          <a class="btn sm" href="../invoice.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-file-pdf"></i> Invoice</a>
+        <td class="mono" data-label="Reference"><?= e($p['payment_id']) ?></td>
+        <td data-label="For"><?= e($p['notes'] ?: 'Membership dues') ?></td>
+        <td data-label="Method"><?= e($p['payment_method']) ?></td>
+        <td class="num" data-label="Amount"><b><?= money($p['amount']) ?></b></td>
+        <td data-label="Date"><?= dt($p['payment_date']) ?></td>
+        <td data-label="Status"><?= badge($p['payment_status']) ?></td>
+        <td data-label="Actions">
+          <a class="btn sm" href="../invoice.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-file-invoice"></i> View invoice</a>
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (maya_configured()): ?>
-            <form method="post" action="../api/maya-checkout.php" style="display:inline">
+            <form method="post" action="../api/maya-checkout.php" class="payment-action">
               <?= csrf_field() ?><input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
               <button class="btn sm red" type="submit"><i class="fa-solid fa-wallet"></i> Pay with GCash</button>
             </form>
