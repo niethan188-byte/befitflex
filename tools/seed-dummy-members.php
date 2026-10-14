@@ -13,7 +13,7 @@ $pdo = db();
 $count = 100;
 $emailPrefix = 'dummy.member.';
 $password = 'dummy123';
-$methods = ['Cash', 'Card', 'GCash', 'Bank Transfer', 'Maya'];
+$methods = ['Cash', 'Card', 'GCash', 'Bank Transfer'];
 $membershipType = 'Monthly';
 $firstNames = ['Alex', 'Bianca', 'Carlo', 'Diana', 'Emil', 'Faith', 'Gabriel', 'Hana', 'Ivan', 'Jessa'];
 $lastNames = ['Santos', 'Reyes', 'Cruz', 'Garcia', 'Mendoza', 'Torres', 'Navarro', 'Ramos', 'Flores', 'Castillo'];
@@ -31,7 +31,9 @@ $insertMember = $pdo->prepare(
     'INSERT INTO members (member_id, user_id, member_name, contact_number, email, membership_type, join_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 );
 $insertPayment = $pdo->prepare(
-    'INSERT INTO payments (payment_id, member_id, amount, payment_method, payment_status, payment_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO payments
+        (payment_id, member_id, amount, payment_method, payment_status, payment_date, maya_checkout_id, notes)
+     VALUES (?, ?, ?, ?, ?, ?, NULL, ?)'
 );
 
 $pdo->beginTransaction();

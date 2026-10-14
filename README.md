@@ -132,7 +132,11 @@ The Maya Checkout integration uses the sandbox by default. Members can start
 hosted checkout from their payment history when the Maya public API key is
 configured. On return, the app retrieves the checkout from Maya and marks it paid
 only when the server confirms its successful status, payment reference, amount,
-and currency. A publicly reachable signed webhook can also confirm payments.
+currency, and saved checkout ID. A signed webhook can confirm a payment only
+when its checkout ID, payment reference, amount, and currency also match the
+local pending payment.
+Administrators can still record non-Maya payments manually, but Maya-linked
+payments cannot be manually marked Paid.
 Available payment methods depend on the Maya merchant account.
 
 To test online payments:
@@ -156,6 +160,16 @@ To test online payments:
    payment and complete a sandbox transaction. The return page checks the
    transaction directly with Maya; webhooks additionally require a configured
    signed notification endpoint.
+
+Maya's direct status lookup requires the checkout ID, so payments created
+before the app saved it cannot be checked from the return page and the app will
+not guess an ID from a payment reference or trust a browser redirect. A complete,
+validly signed webhook can still match and save a previously missing ID when it
+includes the successful status, checkout ID, payment reference, amount, and
+currency. On localhost Maya cannot deliver that webhook; if no such verified
+event is received, staff must check the member's receipt in the Maya merchant
+dashboard before recording any manual resolution. Do not ask the member to pay
+again until that check is complete.
 
 The default checkout endpoint is Maya's sandbox. `MAYA_CHECKOUT_URL` can override
 it when needed; use Maya's production endpoint and production credentials only

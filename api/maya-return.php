@@ -46,13 +46,20 @@ if (!$result['ok']) {
 }
 
 $checkout = $result['data'];
-if (!maya_checkout_confirms_payment($checkout, $payment)) {
+if (!maya_checkout_confirms_payment($checkout, $payment, $checkoutId)) {
     if (($checkout['requestReferenceNumber'] ?? null) !== $paymentId) {
         error_log('Maya status lookup reference mismatch for payment ' . $paymentId);
         flash('Maya returned a different payment reference. The payment status was not changed.', 'err');
+    } elseif (!maya_checkout_id_matches($checkout, $payment, $checkoutId)) {
+        error_log('Maya status lookup checkout ID mismatch for payment ' . $paymentId);
+        flash('Maya returned a conflicting checkout ID. The payment status was not changed.', 'err');
+    } elseif (($checkout['paymentStatus'] ?? null) === 'PAYMENT_SUCCESS'
+        && strtoupper((string) ($checkout['totalAmount']['currency'] ?? '')) !== 'PHP') {
+        error_log('Maya status lookup currency mismatch for payment ' . $paymentId);
+        flash('Maya returned a different currency. The payment status was not changed.', 'err');
     } elseif (($checkout['paymentStatus'] ?? null) === 'PAYMENT_SUCCESS') {
         error_log('Maya status lookup amount mismatch for payment ' . $paymentId);
-        flash('Maya returned a different amount or currency. The payment status was not changed.', 'err');
+        flash('Maya returned a different amount. The payment status was not changed.', 'err');
     } else {
         flash('Maya has not confirmed a successful payment yet. Please check again shortly.', 'err');
     }
@@ -61,11 +68,14 @@ if (!maya_checkout_confirms_payment($checkout, $payment)) {
 
 $stmt = db()->prepare(
     'UPDATE payments SET payment_method = "Maya", payment_status = "Paid", payment_date = CURDATE()
-      WHERE payment_id = ? AND payment_status <> "Paid"'
+      WHERE payment_id = ? AND maya_checkout_id = ? AND payment_status <> "Paid"'
 );
-$stmt->execute([$paymentId]);
+$stmt->execute([$paymentId, $checkoutId]);
 if ($stmt->rowCount() > 0) {
     log_activity('Maya return verification', 'Payments', $paymentId . ' → Paid');
+} else {
+    flash('The payment changed while Maya was being checked. Refresh the payment page and verify its current status.', 'err');
+    redirect($paymentsUrl);
 }
 flash('Maya confirmed your payment.');
 redirect($paymentsUrl);

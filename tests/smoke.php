@@ -17,20 +17,35 @@ $checks['admin/member roles only'] = (int) scalar(
 $checks['prepared statements'] = !(bool) db()->getAttribute(PDO::ATTR_EMULATE_PREPARES);
 $checks['maya webhook rejects missing secret'] = maya_webhook_valid('{}', '') === false;
 $checks['maya status requires matching successful checkout'] = maya_checkout_confirms_payment([
+    'checkoutId' => 'checkout-123',
     'paymentStatus' => 'PAYMENT_SUCCESS',
     'requestReferenceNumber' => 'PAY00001',
     'totalAmount' => ['value' => 995, 'currency' => 'PHP'],
-], ['payment_id' => 'PAY00001', 'amount' => '995.00'])
+], ['payment_id' => 'PAY00001', 'amount' => '995.00', 'maya_checkout_id' => 'checkout-123'], 'checkout-123')
     && !maya_checkout_confirms_payment([
+        'checkoutId' => 'checkout-123',
         'paymentStatus' => 'PAYMENT_SUCCESS',
         'requestReferenceNumber' => 'PAY00001',
         'totalAmount' => ['value' => 1000, 'currency' => 'PHP'],
-    ], ['payment_id' => 'PAY00001', 'amount' => '995.00'])
+    ], ['payment_id' => 'PAY00001', 'amount' => '995.00', 'maya_checkout_id' => 'checkout-123'], 'checkout-123')
     && !maya_checkout_confirms_payment([
+        'checkoutId' => 'checkout-123',
         'paymentStatus' => 'PENDING_TOKEN',
         'requestReferenceNumber' => 'PAY00001',
         'totalAmount' => ['value' => 995, 'currency' => 'PHP'],
-    ], ['payment_id' => 'PAY00001', 'amount' => '995.00']);
+    ], ['payment_id' => 'PAY00001', 'amount' => '995.00', 'maya_checkout_id' => 'checkout-123'], 'checkout-123')
+    && !maya_checkout_confirms_payment([
+        'checkoutId' => 'checkout-123',
+        'paymentStatus' => 'PAYMENT_SUCCESS',
+        'requestReferenceNumber' => 'PAY00001',
+        'totalAmount' => ['value' => 995, 'currency' => 'USD'],
+    ], ['payment_id' => 'PAY00001', 'amount' => '995.00', 'maya_checkout_id' => 'checkout-123'], 'checkout-123')
+    && !maya_checkout_confirms_payment([
+        'checkoutId' => 'checkout-123',
+        'paymentStatus' => 'PAYMENT_SUCCESS',
+        'requestReferenceNumber' => 'PAY00001',
+        'totalAmount' => ['value' => 995, 'currency' => 'PHP'],
+    ], ['payment_id' => 'PAY00001', 'amount' => '995.00'], 'checkout-123');
 $checks['pdf dependency'] = class_exists('Dompdf\\Dompdf');
 $checks['AI insights'] = class_exists('AIInsights') && AIInsights::generate([], [], []);
 $checks['pii encryption round trip'] = getenv('BEFITFLEX_ENCRYPTION_KEY')

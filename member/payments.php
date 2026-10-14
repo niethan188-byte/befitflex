@@ -68,13 +68,15 @@ include __DIR__ . '/../includes/header.php';
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (!empty($p['maya_checkout_id'])): ?>
             <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-rotate"></i> Check Maya status</a>
+            <?php else: ?>
+            <span class="note">No Maya checkout reference is saved, so this page cannot check an older session. If you already paid through Maya, do not pay again; contact the gym with your receipt so staff can verify it.</span>
             <?php endif; ?>
-            <?php if (maya_configured()): ?>
+            <?php if (maya_configured() && empty($p['maya_checkout_id'])): ?>
             <form method="post" action="../api/maya-checkout.php" class="payment-action">
               <?= csrf_field() ?><input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
               <button class="btn sm red" type="submit"><i class="fa-solid fa-wallet"></i> Pay online with Maya</button>
             </form>
-            <?php else: ?>
+            <?php elseif (!maya_configured()): ?>
             <span class="note">Online checkout unavailable</span>
             <?php endif; ?>
           <?php endif; ?>

@@ -19,18 +19,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($act === 'mark_paid') {
-        db()->prepare("UPDATE payments SET payment_status='Paid', payment_date=CURDATE() WHERE payment_id=?")
-            ->execute([$_POST['payment_id']]);
-
         $p = row('SELECT p.*, m.user_id, m.member_name FROM payments p
                     JOIN members m ON m.member_id = p.member_id WHERE p.payment_id = ?', [$_POST['payment_id']]);
-        if ($p) {
+        if (!$p) {
+            flash('Payment record not found.', 'err');
+        } elseif (!maya_manual_mark_allowed($p)) {
+            flash('Maya-linked payments must be confirmed by Maya. Use Check Maya status; this payment was not changed.', 'err');
+        } else {
+            $stmt = db()->prepare(
+                "UPDATE payments SET payment_status='Paid', payment_date=CURDATE()
+                  WHERE payment_id = ? AND payment_status <> 'Paid'
+                    AND payment_method <> 'Maya'
+                    AND (maya_checkout_id IS NULL OR maya_checkout_id = '')"
+            );
+            $stmt->execute([$_POST['payment_id']]);
+            if ($stmt->rowCount() !== 1) {
+                flash('The payment changed before it could be recorded. Refresh and check its current status.', 'err');
+                redirect('payments.php');
+            }
             notify((int) $p['user_id'], 'payment', 'Payment received',
                 'We received ' . number_format((float) $p['amount'], 2) . ' for your membership. Thank you.',
                 'circle-check', 'success', 'member/payments.php');
+            log_activity('Mark paid', 'Payments', (string) $_POST['payment_id']);
+            flash('Marked as paid and the member was notified.');
         }
-        log_activity('Mark paid', 'Payments', (string) $_POST['payment_id']);
-        flash('Marked as paid and the member was notified.');
     }
 
     if ($act === 'delete') {
@@ -109,12 +121,19 @@ include __DIR__ . '/../includes/header.php';
             <?php if (!empty($p['maya_checkout_id'])): ?>
               <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i></a>
             <?php endif; ?>
-            <form method="post" style="display:inline">
-              <?= csrf_field() ?>
-              <input type="hidden" name="action" value="mark_paid">
-              <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
-              <button class="btn sm" title="Mark as paid"><i class="fa-solid fa-check"></i></button>
-            </form>
+            <?php if (empty($p['maya_checkout_id']) && $p['payment_method'] === 'Maya'): ?>
+              <span class="note" title="Maya cannot verify this payment without its saved checkout ID.">No Maya checkout reference</span>
+            <?php endif; ?>
+            <?php if (!empty($p['maya_checkout_id']) || $p['payment_method'] === 'Maya'): ?>
+              <span class="note" title="Maya-linked payments can only be confirmed by Maya.">Maya confirmation required</span>
+            <?php else: ?>
+              <form method="post" style="display:inline">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="mark_paid">
+                <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
+                <button class="btn sm" title="Mark as paid"><i class="fa-solid fa-check"></i></button>
+              </form>
+            <?php endif; ?>
           <?php endif; ?>
           <form method="post" style="display:inline" onsubmit="return confirm('Delete this payment record?')">
             <?= csrf_field() ?>

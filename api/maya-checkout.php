@@ -21,6 +21,10 @@ if (!$payment || ($u['type'] === 'member' && $payment['member_id'] !== ($_SESSIO
     exit('Payment not found.');
 }
 
+if (!empty($payment['maya_checkout_id'])) {
+    redirect('maya-return.php?payment_id=' . rawurlencode($paymentId));
+}
+
 $configuredBase = getenv('BEFITFLEX_APP_URL');
 if (is_string($configuredBase) && trim($configuredBase) !== '') {
     $base = rtrim(trim($configuredBase), '/');
@@ -46,7 +50,15 @@ if (!is_string($checkoutId) || trim($checkoutId) === '') {
     flash('Maya returned no checkout reference. Please try again.', 'err');
     redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
 }
-db()->prepare('UPDATE payments SET maya_checkout_id = ? WHERE payment_id = ?')
-    ->execute([$checkoutId, $paymentId]);
+$stmt = db()->prepare(
+    "UPDATE payments SET maya_checkout_id = ?
+      WHERE payment_id = ? AND payment_status IN ('Pending', 'Overdue')
+        AND (maya_checkout_id IS NULL OR maya_checkout_id = '')"
+);
+$stmt->execute([$checkoutId, $paymentId]);
+if ($stmt->rowCount() !== 1) {
+    flash('A Maya checkout could not be safely linked to this payment. It was not opened in your browser; refresh the payment page and check its status before retrying.', 'err');
+    redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
+}
 header('Location: ' . $redirect);
 exit;
