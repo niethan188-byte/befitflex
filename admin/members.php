@@ -45,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($act === 'create') {
+      if (!array_key_exists((string) ($_POST['membership_type'] ?? ''), MEMBERSHIP_PRICE)) {
+        flash('Pick a valid membership type.', 'err');
+        redirect('members.php');
+      }
       if (!encryption_available()) {
         flash('PII encryption is unavailable in the web server. Restart Laragon and try again.', 'err');
         redirect('members.php');
@@ -72,6 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($act === 'update') {
+      if (!array_key_exists((string) ($_POST['membership_type'] ?? ''), MEMBERSHIP_PRICE)) {
+        flash('Pick a valid membership type.', 'err');
+        redirect('members.php');
+      }
       if (!encryption_available()) {
         flash('PII encryption is unavailable in the web server. Restart Laragon and try again.', 'err');
         redirect('members.php');

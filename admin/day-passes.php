@@ -10,9 +10,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($act === 'create') {
         $name = trim((string) ($_POST['visitor_name'] ?? ''));
         $contact = trim((string) ($_POST['contact_number'] ?? ''));
+        $memberId = trim((string) ($_POST['member_id'] ?? ''));
         $date = (string) ($_POST['visit_date'] ?? date('Y-m-d'));
-        $amount = (float) ($_POST['amount'] ?? DAY_PASS_PRICE);
-        if ($name === '' || $contact === '' || $date < date('Y-m-d') || $amount < 0) {
+        $rate = (string) ($_POST['pass_rate'] ?? '');
+        $amount = match ($rate) {
+            'regular' => DAY_PASS_PRICE,
+            'student' => STUDENT_DAY_PASS_PRICE,
+            default => null,
+        };
+        $existingMember = $memberId !== ''
+            ? row(
+                "SELECT m.member_id, m.membership_type, m.status,
+                        (SELECT p.payment_status FROM payments p
+                          WHERE p.member_id = m.member_id
+                          ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+                   FROM members m WHERE m.member_id = ?",
+                [$memberId]
+            )
+            : null;
+        $eligibleMonthlyMember = $existingMember !== null
+            && $existingMember['membership_type'] === 'Monthly'
+            && $existingMember['status'] === 'Active'
+            && $existingMember['latest_payment_status'] === 'Paid';
+        if (!$eligibleMonthlyMember) {
+            foreach (rows(
+                "SELECT m.member_id, m.membership_type, m.status, m.contact_number, m.contact_number_encrypted,
+                        (SELECT p.payment_status FROM payments p
+                          WHERE p.member_id = m.member_id
+                          ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+                   FROM members m WHERE m.member_name = ?",
+                [$name]
+            ) as $candidate) {
+                if (
+                    $candidate['membership_type'] === 'Monthly'
+                    && $candidate['status'] === 'Active'
+                    && $candidate['latest_payment_status'] === 'Paid'
+                    && hash_equals(trim(member_contact($candidate)), $contact)
+                ) {
+                    $eligibleMonthlyMember = true;
+                    break;
+                }
+            }
+        }
+
+        if ($eligibleMonthlyMember) {
+            flash('This member already has an active monthly membership and cannot buy a day pass.', 'err');
+        } elseif ($name === '' || $contact === '' || $date < date('Y-m-d') || $amount === null) {
             flash('Enter a valid visitor, contact number, date and amount.', 'err');
         } else {
             $passId = next_id('day_passes', 'pass_id', 'DAY', 5);
@@ -112,12 +155,24 @@ include __DIR__ . '/../includes/header.php';
     <form method="post">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="create">
-      <div class="field-row"><label>Customer name</label><input type="text" name="visitor_name" required autofocus></div>
-      <div class="field-row"><label>Contact number</label><input type="tel" name="contact_number" required></div>
+      <input type="hidden" name="member_id" id="dayPassMemberId" value="">
+      <div class="field-row">
+        <label for="dayPassName">Customer name</label>
+        <input type="text" name="visitor_name" id="dayPassName" required autofocus autocomplete="off" aria-autocomplete="list" aria-controls="dayPassMemberSuggestions">
+        <div id="dayPassMemberSuggestions" role="listbox" aria-label="Matching members" style="display:none;position:relative;z-index:5;background:var(--panel, #202329);border:1px solid var(--line, #444);border-radius:10px;margin-top:4px;max-height:220px;overflow-y:auto"></div>
+        <div id="dayPassMemberStatus" class="note" aria-live="polite"></div>
+      </div>
+      <div class="field-row"><label for="dayPassContact">Contact number</label><input type="tel" name="contact_number" id="dayPassContact" required></div>
       <div class="form-grid">
         <div class="field-row"><label>Visit date</label><input type="date" name="visit_date" value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>" required></div>
-        <div class="field-row"><label>Amount</label><input type="number" name="amount" value="<?= DAY_PASS_PRICE ?>" min="0" step="0.01" required></div>
+        <div class="field-row"><label>Rate</label>
+          <select id="dayPassRate" name="pass_rate" onchange="suggestDayPassAmount()">
+            <option value="regular">Regular — <?= money(DAY_PASS_PRICE) ?></option>
+            <option value="student">Student — <?= money(STUDENT_DAY_PASS_PRICE) ?></option>
+          </select>
+        </div>
       </div>
+      <div class="field-row"><label>Amount</label><input type="number" id="dayPassAmount" value="<?= DAY_PASS_PRICE ?>" readonly></div>
       <div class="form-grid">
         <div class="field-row"><label>Payment method</label><select name="payment_method"><option>Cash</option><option>Card</option><option>GCash</option><option>Bank Transfer</option><option>Maya</option></select></div>
         <div class="field-row"><label>Payment status</label><select name="pass_status"><option>Paid</option><option>Pending</option></select></div>
@@ -126,10 +181,92 @@ include __DIR__ . '/../includes/header.php';
       <p class="note">The pass appears as <b>DAY00001</b>. At the numeric kiosk, enter <b>900001</b>.</p>
       <div class="modal-actions">
         <button type="button" class="btn" onclick="closeModal('mDayPass')">Cancel</button>
-        <button class="btn red"><i class="fa-solid fa-check"></i> Create pass</button>
+        <button type="submit" class="btn red"><i class="fa-solid fa-check"></i> Create pass</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+const dayPassName = document.getElementById('dayPassName');
+const dayPassContact = document.getElementById('dayPassContact');
+const dayPassMemberId = document.getElementById('dayPassMemberId');
+const dayPassSuggestions = document.getElementById('dayPassMemberSuggestions');
+const dayPassMemberStatus = document.getElementById('dayPassMemberStatus');
+const dayPassSubmit = document.querySelector('#mDayPass button[type="submit"]');
+let dayPassSearchTimer;
+let dayPassSearchSequence = 0;
+
+dayPassName.addEventListener('input', () => {
+  clearTimeout(dayPassSearchTimer);
+  dayPassSearchSequence++;
+  dayPassSuggestions.replaceChildren();
+  dayPassSuggestions.style.display = 'none';
+  dayPassContact.value = '';
+  dayPassMemberId.value = '';
+  dayPassSubmit.disabled = false;
+  dayPassSubmit.removeAttribute('title');
+
+  const query = dayPassName.value.trim();
+  if (query.length < 2) {
+    dayPassMemberStatus.textContent = '';
+    return;
+  }
+
+  dayPassMemberStatus.textContent = 'Searching members…';
+  const sequence = dayPassSearchSequence;
+  dayPassSearchTimer = setTimeout(async () => {
+    try {
+      const response = await fetch('../api/day-pass-members.php?q=' + encodeURIComponent(query), {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+      });
+      if (!response.ok) throw new Error('Member search failed.');
+      const data = await response.json();
+      if (sequence !== dayPassSearchSequence) return;
+
+      dayPassSuggestions.replaceChildren();
+      for (const member of data.members) {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', 'false');
+        option.style.cssText = 'display:block;width:100%;padding:10px 12px;text-align:left;border:0;border-bottom:1px solid var(--line, #444);background:transparent;color:inherit;cursor:pointer';
+        option.textContent = `${member.name}${member.contact ? ` · ${member.contact}` : ''}${member.active_monthly ? ' · Active monthly membership' : ''}`;
+        option.addEventListener('click', () => {
+          dayPassName.value = member.name;
+          dayPassContact.value = member.contact;
+          dayPassMemberId.value = member.id;
+          dayPassSuggestions.replaceChildren();
+          dayPassSuggestions.style.display = 'none';
+          if (member.active_monthly) {
+            dayPassMemberStatus.textContent = 'This member already has an active monthly membership and cannot buy a day pass.';
+            dayPassSubmit.disabled = true;
+            dayPassSubmit.title = 'Active monthly members cannot buy a day pass.';
+          } else {
+            dayPassMemberStatus.textContent = member.contact ? 'Member selected; contact number filled in.' : 'Member selected; enter their contact number.';
+            dayPassSubmit.disabled = false;
+            dayPassSubmit.removeAttribute('title');
+          }
+        });
+        dayPassSuggestions.append(option);
+      }
+
+      dayPassSuggestions.style.display = data.members.length ? 'block' : 'none';
+      dayPassMemberStatus.textContent = data.members.length ? 'Select a member to fill in their contact number.' : 'No matching members found.';
+    } catch (error) {
+      if (sequence !== dayPassSearchSequence) return;
+      dayPassMemberStatus.textContent = 'Member search is unavailable. You can enter the visitor details manually.';
+    }
+  }, 250);
+});
+
+function suggestDayPassAmount() {
+  const isStudent = document.getElementById('dayPassRate').value === 'student';
+  document.getElementById('dayPassAmount').value = isStudent
+    ? <?= STUDENT_DAY_PASS_PRICE ?>
+    : <?= DAY_PASS_PRICE ?>;
+}
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '')                              $errors[] = 'Your full name is required.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'That email address is not valid.';
     if (strlen($pass) < 6)                          $errors[] = 'Choose a password of at least 6 characters.';
-    if (!in_array($type, ['Monthly', 'Quarterly', 'Annual'], true)) $errors[] = 'Pick a membership type.';
+    if (!array_key_exists($type, MEMBERSHIP_PRICE)) $errors[] = 'Pick a membership type.';
     if (!$consent)                                  $errors[] = 'Privacy consent is required to enroll.';
     if (scalar('SELECT COUNT(*) FROM users WHERE email = ?', [$email])) {
         $errors[] = 'An account with that email already exists.';

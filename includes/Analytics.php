@@ -118,13 +118,9 @@ final class Analytics
                 ? round($rev / ($rev + (float) $s['outstanding']) * 100, 1) : 100.0;
 
             /* Monthly recurring revenue: what the active book is worth per month. */
-            $mrr = (float) db()->query(
-                "SELECT COALESCE(SUM(CASE membership_type
-                        WHEN 'Monthly'   THEN 1500
-                        WHEN 'Quarterly' THEN 4200/3
-                        WHEN 'Annual'    THEN 12000/12 END),0)
-                   FROM members WHERE status='Active'"
-            )->fetchColumn();
+            $mrr = (int) scalar(
+                "SELECT COUNT(*) FROM members WHERE status='Active' AND membership_type='Monthly'"
+            ) * MEMBERSHIP_PRICE['Monthly'];
             $s['mrr'] = round($mrr, 2);
 
             /* Lifetime value: average monthly spend x average months retained. */

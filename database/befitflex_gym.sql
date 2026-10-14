@@ -33,7 +33,7 @@ CREATE TABLE members (
     contact_number VARCHAR(20) NOT NULL,
     contact_number_encrypted TEXT NULL,
     email VARCHAR(255) NOT NULL,
-    membership_type ENUM('Monthly','Quarterly','Annual') NOT NULL,
+    membership_type ENUM('Monthly') NOT NULL,
     join_date DATE NOT NULL,
     out_date DATE NULL,
     status ENUM('Active','Inactive','Expired') NOT NULL DEFAULT 'Active',
@@ -59,7 +59,7 @@ CREATE TABLE day_passes (
     visitor_name VARCHAR(255) NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     visit_date DATE NOT NULL,
-    amount DECIMAL(10,2) NOT NULL DEFAULT 300.00,
+    amount DECIMAL(10,2) NOT NULL DEFAULT 150.00,
     payment_method ENUM('Cash','Card','GCash','Bank Transfer','Maya') NOT NULL DEFAULT 'Cash',
     pass_status ENUM('Paid','Pending','Cancelled') NOT NULL DEFAULT 'Paid',
     notes VARCHAR(500) NULL,
@@ -235,9 +235,9 @@ INSERT INTO users (user_id, email, password, user_type) VALUES
 UPDATE users SET email_verified_at = NOW() WHERE email_verified_at IS NULL;
 
 INSERT INTO members (member_id,user_id,member_name,contact_number,email,membership_type,join_date,status) VALUES
-('MEM0001',5,'Anna Cruz','09201234567','anna@example.com','Annual','2026-01-15','Active'),
+('MEM0001',5,'Anna Cruz','09201234567','anna@example.com','Monthly','2026-01-15','Active'),
 ('MEM0002',6,'Ben Reyes','09211234567','ben@example.com','Monthly','2026-03-02','Active'),
-('MEM0003',7,'Carla Diaz','09221234567','carla@example.com','Quarterly','2026-05-20','Active'),
+('MEM0003',7,'Carla Diaz','09221234567','carla@example.com','Monthly','2026-05-20','Active'),
 ('MEM0004',8,'Dan Torres','09231234567','dan@example.com','Monthly','2025-11-11','Expired');
 
 INSERT INTO gyms (gym_id,gym_branch,gym_name,location,description,contact_number) VALUES
@@ -251,11 +251,11 @@ INSERT INTO classes (class_id,class_name,class_description,schedule_day,start_ti
 ('CLS0004','Weekend Strength Lab','Technique clinic for squat, bench and deadlift.','Saturday','10:00:00','11:30:00',12,'Active');
 
 INSERT INTO payments (payment_id,member_id,amount,payment_method,payment_status,payment_date,notes) VALUES
-('PAY00001','MEM0001',12000.00,'Card','Paid','2026-01-15','Annual membership'),
-('PAY00002','MEM0002',1500.00,'GCash','Paid','2026-07-02','July dues'),
-('PAY00003','MEM0002',1500.00,'GCash','Pending',NULL,'August dues'),
-('PAY00004','MEM0003',4200.00,'Bank Transfer','Paid','2026-05-20','Quarterly membership'),
-('PAY00005','MEM0004',1500.00,'Cash','Overdue','2026-06-01','Unsettled balance');
+('PAY00001','MEM0001',995.00,'Card','Paid','2026-01-15','Monthly membership'),
+('PAY00002','MEM0002',995.00,'GCash','Paid','2026-07-02','July dues'),
+('PAY00003','MEM0002',995.00,'GCash','Pending',NULL,'August dues'),
+('PAY00004','MEM0003',995.00,'Bank Transfer','Paid','2026-05-20','Monthly membership'),
+('PAY00005','MEM0004',995.00,'Cash','Overdue','2026-06-01','Unsettled balance');
 
 INSERT INTO attendance (attendance_id,member_id,check_in_time,check_out_time,attendance_date) VALUES
 ('ATT000001','MEM0001','2026-08-11 06:12:00','2026-08-11 07:40:00','2026-08-11'),
@@ -282,8 +282,8 @@ INSERT INTO sessions (session_id,session_name,session_date,session_time,day_of_w
 
 INSERT INTO notifications (user_id,notification_type,notification_title,notification_message,notification_icon,icon_color,action_url,priority) VALUES
 (1,'system','Welcome to the admin panel','Members, payments and reports are all managed from here.','shield-halved','danger','admin/dashboard.php','normal'),
-(5,'payment','Membership active','Your annual membership is paid through January 2027.','money-bill-wave','success','member/payments.php','normal'),
-(6,'payment','Payment pending','August dues of 1,500.00 are still outstanding.','triangle-exclamation','warning','member/payments.php','high'),
+(5,'payment','Membership active','Your monthly membership payment has been received.','money-bill-wave','success','member/payments.php','normal'),
+(6,'payment','Payment pending','August dues of 995.00 are still outstanding.','triangle-exclamation','warning','member/payments.php','high'),
 (5,'reservation','Upcoming session','Anna Cruz booked a session on August 17 at 7:00 AM.','calendar-check','info','member/reservations.php','normal'),
 (5,'system','Data Privacy Notice','Be Fit Flex Gym processes your personal data under RA 10173. Read the notice for your rights as a data subject.','user-shield','danger','privacy.php','normal');
 

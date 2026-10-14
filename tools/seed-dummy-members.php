@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/../config/config.php';
 require __DIR__ . '/../config/db.php';
 
 if (PHP_SAPI !== 'cli') {
@@ -13,8 +14,7 @@ $count = 100;
 $emailPrefix = 'dummy.member.';
 $password = 'dummy123';
 $methods = ['Cash', 'Card', 'GCash', 'Bank Transfer', 'Maya'];
-$membershipTypes = ['Monthly', 'Quarterly', 'Annual'];
-$amounts = ['Monthly' => 1500.00, 'Quarterly' => 4200.00, 'Annual' => 12000.00];
+$membershipType = 'Monthly';
 $firstNames = ['Alex', 'Bianca', 'Carlo', 'Diana', 'Emil', 'Faith', 'Gabriel', 'Hana', 'Ivan', 'Jessa'];
 $lastNames = ['Santos', 'Reyes', 'Cruz', 'Garcia', 'Mendoza', 'Torres', 'Navarro', 'Ramos', 'Flores', 'Castillo'];
 
@@ -41,7 +41,6 @@ try {
         $email = sprintf('%s%03d@example.com', $emailPrefix, $index);
         $name = $firstNames[($index - 1) % count($firstNames)] . ' ' . $lastNames[(int) floor(($index - 1) / count($firstNames))];
         $joinDate = (new DateTimeImmutable('2025-01-01'))->modify('+' . (($index * 13) % 620) . ' days');
-        $membershipType = $membershipTypes[($index - 1) % count($membershipTypes)];
         $status = $index % 9 === 0 ? 'Expired' : ($index % 7 === 0 ? 'Inactive' : 'Active');
         $paymentMethod = $methods[($index - 1) % count($methods)];
         $paymentStatus = $index % 11 === 0 ? 'Overdue' : ($index % 6 === 0 ? 'Pending' : 'Paid');
@@ -64,7 +63,7 @@ try {
         $insertPayment->execute([
             sprintf('DUMPAY%04d', $index),
             $memberId,
-            $amounts[$membershipType],
+            MEMBERSHIP_PRICE[$membershipType],
             $paymentMethod,
             $paymentStatus,
             $paymentDate,

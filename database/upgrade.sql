@@ -68,13 +68,15 @@ CREATE TABLE IF NOT EXISTS day_passes (
     visitor_name VARCHAR(255) NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     visit_date DATE NOT NULL,
-    amount DECIMAL(10,2) NOT NULL DEFAULT 300.00,
+    amount DECIMAL(10,2) NOT NULL DEFAULT 150.00,
     payment_method ENUM('Cash','Card','GCash','Bank Transfer','Maya') NOT NULL DEFAULT 'Cash',
     pass_status ENUM('Paid','Pending','Cancelled') NOT NULL DEFAULT 'Paid',
     notes VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_day_pass_date (visit_date), INDEX idx_day_pass_status (pass_status)
 ) ENGINE=InnoDB;
+
+ALTER TABLE day_passes ALTER COLUMN amount SET DEFAULT 150.00;
 
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns

@@ -27,11 +27,10 @@ const MAYA_CHECKOUT_URL = 'https://pg-sandbox.paymaya.com/checkout/v1/checkouts'
 
 /** Membership pricing used when generating dues. */
 const MEMBERSHIP_PRICE = [
-    'Monthly'   => 1500.00,
-    'Quarterly' => 4200.00,
-    'Annual'    => 12000.00,
+    'Monthly'   => 995.00,
 ];
 
-const DAY_PASS_PRICE = 300.00;
+const DAY_PASS_PRICE = 150.00;
+const STUDENT_DAY_PASS_PRICE = 120.00;
 
 date_default_timezone_set('Asia/Manila');
