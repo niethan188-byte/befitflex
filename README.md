@@ -45,32 +45,32 @@ For the Railway Docker deployment and production environment setup, see
 
 ## Email notifications
 
-Email delivery uses the Mailtrap Email Sending API. The application sends email for payments,
-reservations, account messages, bulk member messages, and admin
-announcements. In-app notifications continue to work if email is not configured.
+Email delivery uses PHPMailer over SMTP. Configure Mailtrap Sandbox credentials
+from the Mailtrap inbox's SMTP settings; messages are captured in the sandbox
+instead of delivered to recipients. The application sends email for payments,
+reservations, account messages, bulk member messages, and admin announcements.
+In-app notifications continue to work if email is not configured.
 
-1. Create a Mailtrap account and an API token at <https://mailtrap.io>.
-   For testing, use a Mailtrap Sandbox endpoint. For real delivery, use a
-   verified sending domain and the Email Sending API endpoint.
-2. Set the key in Windows PowerShell; do not put it in a PHP file:
+Set these variables in Windows PowerShell; do not put credentials in a PHP file:
 
   ```powershell
-  [Environment]::SetEnvironmentVariable('MAILTRAP_API_TOKEN', 'your_mailtrap_token', 'User')
-  [Environment]::SetEnvironmentVariable('MAILTRAP_API_URL', 'https://send.api.mailtrap.io/api/send', 'User')
-  [Environment]::SetEnvironmentVariable('MAILTRAP_FROM_EMAIL', 'notifications@your-verified-domain.com', 'User')
-  [Environment]::SetEnvironmentVariable('MAILTRAP_FROM_NAME', 'Be Fit Flex Gym', 'User')
-  [Environment]::SetEnvironmentVariable('MAILTRAP_REPLY_TO', 'befitgymlaguna@gmail.com', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_MAILER', 'smtp', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_HOST', 'sandbox.smtp.mailtrap.io', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_PORT', '2525', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_USERNAME', 'your_rotated_sandbox_username', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_PASSWORD', 'your_rotated_sandbox_password', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_ENCRYPTION', 'tls', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_FROM_ADDRESS', 'notifications@example.com', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_FROM_NAME', 'Be Fit Flex Gym', 'User')
+  [Environment]::SetEnvironmentVariable('MAIL_REPLY_TO', 'befitgymlaguna@gmail.com', 'User')
   ```
 
-3. Fully exit and reopen the XAMPP Control Panel, then start Apache so it can
-   read the variables.
-4. Confirm PHP cURL is enabled in `php.ini` with `extension=curl`.
-5. Send an announcement from `admin/announcements.php` and check the Mailtrap
-  dashboard and the `notifications.email_sent` column.
-
-For production, verify your domain in Mailtrap and use a sender address on that
-domain. Never commit the API token to the project. Revoke any token that has
-been exposed in chat, screenshots, or source files.
+Replace the example username and password with the current credentials in your
+Mailtrap Sandbox inbox. Any credentials previously posted publicly should be
+rotated first. Fully exit and reopen the XAMPP Control Panel, then start Apache
+so it inherits the variables. Check `tools/health-check.php` for **Mailtrap SMTP:
+configured**, submit a test registration, and inspect the message in the
+Mailtrap Sandbox inbox.
 
 ## Sign in
 
@@ -187,9 +187,8 @@ it when needed; use Maya's production endpoint and production credentials only
 when deliberately moving to live payments. Maya Checkout remains subject to
 merchant approval and enabled payment methods.
 
-Mailtrap email uses its HTTPS API rather than SMTP. AES-256 still requires a
-production key-management policy and a tested data migration before it can be
-enabled safely.
+AES-256 still requires a production key-management policy and a tested data
+migration before it can be enabled safely.
 
 
 ## Analytics

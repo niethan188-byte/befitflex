@@ -185,9 +185,14 @@ no framework or frontend build step.
    For Maya sandbox checkout, also set `MAYA_PUBLIC_KEY` and `MAYA_SECRET_KEY`
    to sandbox credentials; the sandbox endpoint is the default. Set
    `MAYA_WEBHOOK_SECRET` if using the webhook, and configure that webhook in
-   Maya to `https://your-app.up.railway.app/api/maya-webhook.php`. Configure
-   Mailtrap variables (`MAILTRAP_API_TOKEN`, `MAILTRAP_FROM_EMAIL`, and
-   optional sender settings) if email delivery is needed.
+   Maya to `https://your-app.up.railway.app/api/maya-webhook.php`.
+
+   Configure the Mailtrap Sandbox SMTP variables `MAIL_MAILER=smtp`,
+   `MAIL_HOST=sandbox.smtp.mailtrap.io`, `MAIL_PORT=2525`,
+   `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION=tls`,
+   `MAIL_FROM_ADDRESS`, and `MAIL_FROM_NAME` if email delivery is needed.
+   Use the SMTP credentials shown for the Mailtrap Sandbox inbox, not an API
+   token. The verification link uses `BEFITFLEX_APP_URL` when configured.
 
 5. Deploy and inspect the Railway deployment logs. From the Railway service
    shell, run the health check to verify its live database connection, PHP

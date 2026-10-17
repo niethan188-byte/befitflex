@@ -1,64 +1,75 @@
 <?php
 declare(strict_types=1);
 
-/** Send an email through Mailtrap. Returns false when email is not configured or fails. */
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+function mailtrap_smtp_configured(): bool
+{
+    $mailer = getenv('MAIL_MAILER') ?: 'smtp';
+    $host = getenv('MAIL_HOST');
+    $username = getenv('MAIL_USERNAME');
+    $password = getenv('MAIL_PASSWORD');
+    $port = getenv('MAIL_PORT') ?: '2525';
+    $encryption = strtolower((string) (getenv('MAIL_ENCRYPTION') ?: 'tls'));
+
+    return strtolower($mailer) === 'smtp'
+        && is_string($host) && trim($host) !== ''
+        && is_string($username) && trim($username) !== ''
+        && is_string($password) && $password !== ''
+        && ctype_digit((string) $port) && (int) $port >= 1 && (int) $port <= 65535
+        && in_array($encryption, ['tls', 'ssl'], true)
+        && class_exists(PHPMailer::class);
+}
+
+/** Send an email through Mailtrap Sandbox SMTP. Returns false when unavailable or failed. */
 function send_email(string $to, string $subject, string $html, ?string $text = null): bool
 {
-    $apiKey = getenv('MAILTRAP_API_TOKEN');
-    $endpoint = getenv('MAILTRAP_API_URL') ?: 'https://send.api.mailtrap.io/api/send';
-    $fromEmail = getenv('MAILTRAP_FROM_EMAIL') ?: 'notifications@example.com';
-    $fromName = getenv('MAILTRAP_FROM_NAME') ?: 'Be Fit Flex Gym';
-    $replyTo = getenv('MAILTRAP_REPLY_TO');
-
-    if (!$apiKey || !filter_var($to, FILTER_VALIDATE_EMAIL) || !function_exists('curl_init')) {
-        error_log('Mailtrap email skipped: missing API token, invalid recipient, or cURL is disabled.');
+    if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        error_log('Mailtrap SMTP email skipped: invalid recipient.');
+        return false;
+    }
+    if (!mailtrap_smtp_configured()) {
+        error_log('Mailtrap SMTP email skipped: SMTP configuration or PHPMailer is unavailable.');
         return false;
     }
 
-    $payloadData = [
-        'from' => ['email' => $fromEmail, 'name' => $fromName],
-        'to' => [['email' => $to]],
-        'category' => 'Be Fit Flex notification',
-        'subject' => $subject,
-        'text' => $text ?: trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $html))),
-        'html' => $html,
-    ];
-    if ($replyTo && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
-        $payloadData['reply_to'] = ['email' => $replyTo];
-    }
-    $payload = json_encode($payloadData, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION);
-
-    for ($attempt = 1; $attempt <= 3; $attempt++) {
-        $curl = curl_init($endpoint);
-        curl_setopt_array($curl, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer ' . $apiKey,
-                'Content-Type: application/json',
-            ],
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_TIMEOUT => 15,
-        ]);
-
-        $response = curl_exec($curl);
-        $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $error = curl_error($curl);
-        curl_close($curl);
-
-        if ($response !== false && $status >= 200 && $status < 300) {
-            return true;
-        }
-
-        $temporary = $status === 429 || $status >= 500;
-        if (!$temporary || $attempt === 3) {
-            error_log('Mailtrap email failed: HTTP ' . $status . ($error ? ' ' . $error : ' ' . (string) $response));
-            return false;
-        }
-
-        usleep($attempt * 250000);
+    $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: 'notifications@example.com';
+    $fromName = getenv('MAIL_FROM_NAME') ?: 'Be Fit Flex Gym';
+    $replyTo = getenv('MAIL_REPLY_TO');
+    if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+        error_log('Mailtrap SMTP email skipped: invalid sender address.');
+        return false;
     }
 
-    return false;
+    try {
+        $mailer = new PHPMailer(true);
+        $mailer->isSMTP();
+        $mailer->Host = trim((string) getenv('MAIL_HOST'));
+        $mailer->SMTPAuth = true;
+        $mailer->Username = (string) getenv('MAIL_USERNAME');
+        $mailer->Password = (string) getenv('MAIL_PASSWORD');
+        $mailer->Port = (int) (getenv('MAIL_PORT') ?: '2525');
+        $mailer->SMTPSecure = strtolower((string) (getenv('MAIL_ENCRYPTION') ?: 'tls')) === 'ssl'
+            ? PHPMailer::ENCRYPTION_SMTPS
+            : PHPMailer::ENCRYPTION_STARTTLS;
+        $mailer->Timeout = 15;
+        $mailer->CharSet = PHPMailer::CHARSET_UTF8;
+        $mailer->setFrom($fromEmail, $fromName);
+        $mailer->addAddress($to);
+        if (is_string($replyTo) && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+            $mailer->addReplyTo($replyTo);
+        }
+        $mailer->Subject = $subject;
+        $mailer->isHTML(true);
+        $mailer->Body = $html;
+        $mailer->AltBody = $text ?: trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $html)));
+
+        return $mailer->send();
+    } catch (Exception $ex) {
+        error_log('Mailtrap SMTP email failed: ' . $ex->getMessage());
+        return false;
+    }
 }

@@ -63,19 +63,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
 
-            $verificationUrl = 'http://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
-              . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/')
-              . '/verify-email.php?token=' . urlencode($verificationToken);
-            send_email($email, 'Verify your Be Fit Flex Gym account',
+            $configuredBase = getenv('BEFITFLEX_APP_URL');
+            if (is_string($configuredBase) && trim($configuredBase) !== '') {
+                $base = rtrim(trim($configuredBase), '/');
+            } else {
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $base = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+                    . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+            }
+            $verificationUrl = $base . '/verify-email.php?token=' . urlencode($verificationToken);
+            $emailSent = send_email($email, 'Verify your Be Fit Flex Gym account',
               '<h2>Welcome to Be Fit Flex Gym</h2><p>Confirm your email address to activate your account.</p>'
               . '<p><a href="' . e($verificationUrl) . '">Verify my email address</a></p>'
               . '<p>This link expires in 24 hours.</p>');
 
             notify($userId, 'system', 'Welcome to Be Fit Flex Gym',
               'Your member profile ' . $memberId . ' was created. Verify your email address before signing in.',
-                'dumbbell', 'danger', 'member/dashboard.php');
+                'dumbbell', 'danger', 'member/dashboard.php', 'normal', false);
 
-            flash('Account created. Check your email to verify it before signing in.');
+            if ($emailSent) {
+                flash('Account created. Check your email to verify it before signing in.');
+            } else {
+                flash('Account created, but the verification email could not be sent. Contact the gym for help activating your account.', 'err');
+            }
             redirect('index.php');
         } catch (Throwable $ex) {
             $pdo->rollBack();

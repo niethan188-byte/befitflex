@@ -1,11 +1,13 @@
 {
     "require": {
         "dompdf/dompdf": "^3.1",
-        "chillerlan/php-qrcode": "4.3"
+        "chillerlan/php-qrcode": "4.3",
+        "phpmailer/phpmailer": "^6.10"
     },
     "scripts": {
         "smoke": "php tests/smoke.php",
         "test:maya": "php tests/maya.php",
+        "test:email": "php tests/email.php",
         "health": "php tools/health-check.php",
         "encrypt-contacts": "php tools/encrypt-contacts.php",
         "db:reset": "php tools/rebuild-database.php",

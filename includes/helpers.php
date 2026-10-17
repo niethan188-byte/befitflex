@@ -112,7 +112,8 @@ function next_id(string $table, string $col, string $prefix, int $digits): strin
 
 function notify(int $userId, string $type, string $title, string $message,
                 string $icon = 'bell', string $color = 'primary',
-                ?string $url = null, string $priority = 'normal'): void
+                ?string $url = null, string $priority = 'normal',
+                bool $deliverEmail = true): void
 {
     $pdo = db();
     $pdo->prepare(
@@ -137,7 +138,7 @@ function notify(int $userId, string $type, string $title, string $message,
         [$userId]
     );
 
-    if ($recipient && (int) $recipient['email_enabled'] === 1) {
+    if ($deliverEmail && $recipient && (int) $recipient['email_enabled'] === 1) {
         $html = '<h2>' . e($title) . '</h2><p>' . nl2br(e($message)) . '</p>';
         if (send_email((string) $recipient['email'], $title, $html)) {
             $pdo->prepare(
