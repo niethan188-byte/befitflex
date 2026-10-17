@@ -1087,6 +1087,74 @@ body.admin-analytics .grid > .panel {
     gap: 8px;
   }
 
+  /* ---------- member profile responsive layout ---------- */
+
+  body.member-profile .main,
+  body.member-profile .profile-grid,
+  body.member-profile .profile-grid > *,
+  body.member-profile .profile-preferences-grid > * {
+    min-width: 0;
+  }
+
+  body.member-profile .profile-membership-table th {
+    width: 36%;
+    vertical-align: top;
+  }
+
+  body.member-profile .profile-membership-table td {
+    overflow-wrap: anywhere;
+  }
+
+  body.member-profile .profile-preference {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    background: rgba(255,255,255,.025);
+    color: var(--text);
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+
+  body.member-profile .profile-preference input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    body.member-profile .profile-grid,
+    body.member-profile .profile-preferences-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    body.member-profile .profile-grid {
+      margin-bottom: 14px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    body.member-profile .profile-submit {
+      width: 100%;
+      justify-content: center;
+    }
+
+    body.member-profile .profile-membership-table th {
+      width: 34%;
+      padding-right: 12px;
+    }
+
+    body.member-profile .profile-membership-table th,
+    body.member-profile .profile-membership-table td {
+      padding-top: 9px;
+      padding-bottom: 9px;
+    }
+  }
+
   body.admin-analytics .rank-l {
     white-space: normal;
     overflow-wrap: anywhere;

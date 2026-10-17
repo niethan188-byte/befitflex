@@ -61,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page = 'profile';
+$bodyClass = 'member-profile';
 $title = 'My Profile';
 $subtitle = 'Your details, password and notification settings.';
 
@@ -73,10 +74,10 @@ $ck = fn(string $k) => !empty($prefs[$k]) ? 'checked' : '';
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="grid c2">
-  <div class="panel glass">
+<div class="grid c2 profile-grid">
+  <div class="panel glass profile-membership">
     <h2><i class="fa-solid fa-id-card"></i> Membership</h2>
-    <table class="kv" style="width:100%">
+    <table class="kv profile-membership-table" style="width:100%">
       <tr><th>Member ID</th><td class="mono"><?= e($me['member_id']) ?></td></tr>
       <tr><th>Email</th><td><?= e($me['email']) ?></td></tr>
       <tr><th>Plan</th><td><?= e($me['membership_type']) ?> · <?= money(MEMBERSHIP_PRICE[$me['membership_type']] ?? 0) ?></td></tr>
@@ -89,7 +90,7 @@ include __DIR__ . '/../includes/header.php';
     <p class="note" style="margin-top:14px">To update your membership details or plan, speak to the front desk.</p>
   </div>
 
-  <div class="panel glass">
+  <div class="panel glass profile-settings">
     <h2><i class="fa-solid fa-user-pen"></i> Edit your details</h2>
     <form method="post">
       <?= csrf_field() ?>
@@ -98,7 +99,7 @@ include __DIR__ . '/../includes/header.php';
         <input type="text" name="member_name" required value="<?= e($me['member_name']) ?>"></div>
       <div class="field-row"><label>Contact number</label>
         <input type="tel" name="contact_number" required value="<?= e(member_contact($me)) ?>"></div>
-      <button class="btn red"><i class="fa-solid fa-check"></i> Save changes</button>
+      <button class="btn red profile-submit"><i class="fa-solid fa-check"></i> Save changes</button>
     </form>
 
     <h2 style="margin-top:28px"><i class="fa-solid fa-key"></i> Change password</h2>
@@ -109,23 +110,23 @@ include __DIR__ . '/../includes/header.php';
         <input type="password" name="current_password" required></div>
       <div class="field-row"><label>New password</label>
         <input type="password" name="new_password" required minlength="6"></div>
-      <button class="btn"><i class="fa-solid fa-lock"></i> Update password</button>
+      <button class="btn profile-submit"><i class="fa-solid fa-lock"></i> Update password</button>
     </form>
   </div>
 </div>
 
-<div class="panel glass">
+<div class="panel glass profile-preferences">
   <h2><i class="fa-solid fa-bell"></i> Notification preferences</h2>
   <form method="post">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="prefs">
-    <div class="grid c2">
+    <div class="grid c2 profile-preferences-grid">
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">In-app</div>
         <?php foreach (['in_app_payments' => 'Payments', 'in_app_reservations' => 'Reservations',
                         'in_app_account' => 'Account', 'in_app_system' => 'System messages'] as $k => $lbl): ?>
-          <label style="display:flex;gap:10px;align-items:center;margin-bottom:10px;font-size:13.5px;color:var(--text)">
-            <input type="checkbox" name="<?= $k ?>" value="1" style="width:auto" <?= $ck($k) ?>> <?= $lbl ?>
+          <label class="profile-preference">
+            <input type="checkbox" name="<?= $k ?>" value="1" <?= $ck($k) ?>> <span><?= $lbl ?></span>
           </label>
         <?php endforeach; ?>
       </div>
@@ -133,13 +134,13 @@ include __DIR__ . '/../includes/header.php';
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Email</div>
         <?php foreach (['email_payments' => 'Payments', 'email_reservations' => 'Reservations',
                         'email_account' => 'Account', 'email_system' => 'System messages'] as $k => $lbl): ?>
-          <label style="display:flex;gap:10px;align-items:center;margin-bottom:10px;font-size:13.5px;color:var(--text)">
-            <input type="checkbox" name="<?= $k ?>" value="1" style="width:auto" <?= $ck($k) ?>> <?= $lbl ?>
+          <label class="profile-preference">
+            <input type="checkbox" name="<?= $k ?>" value="1" <?= $ck($k) ?>> <span><?= $lbl ?></span>
           </label>
         <?php endforeach; ?>
       </div>
     </div>
-    <button class="btn red" style="margin-top:14px"><i class="fa-solid fa-check"></i> Save preferences</button>
+    <button class="btn red profile-submit" style="margin-top:14px"><i class="fa-solid fa-check"></i> Save preferences</button>
   </form>
 </div>
 
