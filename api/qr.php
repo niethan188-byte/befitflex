@@ -54,6 +54,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $options = new chillerlan\QRCode\QROptions([
     'outputType' => chillerlan\QRCode\QRCode::OUTPUT_MARKUP_SVG,
     'eccLevel' => chillerlan\QRCode\QRCode::ECC_M,
+    'dataModeOverride' => 'Byte',
     'addQuietzone' => true,
     'imageBase64' => false,
 ]);
