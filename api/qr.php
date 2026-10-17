@@ -3,11 +3,14 @@ declare(strict_types=1);
 
 require __DIR__ . '/../includes/auth.php';
 
+header('Cache-Control: private, no-store, max-age=0');
+header('Pragma: no-cache');
+
 $type = (string) ($_GET['type'] ?? '');
 $id = strtoupper(trim((string) ($_GET['id'] ?? '')));
 $payload = '';
 
-if ($type === 'member' && preg_match('/^MEM\d{4,}$/', $id)) {
+if ($type === 'member' && preg_match('/^(?:MEM|DUMMY)\d{4,}$/', $id)) {
     $u = require_role('member', 'admin');
     if ($u['type'] === 'member' && ($_SESSION['member_id'] ?? '') !== $id) {
         http_response_code(403);
@@ -17,7 +20,7 @@ if ($type === 'member' && preg_match('/^MEM\d{4,}$/', $id)) {
         "SELECT m.member_id, m.status,
                 (SELECT p.payment_status FROM payments p
                    WHERE p.member_id = m.member_id
-                   ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+                   ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status
            FROM members m WHERE m.member_id = ?",
         [$id]
     );

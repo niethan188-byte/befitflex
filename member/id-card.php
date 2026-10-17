@@ -13,7 +13,10 @@ $me = row(
   "SELECT m.*,
       (SELECT p.payment_status FROM payments p
          WHERE p.member_id = m.member_id
-         ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+         ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status,
+      (SELECT p.updated_at FROM payments p
+         WHERE p.member_id = m.member_id
+         ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_updated_at
      FROM members m WHERE m.member_id = ?",
   [$mid]
 );
@@ -51,7 +54,14 @@ include __DIR__ . '/../includes/header.php';
 
         <div class="idcard-qr-frame">
           <?php if ($qrAvailable): ?>
-            <img src="<?= $b ?>api/qr.php?type=member&amp;id=<?= rawurlencode((string) $mid) ?>" alt="Member check-in QR code" width="120" height="120">
+            <img
+              src="<?= $b ?>api/qr.php?type=member&amp;id=<?= rawurlencode((string) $mid) ?>&amp;v=<?= rawurlencode((string) ($me['latest_payment_updated_at'] ?? '')) ?>"
+              alt="Member check-in QR code"
+              width="120"
+              height="120"
+              onerror="this.hidden=true;this.nextElementSibling.hidden=false"
+            >
+            <span class="qr-load-error" role="status" hidden>QR code could not be loaded. Refresh the page or show your member number at the front desk.</span>
           <?php else: ?>
             <span style="font-size:11px;color:#333;text-align:center">QR available when membership is active and paid</span>
           <?php endif; ?>

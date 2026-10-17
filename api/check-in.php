@@ -67,7 +67,7 @@ if ($passId !== '' && preg_match('/^DAY\d{5,}$/', $passId)) {
     exit;
 }
 
-if (!preg_match('/^MEM\d{4,}$/', $memberId)) {
+if (!preg_match('/^(?:MEM|DUMMY)\d{4,}$/', $memberId)) {
     http_response_code(422);
     exit(json_encode(['ok' => false, 'error' => 'invalid_member_id']));
 }
@@ -76,7 +76,7 @@ $member = row(
     "SELECT m.member_id, m.member_name, m.status,
             (SELECT p.payment_status FROM payments p
                WHERE p.member_id = m.member_id
-               ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+               ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status
        FROM members m WHERE m.member_id = ?",
     [$memberId]
 );

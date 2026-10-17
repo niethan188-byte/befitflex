@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "SELECT m.member_id, m.membership_type, m.status,
                         (SELECT p.payment_status FROM payments p
                           WHERE p.member_id = m.member_id
-                          ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+                          ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status
                    FROM members m WHERE m.member_id = ?",
                 [$memberId]
             )
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "SELECT m.member_id, m.membership_type, m.status, m.contact_number, m.contact_number_encrypted,
                         (SELECT p.payment_status FROM payments p
                           WHERE p.member_id = m.member_id
-                          ORDER BY p.created_at DESC LIMIT 1) latest_payment_status
+                          ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status
                    FROM members m WHERE m.member_name = ?",
                 [$name]
             ) as $candidate) {

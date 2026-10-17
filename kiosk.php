@@ -108,7 +108,7 @@ document.addEventListener('keydown', (e) => {
     const scanned = scanField.value.trim() || scan;
     scanField.value = '';
     scan = '';
-    if (/^(?:BEFITFLEX:)?(?:MEM\d{4,}|DAY\d{5,}|\d{4,})$/i.test(scanned)) {
+    if (/^(?:BEFITFLEX:)?(?:MEM\d{4,}|DUMMY\d{4,}|DAY\d{5,}|\d{4,})$/i.test(scanned)) {
       buf = '';
       paint();
       submit(scanned);
@@ -126,7 +126,7 @@ document.addEventListener('keydown', (e) => {
 
 function parseScannedCode(raw) {
   const code = raw.trim().toUpperCase().replace(/^BEFITFLEX:/, '');
-  if (/^MEM\d{4,}$/.test(code)) return { id: code, payload: { member_id: code } };
+  if (/^(?:MEM|DUMMY)\d{4,}$/.test(code)) return { id: code, payload: { member_id: code } };
   if (/^DAY\d{5,}$/.test(code)) return { id: code, payload: { pass_id: code } };
   if (/^9\d{5}$/.test(code)) return { id: 'DAY' + code.slice(1), payload: { pass_id: 'DAY' + code.slice(1) } };
   if (/^\d{4,}$/.test(code)) {

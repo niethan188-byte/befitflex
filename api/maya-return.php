@@ -35,7 +35,7 @@ if ($payment['payment_status'] === 'Paid') {
 
 $checkoutId = (string) ($payment['maya_checkout_id'] ?? '');
 if ($checkoutId === '') {
-    flash('No Maya checkout reference is saved for this payment. Its status remains unchanged.', 'err');
+    flash('No Maya checkout ID is saved, so Maya cannot be queried by payment reference. Its status remains unchanged. Contact the gym with your receipt for manual verification in Maya.', 'err');
     redirect($paymentsUrl);
 }
 
@@ -47,19 +47,28 @@ if (!$result['ok']) {
 
 $checkout = $result['data'];
 if (!maya_checkout_confirms_payment($checkout, $payment, $checkoutId)) {
-    if (($checkout['requestReferenceNumber'] ?? null) !== $paymentId) {
+    $mismatch = maya_checkout_payment_mismatch($checkout, $payment, $checkoutId);
+    if ($mismatch === 'payment reference') {
         error_log('Maya status lookup reference mismatch for payment ' . $paymentId);
         flash('Maya returned a different payment reference. The payment status was not changed.', 'err');
-    } elseif (!maya_checkout_id_matches($checkout, $payment, $checkoutId)) {
+    } elseif ($mismatch === 'checkout reference') {
         error_log('Maya status lookup checkout ID mismatch for payment ' . $paymentId);
         flash('Maya returned a conflicting checkout ID. The payment status was not changed.', 'err');
-    } elseif (($checkout['paymentStatus'] ?? null) === 'PAYMENT_SUCCESS'
-        && strtoupper((string) ($checkout['totalAmount']['currency'] ?? '')) !== 'PHP') {
+    } elseif ($mismatch === 'currency') {
         error_log('Maya status lookup currency mismatch for payment ' . $paymentId);
         flash('Maya returned a different currency. The payment status was not changed.', 'err');
-    } elseif (($checkout['paymentStatus'] ?? null) === 'PAYMENT_SUCCESS') {
-        error_log('Maya status lookup amount mismatch for payment ' . $paymentId);
-        flash('Maya returned a different amount. The payment status was not changed.', 'err');
+    } elseif ($mismatch === 'amount') {
+        $expectedCents = maya_amount_in_cents($payment['amount'] ?? null);
+        $returnedCents = maya_checkout_amount_in_cents($checkout);
+        error_log(
+            'Maya status lookup amount mismatch for payment ' . $paymentId
+            . ' (expected cents=' . ($expectedCents === null ? 'invalid' : $expectedCents)
+            . ', returned cents=' . ($returnedCents === null ? 'invalid' : $returnedCents) . ').'
+        );
+        flash('Maya’s verified amount does not match this invoice exactly. The payment status was not changed. Do not pay again; contact the gym to check the Maya receipt and merchant record.', 'err');
+    } elseif (maya_checkout_status($checkout) === 'PAYMENT_SUCCESS') {
+        error_log('Maya status lookup did not include all required payment details for payment ' . $paymentId);
+        flash('Maya confirmed payment success but did not return all details needed to verify it. The payment status was not changed; contact the gym with your Maya receipt.', 'err');
     } else {
         flash('Maya has not confirmed a successful payment yet. Please check again shortly.', 'err');
     }

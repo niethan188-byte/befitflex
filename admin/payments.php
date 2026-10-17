@@ -8,12 +8,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['action'] ?? '';
 
     if ($act === 'create') {
+        $paymentMethod = (string) ($_POST['payment_method'] ?? '');
+        $paymentStatus = (string) ($_POST['payment_status'] ?? '');
+        if (!maya_manual_payment_creation_allowed($paymentMethod, $paymentStatus)) {
+            flash('Maya payments cannot be recorded as paid manually. Save the payment as Pending and wait for Maya server-side confirmation.', 'err');
+            redirect('payments.php');
+        }
+
         $pid = next_id('payments', 'payment_id', 'PAY', 5);
         db()->prepare(
             'INSERT INTO payments (payment_id,member_id,amount,payment_method,payment_status,payment_date,notes)
              VALUES (?,?,?,?,?,?,?)'
-        )->execute([$pid, $_POST['member_id'], (float) $_POST['amount'], $_POST['payment_method'],
-                    $_POST['payment_status'], $_POST['payment_date'] ?: null, $_POST['notes']]);
+        )->execute([$pid, $_POST['member_id'], (float) $_POST['amount'], $paymentMethod,
+                    $paymentStatus, $_POST['payment_date'] ?: null, $_POST['notes']]);
         log_activity('Record payment', 'Payments', $pid);
         flash('Payment ' . $pid . ' recorded.');
     }
@@ -120,9 +127,32 @@ include __DIR__ . '/../includes/header.php';
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (!empty($p['maya_checkout_id'])): ?>
               <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i></a>
+              <?php if (maya_payment_flow_configured()): ?>
+                <form method="post" action="../api/maya-retry.php" style="display:inline">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
+                  <button class="btn sm red" type="submit" title="Retry Maya payment"><i class="fa-solid fa-wallet"></i></button>
+                </form>
+              <?php endif; ?>
             <?php endif; ?>
             <?php if (empty($p['maya_checkout_id']) && $p['payment_method'] === 'Maya'): ?>
-              <span class="note" title="Maya cannot verify this payment without its saved checkout ID.">No Maya checkout reference</span>
+              <span class="note" title="No checkout ID is saved, so Maya status cannot be checked. Ask for the receipt and verify it in Maya before taking further action.">No saved Maya checkout ID; verify receipt with Maya</span>
+            <?php endif; ?>
+            <?php if (empty($p['maya_checkout_id'])): ?>
+              <details style="display:inline-block">
+                <summary class="btn sm">Verify existing Maya checkout</summary>
+                <p class="note">Enter the checkout ID from the member's receipt or Maya merchant dashboard. The server will verify its payment reference, amount, and currency before linking it.</p>
+                <?php if (maya_payment_flow_configured()): ?>
+                  <form method="post" action="../api/maya-recover.php" class="payment-action">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
+                    <input type="text" name="checkout_id" maxlength="100" required placeholder="Maya checkout ID">
+                    <button class="btn sm" type="submit">Verify and link</button>
+                  </form>
+                <?php else: ?>
+                  <p class="note">Configure both Maya API keys and PHP cURL before trying to verify a checkout.</p>
+                <?php endif; ?>
+              </details>
             <?php endif; ?>
             <?php if (!empty($p['maya_checkout_id']) || $p['payment_method'] === 'Maya'): ?>
               <span class="note" title="Maya-linked payments can only be confirmed by Maya.">Maya confirmation required</span>

@@ -39,9 +39,9 @@ include __DIR__ . '/../includes/header.php';
   <h2><i class="fa-solid fa-circle-info"></i> How to settle</h2>
   <p class="note">Pay at the front desk in cash or by card, or use Maya's secure online checkout
   below. Online payments are recorded after Maya confirms the transaction.</p>
-  <?php if (maya_configured() && !getenv('MAYA_SECRET_KEY')): ?>
-  <p class="note">Online checkout is enabled, but automatic payment verification needs the Maya
-  secret API key to be configured.</p>
+  <?php if (!maya_payment_flow_configured()): ?>
+  <p class="note">Online Maya checkout is unavailable until the Maya public and secret API keys
+  are configured and PHP cURL is enabled. Payments will remain pending without server-side verification.</p>
   <?php endif; ?>
 </div>
 <?php endif; ?>
@@ -68,16 +68,24 @@ include __DIR__ . '/../includes/header.php';
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (!empty($p['maya_checkout_id'])): ?>
             <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-rotate"></i> Check Maya status</a>
-            <?php else: ?>
-            <span class="note">No Maya checkout reference is saved, so this page cannot check an older session. If you already paid through Maya, do not pay again; contact the gym with your receipt so staff can verify it.</span>
+            <?php if (maya_payment_flow_configured()): ?>
+            <form method="post" action="../api/maya-retry.php" class="payment-action">
+              <?= csrf_field() ?><input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
+              <button class="btn sm red" type="submit"><i class="fa-solid fa-wallet"></i> Retry Maya payment</button>
+            </form>
             <?php endif; ?>
-            <?php if (maya_configured() && empty($p['maya_checkout_id'])): ?>
+            <?php elseif ($p['payment_method'] === 'Maya'): ?>
+            <span class="note">No Maya checkout ID is saved, so this payment cannot be checked safely. Do not pay again; contact the gym with your Maya receipt for verification.</span>
+            <?php else: ?>
+            <span class="note">No Maya checkout ID is saved, so this page cannot check an older session. If you already paid, do not start another checkout; contact the gym with your receipt. Staff can enter an existing checkout ID from the receipt or Maya dashboard for server-side verification.</span>
+            <?php endif; ?>
+            <?php if (maya_payment_flow_configured() && empty($p['maya_checkout_id']) && $p['payment_method'] !== 'Maya'): ?>
             <form method="post" action="../api/maya-checkout.php" class="payment-action">
               <?= csrf_field() ?><input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
               <button class="btn sm red" type="submit"><i class="fa-solid fa-wallet"></i> Pay online with Maya</button>
             </form>
-            <?php elseif (!maya_configured()): ?>
-            <span class="note">Online checkout unavailable</span>
+            <?php elseif (!maya_payment_flow_configured() && empty($p['maya_checkout_id']) && $p['payment_method'] !== 'Maya'): ?>
+            <span class="note">Online checkout unavailable until Maya verification is configured</span>
             <?php endif; ?>
           <?php endif; ?>
         </td>

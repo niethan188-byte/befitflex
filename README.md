@@ -129,14 +129,16 @@ docs/                walkthrough, screen map, theme notes
 ### Implementation boundaries
 
 The Maya Checkout integration uses the sandbox by default. Members can start
-hosted checkout from their payment history when the Maya public API key is
-configured. On return, the app retrieves the checkout from Maya and marks it paid
+hosted checkout from their payment history when both Maya API keys are configured
+and PHP cURL is enabled. On return, the app retrieves the checkout from Maya and marks it paid
 only when the server confirms its successful status, payment reference, amount,
 currency, and saved checkout ID. A signed webhook can confirm a payment only
 when its checkout ID, payment reference, amount, and currency also match the
 local pending payment.
 Administrators can still record non-Maya payments manually, but Maya-linked
-payments cannot be manually marked Paid.
+payments cannot be manually marked Paid. When a checkout ID is saved, the payment
+page offers a retry action; it first checks the existing checkout with Maya and
+starts a new one only after Maya confirms failure, cancellation, or expiry.
 Available payment methods depend on the Maya merchant account.
 
 To test online payments:
@@ -167,9 +169,14 @@ not guess an ID from a payment reference or trust a browser redirect. A complete
 validly signed webhook can still match and save a previously missing ID when it
 includes the successful status, checkout ID, payment reference, amount, and
 currency. On localhost Maya cannot deliver that webhook; if no such verified
-event is received, staff must check the member's receipt in the Maya merchant
-dashboard before recording any manual resolution. Do not ask the member to pay
-again until that check is complete.
+event is received, staff can enter the checkout ID from the receipt or Maya
+merchant dashboard using **Verify existing Maya checkout** on the admin payment
+row. The server queries Maya and links it only if the checkout ID, payment
+reference, amount, and currency match; it marks the payment Paid only if Maya
+also reports `PAYMENT_SUCCESS`. A receipt or merchant-dashboard review alone does
+not change the app's payment status. If no checkout ID can be recovered, leave
+the payment pending and do not ask the member to pay again until the charge is
+resolved.
 
 The default checkout endpoint is Maya's sandbox. `MAYA_CHECKOUT_URL` can override
 it when needed; use Maya's production endpoint and production credentials only

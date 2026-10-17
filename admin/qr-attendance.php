@@ -150,7 +150,7 @@ startButton.addEventListener('click', () => cameraStream ? stopCamera() : startC
 
 async function submit(rawCode) {
   const code = rawCode.trim().toUpperCase().replace(/^BEFITFLEX:/, '');
-  if (!/^MEM\d{4,}$/.test(code)) {
+  if (!/^(?:MEM|DUMMY)\d{4,}$/.test(code)) {
     showResult('err', 'circle-exclamation', 'QR not recognized', 'Show a valid member QR code.');
     return;
   }

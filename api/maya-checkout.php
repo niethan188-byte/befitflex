@@ -24,6 +24,14 @@ if (!$payment || ($u['type'] === 'member' && $payment['member_id'] !== ($_SESSIO
 if (!empty($payment['maya_checkout_id'])) {
     redirect('maya-return.php?payment_id=' . rawurlencode($paymentId));
 }
+if ($payment['payment_method'] === 'Maya') {
+    flash('This Maya payment has no saved checkout ID. Contact the gym with your receipt so staff can verify the existing checkout instead of creating another one.', 'err');
+    redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
+}
+if (!maya_payment_flow_configured()) {
+    flash('Maya checkout requires public and secret API keys and PHP cURL so payment status can be verified.', 'err');
+    redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
+}
 
 $configuredBase = getenv('BEFITFLEX_APP_URL');
 if (is_string($configuredBase) && trim($configuredBase) !== '') {
@@ -40,7 +48,7 @@ if (!$result['ok']) {
 }
 
 $redirect = $result['data']['redirectUrl'] ?? $result['data']['checkoutUrl'] ?? null;
-$checkoutId = $result['data']['checkoutId'] ?? $result['data']['id'] ?? null;
+$checkoutId = $result['data']['checkoutId'] ?? null;
 if (!is_string($redirect) || filter_var($redirect, FILTER_VALIDATE_URL) === false
     || strtolower((string) parse_url($redirect, PHP_URL_SCHEME)) !== 'https') {
     flash('Maya returned no checkout URL.', 'err');
@@ -50,6 +58,7 @@ if (!is_string($checkoutId) || trim($checkoutId) === '') {
     flash('Maya returned no checkout reference. Please try again.', 'err');
     redirect($u['type'] === 'member' ? '../member/payments.php' : '../admin/payments.php');
 }
+$checkoutId = trim($checkoutId);
 $stmt = db()->prepare(
     "UPDATE payments SET maya_checkout_id = ?
       WHERE payment_id = ? AND payment_status IN ('Pending', 'Overdue')
