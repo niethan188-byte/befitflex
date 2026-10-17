@@ -148,6 +148,22 @@ no framework or frontend build step.
    existing BeFitFlex database, back it up first and apply only the required
    SQL from `database/upgrade.sql`.
 
+   To initialize a fresh database and then add the 100 dummy members and
+   payments from `tools/seed-dummy-members.php`, open the web service's Railway
+   shell and run this once:
+
+   ```sh
+   composer railway:init
+   ```
+
+   This runs `tools/rebuild-database.php` followed by
+   `tools/seed-dummy-members.php`, using the service's configured `MYSQL*`
+   variables. It drops and recreates `befitflex_gym`; **do not configure it as
+   a build, start, or pre-deploy command**, and never run it on a database
+   containing data you need. The dummy-member seeder also intentionally exits
+   with an error if dummy accounts already exist. To load only the schema and
+   built-in demo records, run `composer db:reset` instead.
+
 3. Add persistent storage for announcement media. Create a Railway volume for
    the web service and mount it at `/var/www/html/assets/uploads`. Without a
    volume, uploaded files can disappear when the service is redeployed. Large

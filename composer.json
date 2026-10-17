@@ -8,6 +8,10 @@
         "test:maya": "php tests/maya.php",
         "health": "php tools/health-check.php",
         "encrypt-contacts": "php tools/encrypt-contacts.php",
-        "db:reset": "php tools/rebuild-database.php"
+        "db:reset": "php tools/rebuild-database.php",
+        "railway:init": [
+            "@db:reset",
+            "@php tools/seed-dummy-members.php"
+        ]
     }
 }
