@@ -14,6 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $type    = (string) ($_POST['membership_type'] ?? 'Monthly');
     $pass    = (string) ($_POST['password'] ?? '');
     $consent = !empty($_POST['consent']);
+    $logRegistrationError = static function (string $context, Throwable $ex) use ($name, $email, $contact, $pass): void {
+        $message = str_replace(
+            array_values(array_filter([$name, $email, $contact, $pass], static fn (string $value): bool => $value !== '')),
+            '[redacted]',
+            $ex->getMessage()
+        );
+        error_log($context . ': ' . get_class($ex) . ': ' . $message);
+    };
 
     $errors = [];
     if ($name === '')                              $errors[] = 'Your full name is required.';
@@ -31,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       flash('PII encryption is unavailable. Configure BEFITFLEX_ENCRYPTION_KEY for Apache, then restart Apache from the XAMPP Control Panel.', 'err');
     } else {
         $pdo = db();
-        $pdo->beginTransaction();
         try {
+            $pdo->beginTransaction();
             $verificationToken = bin2hex(random_bytes(32));
             $pdo->prepare(
               'INSERT INTO users (email, password, user_type, email_verification_token, email_verification_expires_at)
@@ -62,35 +70,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            'Consent given at online enrollment on ' . date('Y-m-d')]);
 
             $pdo->commit();
-
-            $configuredBase = getenv('BEFITFLEX_APP_URL');
-            if (is_string($configuredBase) && trim($configuredBase) !== '') {
-                $base = rtrim(trim($configuredBase), '/');
-            } else {
-                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $base = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
-                    . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+        } catch (Throwable $ex) {
+            if ($pdo->inTransaction()) {
+                try {
+                    $pdo->rollBack();
+                } catch (Throwable $rollbackError) {
+                    $logRegistrationError('Account registration rollback failed', $rollbackError);
+                }
             }
-            $verificationUrl = $base . '/verify-email.php?token=' . urlencode($verificationToken);
+            $logRegistrationError('Account registration transaction failed', $ex);
+            flash('Something went wrong creating the account. Please try again.', 'err');
+            redirect('register.php');
+        }
+
+        $configuredBase = getenv('BEFITFLEX_APP_URL');
+        if (is_string($configuredBase) && trim($configuredBase) !== '') {
+            $base = rtrim(trim($configuredBase), '/');
+        } else {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $base = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+                . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+        }
+        $verificationUrl = $base . '/verify-email.php?token=' . urlencode($verificationToken);
+        try {
             $emailSent = send_email($email, 'Verify your Be Fit Flex Gym account',
               '<h2>Welcome to Be Fit Flex Gym</h2><p>Confirm your email address to activate your account.</p>'
               . '<p><a href="' . e($verificationUrl) . '">Verify my email address</a></p>'
               . '<p>This link expires in 24 hours.</p>');
+        } catch (Throwable $ex) {
+            $logRegistrationError('Account verification email failed', $ex);
+            $emailSent = false;
+        }
 
+        try {
             notify($userId, 'system', 'Welcome to Be Fit Flex Gym',
               'Your member profile ' . $memberId . ' was created. Verify your email address before signing in.',
                 'dumbbell', 'danger', 'member/dashboard.php', 'normal', false);
-
-            if ($emailSent) {
-                flash('Account created. Check your email to verify it before signing in.');
-            } else {
-                flash('Account created, but the verification email could not be sent. Contact the gym for help activating your account.', 'err');
-            }
-            redirect('index.php');
         } catch (Throwable $ex) {
-            $pdo->rollBack();
-            flash('Something went wrong creating the account. Please try again.', 'err');
+            $logRegistrationError('Account welcome notification failed', $ex);
         }
+
+        if ($emailSent) {
+            flash('Account created. Check your email to verify it before signing in.');
+        } else {
+            flash('Account created, but the verification email could not be sent. Contact the gym for help activating your account.', 'err');
+        }
+        redirect('index.php');
     }
 }
 
