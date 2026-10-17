@@ -3,10 +3,19 @@ FROM php:8.3-apache
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libcurl4-openssl-dev libonig-dev libpng-dev libxml2-dev libzip-dev \
     && docker-php-ext-install -j"$(nproc)" curl dom gd mbstring mysqli pdo_mysql zip \
-    && for mpm in event worker; do \
-        if [ -e "/etc/apache2/mods-enabled/mpm_${mpm}.load" ]; then a2dismod "mpm_${mpm}"; fi; \
+    && for module in /etc/apache2/mods-enabled/mpm_*.load; do \
+        [ -e "$module" ] || continue; \
+        mpm="$(basename "$module" .load)"; \
+        if [ "$mpm" != "mpm_prefork" ]; then a2dismod "$mpm"; fi; \
     done \
     && a2enmod mpm_prefork \
+    && mpm_count="$(apache2ctl -M 2>&1 | grep -Ec ' mpm_(event|worker|prefork)_module' || true)" \
+    && if [ "$mpm_count" -ne 1 ]; then \
+        echo "Expected exactly one Apache MPM, found $mpm_count." >&2; \
+        apache2ctl -M >&2; \
+        exit 1; \
+    fi \
+    && apache2ctl -M 2>&1 | grep -q ' mpm_prefork_module' \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
