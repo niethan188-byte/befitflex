@@ -30,7 +30,7 @@ CREATE TABLE members (
     member_id VARCHAR(50) PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     member_name VARCHAR(255) NOT NULL,
-    contact_number VARCHAR(20) NOT NULL,
+    contact_number TEXT NOT NULL,
     contact_number_encrypted TEXT NULL,
     email VARCHAR(255) NOT NULL,
     membership_type ENUM('Monthly') NOT NULL,

@@ -11,6 +11,13 @@ $columnNames = array_column($columns, 'Field');
 $checks['email verification schema'] = count(array_intersect([
     'email_verified_at', 'email_verification_token', 'email_verification_expires_at',
 ], $columnNames)) === 3;
+$memberColumns = db()->query('SHOW COLUMNS FROM members')->fetchAll();
+$contactColumn = array_values(array_filter(
+    $memberColumns,
+    static fn(array $column): bool => $column['Field'] === 'contact_number'
+))[0] ?? null;
+$checks['member contact column supports encrypted values'] = $contactColumn !== null
+    && strtolower((string) $contactColumn['Type']) === 'text';
 $checks['admin/member roles only'] = (int) scalar(
     "SELECT COUNT(*) FROM users WHERE user_type NOT IN ('admin','member')"
 ) === 0 && (int) scalar("SELECT COUNT(*) FROM users WHERE user_type IN ('admin','member')") > 0;

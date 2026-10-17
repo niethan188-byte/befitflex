@@ -87,6 +87,12 @@ if ($connection->errno) {
     exit(1);
 }
 
+if (!$connection->query("ALTER TABLE `{$database}`.`members` MODIFY `contact_number` TEXT NOT NULL")) {
+    fwrite(STDERR, "Failed to prepare member contact column for encrypted values: {$connection->error}" . PHP_EOL);
+    $connection->close();
+    exit(1);
+}
+
 $connection->close();
 
 echo "Database '{$database}' rebuilt successfully from {$sqlPath}." . PHP_EOL;

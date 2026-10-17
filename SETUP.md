@@ -61,6 +61,13 @@ composer install
 This installs Dompdf for downloadable payment invoices.
 
 For an existing database, import `database/upgrade.sql` after the main schema.
+The member `contact_number` column must be `TEXT` because the application stores
+the encrypted contact value there for compatibility. Existing deployments
+using the original `VARCHAR(20)` schema must widen it before registration:
+
+```sql
+ALTER TABLE members MODIFY contact_number TEXT NOT NULL;
+```
 
 Configure `BEFITFLEX_ENCRYPTION_KEY` before creating accounts or saving member
 contact details. The key is required by the web application. The other variables
@@ -95,6 +102,8 @@ composer health
 
 The browser application and the CLI must both report PII encryption as
 `configured`; otherwise Apache cannot decrypt protected contact numbers.
+`composer smoke` also checks that the member contact column can hold the
+encrypted value.
 
 After starting MySQL, run `composer encrypt-contacts` to replace the legacy
 plaintext contact values in `members.contact_number` with encrypted ciphertext.
