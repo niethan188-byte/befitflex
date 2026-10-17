@@ -95,11 +95,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
         }
         $verificationUrl = $base . '/verify-email.php?token=' . urlencode($verificationToken);
+        $escapedVerificationUrl = e($verificationUrl);
+        $verificationHtml =
+            '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            . '<title>Verify your email</title></head>'
+            . '<body style="margin:0;padding:0;background:#f1f3f5;font-family:Arial,Helvetica,sans-serif;color:#20242a">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f3f5;padding:32px 12px">'
+            . '<tr><td align="center">'
+            . '<table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden">'
+            . '<tr><td style="height:7px;background:#e53935;font-size:0;line-height:0">&nbsp;</td></tr>'
+            . '<tr><td style="padding:30px 36px 12px">'
+            . '<p style="margin:0;color:#e53935;font-size:13px;font-weight:bold;letter-spacing:1.5px">BE FIT FLEX GYM</p>'
+            . '<h1 style="margin:22px 0 12px;font-size:27px;line-height:1.25;color:#17191d">Welcome, ' . e($name) . '!</h1>'
+            . '<p style="margin:0;color:#555d68;font-size:16px;line-height:1.65">Thanks for joining us. Confirm your email address to finish setting up your member account.</p>'
+            . '</td></tr>'
+            . '<tr><td align="center" style="padding:26px 36px 22px">'
+            . '<a href="' . $escapedVerificationUrl . '" style="display:inline-block;padding:15px 28px;background:#e53935;border-radius:7px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold">Verify my email address</a>'
+            . '</td></tr>'
+            . '<tr><td style="padding:0 36px 28px">'
+            . '<p style="margin:0 0 10px;color:#68707b;font-size:13px;line-height:1.6">This secure link expires in 24 hours. If you didn’t create this account, you can ignore this email.</p>'
+            . '<p style="margin:18px 0 6px;color:#68707b;font-size:12px">If the button doesn’t work, copy and paste this link into your browser:</p>'
+            . '<p style="margin:0;word-break:break-all;font-size:12px;line-height:1.6"><a href="' . $escapedVerificationUrl . '" style="color:#c62828">' . $escapedVerificationUrl . '</a></p>'
+            . '</td></tr>'
+            . '<tr><td style="padding:18px 36px;background:#f8f8f9;border-top:1px solid #eceef0">'
+            . '<p style="margin:0;color:#7a818b;font-size:12px;line-height:1.6">Be Fit Flex Gym · Santa Rosa and Cabuyao, Laguna</p>'
+            . '</td></tr></table>'
+            . '</td></tr></table></body></html>';
+        $verificationText = "Welcome to Be Fit Flex Gym, {$name}!\n\n"
+            . "Confirm your email address to finish setting up your member account:\n"
+            . $verificationUrl . "\n\n"
+            . "This secure link expires in 24 hours. If you didn't create this account, you can ignore this email.\n\n"
+            . "Be Fit Flex Gym · Santa Rosa and Cabuyao, Laguna";
         try {
-            $emailSent = send_email($email, 'Verify your Be Fit Flex Gym account',
-              '<h2>Welcome to Be Fit Flex Gym</h2><p>Confirm your email address to activate your account.</p>'
-              . '<p><a href="' . e($verificationUrl) . '">Verify my email address</a></p>'
-              . '<p>This link expires in 24 hours.</p>');
+            $emailSent = send_email(
+                $email,
+                'Verify your Be Fit Flex Gym email address',
+                $verificationHtml,
+                $verificationText
+            );
         } catch (Throwable $ex) {
             $logRegistrationError('Account verification email failed', $ex);
             $emailSent = false;
