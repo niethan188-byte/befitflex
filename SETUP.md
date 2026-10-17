@@ -111,6 +111,79 @@ and a publicly reachable HTTPS webhook endpoint. Apply `database/upgrade.sql`
 to add the Maya checkout reference column before testing online payments. Do not
 use the default mobile API secret outside local development.
 
+## Deploy to Railway
+
+The repository includes a Dockerfile for PHP 8.3 with Apache and the required
+PHP extensions. Connect the GitHub repository to Railway and deploy the project
+root; Railway will build the root `Dockerfile`. The container listens on
+Railway's `PORT` and serves the app over Railway's public HTTPS domain. There is
+no framework or frontend build step.
+
+1. Add a Railway MySQL service and connect it to the web service. In the web
+   service's **Variables**, add references to the database service variables
+   (replace `MySQL` with that service's name):
+
+   ```text
+   MYSQLHOST=${{MySQL.MYSQLHOST}}
+   MYSQLPORT=${{MySQL.MYSQLPORT}}
+   MYSQLDATABASE=befitflex_gym
+   MYSQLUSER=${{MySQL.MYSQLUSER}}
+   MYSQLPASSWORD=${{MySQL.MYSQLPASSWORD}}
+   ```
+
+   `befitflex_gym` is the database name created by the seed SQL. Ensure the
+   Railway MySQL user can create and access it; if the service restricts the
+   user to its pre-created database, use a compatible database/user or adapt
+   the schema import for that database before deployment.
+
+   The app also accepts `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and
+   `DB_PASSWORD`. Local XAMPP defaults are retained when none are set.
+
+2. Initialize the Railway database with the schema in
+   `database/befitflex_gym.sql`. **This is a destructive demo seed**: it drops
+   and recreates `befitflex_gym`, including seeded demo accounts and data.
+   Import it only into a new, disposable database after confirming the
+   database credentials have permission to create and select that database.
+   Never run it against a database containing data you need to keep. For an
+   existing BeFitFlex database, back it up first and apply only the required
+   SQL from `database/upgrade.sql`.
+
+3. Add persistent storage for announcement media. Create a Railway volume for
+   the web service and mount it at `/var/www/html/assets/uploads`. Without a
+   volume, uploaded files can disappear when the service is redeployed. Large
+   video uploads are configured up to 1 GB in PHP, but actual upload limits
+   may depend on Railway's platform and service plan.
+
+4. Add required secrets in the web service's **Variables**. Use strong unique
+   values, and retain the encryption key securely—losing it makes encrypted
+   member contact numbers unreadable:
+
+   - `BEFITFLEX_ENCRYPTION_KEY`: base64-encoded 32-byte key
+   - `BEFITFLEX_API_SECRET`: long random API secret
+   - `BEFITFLEX_APP_URL`: the deployed HTTPS origin, for example
+     `https://your-app.up.railway.app`
+
+   For Maya sandbox checkout, also set `MAYA_PUBLIC_KEY` and `MAYA_SECRET_KEY`
+   to sandbox credentials; the sandbox endpoint is the default. Set
+   `MAYA_WEBHOOK_SECRET` if using the webhook, and configure that webhook in
+   Maya to `https://your-app.up.railway.app/api/maya-webhook.php`. Configure
+   Mailtrap variables (`MAILTRAP_API_TOKEN`, `MAILTRAP_FROM_EMAIL`, and
+   optional sender settings) if email delivery is needed.
+
+5. Deploy and inspect the Railway deployment logs. From the Railway service
+   shell, run the health check to verify its live database connection, PHP
+   extensions, and configured secrets:
+
+   ```sh
+   php tools/health-check.php
+   ```
+
+The seeded administrator and member passwords in `README.md` are demo
+credentials; replace or remove demo accounts before opening the deployment to
+the public. Railway's container filesystem is otherwise ephemeral. User
+sessions may be lost on redeploy, and this setup is intended for a single web
+replica; multiple replicas require shared session storage.
+
 ## 5. Open it
 
 <http://localhost/befitflex/>

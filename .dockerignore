@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+.vs
+.vscode
+.serena
+node_modules
+vendor
+assets/uploads/*
+!assets/uploads/.gitignore
+cache/*
+!cache/.gitignore
+.env
+.env.*
+!.env.example
+*.log

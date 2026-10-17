@@ -1,17 +1,13 @@
 <?php
-/**
- * Database connection. XAMPP defaults are already filled in.
- * Change only if your MySQL root account has a password.
- */
 declare(strict_types=1);
 
-const DB = [
-    'host' => '127.0.0.1',
-    'port' => '3306',
-    'name' => 'befitflex_gym',
-    'user' => 'root',
-    'pass' => '',
-];
+define('DB', [
+    'host' => getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: '127.0.0.1',
+    'port' => getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306',
+    'name' => getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'befitflex_gym',
+    'user' => getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root',
+    'pass' => getenv('MYSQLPASSWORD') ?: getenv('DB_PASSWORD') ?: '',
+]);
 
 function db(): PDO
 {
@@ -30,14 +26,12 @@ function db(): PDO
         ]);
     } catch (PDOException $e) {
         http_response_code(500);
+        error_log('Database connection failed: ' . $e->getMessage());
         echo '<!doctype html><meta charset="utf-8">'
            . '<div style="font:16px system-ui;background:#0a0a0a;color:#eee;padding:40px;height:100vh">'
            . '<h1 style="color:#E10600">Database connection failed</h1>'
-           . '<p>MySQL is not reachable, or the database has not been imported yet.</p>'
-           . '<ol><li>Start <b>MySQL</b> in the XAMPP Control Panel</li>'
-           . '<li>Import <code>database/befitflex_gym.sql</code> through phpMyAdmin</li>'
-           . '<li>Check the credentials in <code>config/db.php</code></li></ol>'
-           . '<p style="color:#888">' . htmlspecialchars($e->getMessage()) . '</p></div>';
+           . '<p>MySQL is not reachable, the database has not been imported, or its environment variables are incorrect.</p>'
+           . '<p>Check the database service and application logs, then verify the MYSQLHOST, MYSQLPORT, MYSQLDATABASE, MYSQLUSER, and MYSQLPASSWORD settings.</p></div>';
         exit;
     }
 

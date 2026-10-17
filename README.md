@@ -40,6 +40,9 @@ reloads the upload limits in `.user.ini`.
 
 There is no front-end build step.
 
+For the Railway Docker deployment and production environment setup, see
+[SETUP.md](SETUP.md#deploy-to-railway).
+
 ## Email notifications
 
 Email delivery uses the Mailtrap Email Sending API. The application sends email for payments,
