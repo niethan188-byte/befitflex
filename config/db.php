@@ -4,8 +4,8 @@ declare(strict_types=1);
 define('DB', [
     'host' => getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: '127.0.0.1',
     'port' => getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306',
-    'name' => getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'befitflex_gym',
-    'user' => getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root',
+    'name' => getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: getenv('DB_DATABASE') ?: 'befitflex_gym',
+    'user' => getenv('MYSQLUSER') ?: getenv('DB_USER') ?: getenv('DB_USERNAME') ?: 'root',
     'pass' => getenv('MYSQLPASSWORD') ?: getenv('DB_PASSWORD') ?: '',
 ]);
 
