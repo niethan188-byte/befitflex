@@ -623,11 +623,13 @@ body.admin-sessions .table-wrap {
   max-width: 100%;
 }
 
-body.admin-sessions .member-picker {
+body.admin-sessions .member-picker,
+body.admin-attendance .member-picker {
   position: relative;
 }
 
-body.admin-sessions .member-picker-results {
+body.admin-sessions .member-picker-results,
+body.admin-attendance .member-picker-results {
   position: absolute;
   top: calc(100% - 20px);
   left: 0;
@@ -641,11 +643,13 @@ body.admin-sessions .member-picker-results {
   box-shadow: 0 16px 36px rgba(0,0,0,.4);
 }
 
-[data-theme="light"] body.admin-sessions .member-picker-results {
+[data-theme="light"] body.admin-sessions .member-picker-results,
+[data-theme="light"] body.admin-attendance .member-picker-results {
   background: #fff;
 }
 
-body.admin-sessions .member-picker-option {
+body.admin-sessions .member-picker-option,
+body.admin-attendance .member-picker-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -661,29 +665,74 @@ body.admin-sessions .member-picker-option {
   cursor: pointer;
 }
 
-body.admin-sessions .member-picker-option:last-child {
+body.admin-sessions .member-picker-option:last-child,
+body.admin-attendance .member-picker-option:last-child {
   border-bottom: 0;
 }
 
 body.admin-sessions .member-picker-option:hover,
-body.admin-sessions .member-picker-option.active {
+body.admin-sessions .member-picker-option.active,
+body.admin-attendance .member-picker-option:hover,
+body.admin-attendance .member-picker-option.active {
   background: var(--glass-2);
 }
 
 body.admin-sessions .member-picker-option small,
 body.admin-sessions .member-picker-hint,
-body.admin-sessions .member-picker-empty {
+body.admin-sessions .member-picker-empty,
+body.admin-attendance .member-picker-option small,
+body.admin-attendance .member-picker-hint,
+body.admin-attendance .member-picker-empty {
   color: var(--dim);
   font-size: 11px;
 }
 
-body.admin-sessions .member-picker-hint {
+body.admin-sessions .member-picker-hint,
+body.admin-attendance .member-picker-hint {
   display: block;
   margin-top: 6px;
 }
 
-body.admin-sessions .member-picker-empty {
+body.admin-sessions .member-picker-empty,
+body.admin-attendance .member-picker-empty {
   padding: 12px;
+}
+
+body.admin-attendance .main {
+  width: 100%;
+  min-width: 0;
+}
+
+body.admin-attendance .panel,
+body.admin-attendance .table-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.admin-attendance #mIn .modal-box {
+  width: min(480px, 100%);
+  box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+  body.admin-attendance .grid.c2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  body.admin-attendance .panel > h2 {
+    flex-wrap: wrap;
+  }
+
+  body.admin-attendance .panel > h2 .spacer {
+    display: none;
+  }
+
+  body.admin-attendance .panel > h2 > .btn {
+    flex: 1 0 100%;
+    justify-content: center;
+  }
 }
 
 /* ---------- admin payments responsive layout ---------- */
@@ -1152,6 +1201,95 @@ body.admin-analytics .grid > .panel {
     body.member-profile .profile-membership-table td {
       padding-top: 9px;
       padding-bottom: 9px;
+    }
+  }
+
+  /* ---------- admin branches responsive layout ---------- */
+
+  body.admin-gyms .main,
+  body.admin-gyms .branch-grid,
+  body.admin-gyms .branch-card {
+    min-width: 0;
+  }
+
+  body.admin-gyms .branch-card {
+    overflow-wrap: anywhere;
+  }
+
+  body.admin-gyms .branch-details th {
+    width: 30%;
+    vertical-align: top;
+  }
+
+  body.admin-gyms .branch-details td {
+    overflow-wrap: anywhere;
+  }
+
+  body.admin-gyms .branches-session-wrap {
+    max-width: 100%;
+  }
+
+  @media (max-width: 720px) {
+    body.admin-gyms .branch-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    body.admin-gyms .branches-panel > h2 {
+      flex-wrap: wrap;
+    }
+
+    body.admin-gyms .branches-panel > h2 .spacer {
+      display: none;
+    }
+
+    body.admin-gyms .branches-add {
+      flex: 1 0 100%;
+      justify-content: center;
+    }
+
+    body.admin-gyms .branch-card {
+      padding: 18px 16px !important;
+    }
+
+    body.admin-gyms .branch-details th {
+      width: 34%;
+      padding-right: 10px;
+    }
+
+    body.admin-gyms .branch-details th,
+    body.admin-gyms .branch-details td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    body.admin-gyms .branch-actions {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 48px;
+    }
+
+    body.admin-gyms .branch-actions > .btn {
+      justify-content: center;
+    }
+
+    body.admin-gyms .branches-session-table tbody tr {
+      overflow-wrap: anywhere;
+    }
+
+    body.admin-gyms .branches-session-table tbody td:first-child {
+      display: block;
+      text-align: left;
+    }
+
+    body.admin-gyms .branches-session-table tbody td:first-child::before {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    body.admin-gyms .branches-session-table tbody td:not(:first-child) {
+      text-align: right;
     }
   }
 

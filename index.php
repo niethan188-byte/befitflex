@@ -31,7 +31,7 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in · <?= APP_NAME ?> <?= APP_TAGLINE ?></title>
+<title><?= APP_NAME ?> <?= APP_TAGLINE ?></title>
 <?php if ($hasLogo): ?><link rel="icon" href="assets/img/logo.png"><?php endif; ?>
 <link rel="stylesheet" href="assets/css/glass.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">

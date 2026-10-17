@@ -34,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page = 'gyms';
+$bodyClass = 'admin-gyms';
 $title = 'Branches';
 $subtitle = 'Locations and their training sessions.';
 
@@ -51,24 +52,24 @@ $ts = rows(
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="panel glass">
+<div class="panel glass branches-panel">
   <h2><i class="fa-solid fa-location-dot"></i> <?= count($gyms) ?> branch<?= count($gyms) === 1 ? '' : 'es' ?>
     <span class="spacer"></span>
-    <button class="btn red sm" onclick="newGym()"><i class="fa-solid fa-plus"></i> Add branch</button>
+    <button class="btn red sm branches-add" onclick="newGym()"><i class="fa-solid fa-plus"></i> Add branch</button>
   </h2>
 
-  <div class="grid c2">
+  <div class="grid c2 branch-grid">
     <?php foreach ($gyms as $g): ?>
-      <div class="glass hover" style="padding:22px">
+      <div class="glass hover branch-card" style="padding:22px">
         <b style="font-size:16px"><?= e($g['gym_name']) ?></b>
         <div class="mono" style="margin:4px 0 12px"><?= e($g['gym_id']) ?> · <?= e($g['gym_branch']) ?></div>
         <p class="note" style="margin-bottom:14px"><?= e($g['description']) ?></p>
-        <table class="kv" style="font-size:13px">
+        <table class="kv branch-details" style="font-size:13px">
           <tr><th>Address</th><td><?= e($g['location']) ?></td></tr>
           <tr><th>Contact</th><td><?= e($g['contact_number']) ?></td></tr>
           <tr><th>Sessions</th><td><?= (int) $g['session_count'] ?> booked here</td></tr>
         </table>
-        <div style="display:flex;gap:8px;margin-top:16px">
+        <div class="branch-actions" style="display:flex;gap:8px;margin-top:16px">
           <button class="btn sm" onclick='editGym(<?= json_encode($g, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'>
             <i class="fa-solid fa-pen"></i> Edit</button>
           <form method="post" style="display:inline" onsubmit="return confirm('Remove this branch and its training sessions?')">
@@ -83,19 +84,19 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<div class="panel glass">
+<div class="panel glass branches-sessions-panel">
   <h2><i class="fa-solid fa-calendar-week"></i> Group training sessions</h2>
   <?php if (!$ts): ?><div class="empty"><i class="fa-solid fa-calendar-xmark"></i>None scheduled.</div><?php else: ?>
-  <div class="table-wrap"><table>
+  <div class="table-wrap branches-session-wrap"><table class="stackable branches-session-table">
     <thead><tr><th>Session</th><th>Branch</th><th>When</th><th>Duration</th><th>Status</th></tr></thead>
     <tbody>
     <?php foreach ($ts as $s): ?>
       <tr>
-        <td><b><?= e($s['session_name']) ?></b><div class="note"><?= e($s['description']) ?></div></td>
-        <td><?= e($s['gym_branch']) ?></td>
-        <td><?= dt($s['session_date']) ?><div class="mono"><?= timeh($s['session_time']) ?></div></td>
-        <td><?= (int) $s['duration'] ?> min</td>
-        <td><?= badge($s['status']) ?></td>
+        <td data-label="Session"><b><?= e($s['session_name']) ?></b><div class="note"><?= e($s['description']) ?></div></td>
+        <td data-label="Branch"><?= e($s['gym_branch']) ?></td>
+        <td data-label="When"><?= dt($s['session_date']) ?><div class="mono"><?= timeh($s['session_time']) ?></div></td>
+        <td data-label="Duration"><?= (int) $s['duration'] ?> min</td>
+        <td data-label="Status"><?= badge($s['status']) ?></td>
       </tr>
     <?php endforeach; ?>
     </tbody>

@@ -8,17 +8,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['action'] ?? '';
 
     if ($act === 'check_in') {
-        $open = scalar('SELECT COUNT(*) FROM attendance WHERE member_id = ? AND check_out_time IS NULL', [$_POST['member_id']]);
-        if ($open) {
-            flash('That member is already checked in.', 'err');
+        $memberId = trim((string) ($_POST['member_id'] ?? ''));
+        $member = row("SELECT member_id FROM members WHERE member_id = ? AND status = 'Active'", [$memberId]);
+        if (!$member) {
+            flash('Choose an active member from the search results.', 'err');
         } else {
-            $aid = next_id('attendance', 'attendance_id', 'ATT', 6);
-            db()->prepare(
-                'INSERT INTO attendance (attendance_id,member_id,check_in_time,attendance_date)
-                 VALUES (?,?,NOW(),CURDATE())'
-            )->execute([$aid, $_POST['member_id']]);
-            log_activity('Check in', 'Attendance', (string) $_POST['member_id']);
-            flash('Checked in.');
+            $open = scalar('SELECT COUNT(*) FROM attendance WHERE member_id = ? AND check_out_time IS NULL', [$memberId]);
+            if ($open) {
+                flash('That member is already checked in.', 'err');
+            } else {
+                $aid = next_id('attendance', 'attendance_id', 'ATT', 6);
+                db()->prepare(
+                    'INSERT INTO attendance (attendance_id,member_id,check_in_time,attendance_date)
+                     VALUES (?,?,NOW(),CURDATE())'
+                )->execute([$aid, $memberId]);
+                log_activity('Check in', 'Attendance', $memberId);
+                flash('Checked in.');
+            }
         }
     }
 
@@ -32,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page = 'attendance';
+$bodyClass = 'admin-attendance';
 $title = 'Attendance';
 $subtitle = 'Gym floor check-ins and class attendance.';
 
@@ -78,7 +85,7 @@ include __DIR__ . '/../includes/header.php';
   <h2><i class="fa-solid fa-clipboard-user"></i> Today · <?= date('l, M j') ?>
     <span class="spacer"></span>
     <a class="btn red sm" href="qr-attendance.php"><i class="fa-solid fa-qrcode"></i> Scan QR</a>
-    <button class="btn sm" onclick="openModal('mIn')"><i class="fa-solid fa-right-to-bracket"></i> Check a member in</button>
+    <button class="btn sm" onclick="openCheckinModal()"><i class="fa-solid fa-right-to-bracket"></i> Check a member in</button>
   </h2>
 
   <?php if (!$today): ?>
@@ -160,13 +167,21 @@ include __DIR__ . '/../includes/header.php';
     <form method="post">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="check_in">
-      <div class="field-row"><label>Member</label>
-        <select name="member_id" required>
-          <option value="">— choose a member —</option>
+      <div class="field-row member-picker" data-member-picker>
+        <label for="attendanceMemberSearch">Member</label>
+        <input type="search" id="attendanceMemberSearch" placeholder="Search by name or member ID…"
+               autocomplete="off" required aria-autocomplete="list"
+               aria-controls="attendanceMemberResults" aria-expanded="false">
+        <input type="hidden" name="member_id" id="attendanceMemberId">
+        <div class="member-picker-results" id="attendanceMemberResults" role="listbox" hidden></div>
+        <small class="member-picker-hint">Type a name or member ID, then choose a result.</small>
+        <div class="member-picker-options" hidden>
           <?php foreach ($members as $m): ?>
-            <option value="<?= e($m['member_id']) ?>"><?= e($m['member_name']) ?> (<?= e($m['member_id']) ?>)</option>
+            <span data-member-id="<?= e($m['member_id']) ?>"
+                  data-member-name="<?= e($m['member_name']) ?>"></span>
           <?php endforeach; ?>
-        </select></div>
+        </div>
+      </div>
       <p class="note">The check-in time is stamped from the server clock.</p>
       <div class="modal-actions">
         <button type="button" class="btn" onclick="closeModal('mIn')">Cancel</button>
@@ -175,5 +190,138 @@ include __DIR__ . '/../includes/header.php';
     </form>
   </div>
 </div>
+
+<script>
+function openCheckinModal() {
+  const form = document.querySelector('#mIn form');
+  form.reset();
+  document.getElementById('attendanceMemberId').value = '';
+  openModal('mIn');
+  window.setTimeout(() => document.getElementById('attendanceMemberSearch').focus(), 0);
+}
+
+(() => {
+  const picker = document.querySelector('[data-member-picker]');
+  if (!picker) return;
+
+  const input = picker.querySelector('#attendanceMemberSearch');
+  const memberId = picker.querySelector('#attendanceMemberId');
+  const results = picker.querySelector('#attendanceMemberResults');
+  const members = Array.from(picker.querySelectorAll('.member-picker-options [data-member-id]'))
+    .map(option => ({
+      id: option.dataset.memberId,
+      name: option.dataset.memberName,
+      label: `${option.dataset.memberName} · ${option.dataset.memberId}`
+    }));
+  let matches = [];
+  let activeIndex = -1;
+
+  const closeResults = () => {
+    results.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  };
+
+  const chooseMember = member => {
+    input.value = member.label;
+    memberId.value = member.id;
+    input.setCustomValidity('');
+    closeResults();
+  };
+
+  const renderResults = () => {
+    const query = input.value.trim().toLocaleLowerCase();
+    memberId.value = '';
+    input.setCustomValidity(query ? 'Choose a member from the search results.' : '');
+    results.replaceChildren();
+    activeIndex = -1;
+
+    if (!query) {
+      closeResults();
+      return;
+    }
+
+    matches = members.filter(member =>
+      `${member.name} ${member.id}`.toLocaleLowerCase().includes(query)
+    ).slice(0, 8);
+
+    if (!matches.length) {
+      const empty = document.createElement('div');
+      empty.className = 'member-picker-empty';
+      empty.textContent = 'No matching active members.';
+      results.appendChild(empty);
+    } else {
+      matches.forEach((member, index) => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'member-picker-option';
+        option.id = `attendanceMemberOption${index}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', 'false');
+
+        const name = document.createElement('span');
+        name.textContent = member.name;
+        const id = document.createElement('small');
+        id.textContent = member.id;
+        option.append(name, id);
+        option.addEventListener('click', () => chooseMember(member));
+        results.appendChild(option);
+      });
+    }
+
+    results.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  };
+
+  input.addEventListener('input', renderResults);
+  input.addEventListener('keydown', event => {
+    if (results.hidden) return;
+    if (event.key === 'ArrowDown' && matches.length) {
+      event.preventDefault();
+      activeIndex = (activeIndex + 1) % matches.length;
+    } else if (event.key === 'ArrowUp' && matches.length) {
+      event.preventDefault();
+      activeIndex = (activeIndex - 1 + matches.length) % matches.length;
+    } else if (event.key === 'Enter' && activeIndex >= 0) {
+      event.preventDefault();
+      chooseMember(matches[activeIndex]);
+      return;
+    } else if (event.key === 'Escape') {
+      closeResults();
+      return;
+    } else {
+      return;
+    }
+
+    Array.from(results.querySelectorAll('[role="option"]')).forEach((option, index) => {
+      const active = index === activeIndex;
+      option.classList.toggle('active', active);
+      option.setAttribute('aria-selected', String(active));
+    });
+    input.setAttribute('aria-activedescendant', `attendanceMemberOption${activeIndex}`);
+  });
+
+  input.form.addEventListener('submit', event => {
+    if (!memberId.value) {
+      event.preventDefault();
+      input.setCustomValidity('Choose a member from the search results.');
+      input.reportValidity();
+    }
+  });
+
+  input.form.addEventListener('reset', () => {
+    window.setTimeout(() => {
+      memberId.value = '';
+      input.setCustomValidity('');
+      closeResults();
+    });
+  });
+
+  document.addEventListener('click', event => {
+    if (!picker.contains(event.target)) closeResults();
+  });
+})();
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
