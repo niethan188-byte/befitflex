@@ -624,12 +624,14 @@ body.admin-sessions .table-wrap {
 }
 
 body.admin-sessions .member-picker,
-body.admin-attendance .member-picker {
+body.admin-attendance .member-picker,
+body.admin-payments .member-picker {
   position: relative;
 }
 
 body.admin-sessions .member-picker-results,
-body.admin-attendance .member-picker-results {
+body.admin-attendance .member-picker-results,
+body.admin-payments .member-picker-results {
   position: absolute;
   top: calc(100% - 20px);
   left: 0;
@@ -644,12 +646,14 @@ body.admin-attendance .member-picker-results {
 }
 
 [data-theme="light"] body.admin-sessions .member-picker-results,
-[data-theme="light"] body.admin-attendance .member-picker-results {
+[data-theme="light"] body.admin-attendance .member-picker-results,
+[data-theme="light"] body.admin-payments .member-picker-results {
   background: #fff;
 }
 
 body.admin-sessions .member-picker-option,
-body.admin-attendance .member-picker-option {
+body.admin-attendance .member-picker-option,
+body.admin-payments .member-picker-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -666,14 +670,17 @@ body.admin-attendance .member-picker-option {
 }
 
 body.admin-sessions .member-picker-option:last-child,
-body.admin-attendance .member-picker-option:last-child {
+body.admin-attendance .member-picker-option:last-child,
+body.admin-payments .member-picker-option:last-child {
   border-bottom: 0;
 }
 
 body.admin-sessions .member-picker-option:hover,
 body.admin-sessions .member-picker-option.active,
 body.admin-attendance .member-picker-option:hover,
-body.admin-attendance .member-picker-option.active {
+body.admin-attendance .member-picker-option.active,
+body.admin-payments .member-picker-option:hover,
+body.admin-payments .member-picker-option.active {
   background: var(--glass-2);
 }
 
@@ -682,19 +689,24 @@ body.admin-sessions .member-picker-hint,
 body.admin-sessions .member-picker-empty,
 body.admin-attendance .member-picker-option small,
 body.admin-attendance .member-picker-hint,
-body.admin-attendance .member-picker-empty {
+body.admin-attendance .member-picker-empty,
+body.admin-payments .member-picker-option small,
+body.admin-payments .member-picker-hint,
+body.admin-payments .member-picker-empty {
   color: var(--dim);
   font-size: 11px;
 }
 
 body.admin-sessions .member-picker-hint,
-body.admin-attendance .member-picker-hint {
+body.admin-attendance .member-picker-hint,
+body.admin-payments .member-picker-hint {
   display: block;
   margin-top: 6px;
 }
 
 body.admin-sessions .member-picker-empty,
-body.admin-attendance .member-picker-empty {
+body.admin-attendance .member-picker-empty,
+body.admin-payments .member-picker-empty {
   padding: 12px;
 }
 

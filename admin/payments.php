@@ -10,6 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($act === 'create') {
         $paymentMethod = (string) ($_POST['payment_method'] ?? '');
         $paymentStatus = (string) ($_POST['payment_status'] ?? '');
+        $memberId = trim((string) ($_POST['member_id'] ?? ''));
+        $member = row('SELECT member_id FROM members WHERE member_id = ?', [$memberId]);
+        if (!$member) {
+            flash('Choose a member from the search results.', 'err');
+            redirect('payments.php');
+        }
         if (!maya_manual_payment_creation_allowed($paymentMethod, $paymentStatus)) {
             flash('Maya payments cannot be recorded as paid manually. Save the payment as Pending and wait for Maya server-side confirmation.', 'err');
             redirect('payments.php');
@@ -19,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->prepare(
             'INSERT INTO payments (payment_id,member_id,amount,payment_method,payment_status,payment_date,notes)
              VALUES (?,?,?,?,?,?,?)'
-        )->execute([$pid, $_POST['member_id'], (float) $_POST['amount'], $paymentMethod,
+        )->execute([$pid, $memberId, (float) $_POST['amount'], $paymentMethod,
                     $paymentStatus, $_POST['payment_date'] ?: null, $_POST['notes']]);
         log_activity('Record payment', 'Payments', $pid);
         flash('Payment ' . $pid . ' recorded.');
@@ -106,7 +112,7 @@ include __DIR__ . '/../includes/header.php';
   <h2><i class="fa-solid fa-money-bill-wave"></i> <?= count($payments) ?> record<?= count($payments) === 1 ? '' : 's' ?>
     <span class="spacer"></span>
     <input type="search" placeholder="Filter…" data-filter-for="tblPay" style="width:200px">
-    <button class="btn red sm" data-shortcut="new" onclick="openModal('mPay')"><i class="fa-solid fa-plus"></i> Record payment</button>
+    <button class="btn red sm" data-shortcut="new" onclick="openPaymentModal()"><i class="fa-solid fa-plus"></i> Record payment</button>
   </h2>
 
   <?php if (!$payments): ?>
@@ -189,15 +195,22 @@ include __DIR__ . '/../includes/header.php';
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="create">
 
-      <div class="field-row"><label>Member</label>
-        <select name="member_id" required id="paySelect" onchange="suggest()">
-          <option value="">— choose a member —</option>
+      <div class="field-row member-picker" data-member-picker>
+        <label for="paymentMemberSearch">Member</label>
+        <input type="search" id="paymentMemberSearch" placeholder="Search by name or member ID…"
+               autocomplete="off" required aria-autocomplete="list"
+               aria-controls="paymentMemberResults" aria-expanded="false">
+        <input type="hidden" name="member_id" id="paymentMemberId">
+        <div class="member-picker-results" id="paymentMemberResults" role="listbox" hidden></div>
+        <small class="member-picker-hint">Type a name or member ID, then choose a result.</small>
+        <div class="member-picker-options" hidden>
           <?php foreach ($members as $m): ?>
-            <option value="<?= e($m['member_id']) ?>" data-price="<?= MEMBERSHIP_PRICE[$m['membership_type']] ?? 0 ?>">
-              <?= e($m['member_name']) ?> — <?= e($m['membership_type']) ?>
-            </option>
+            <span data-member-id="<?= e($m['member_id']) ?>"
+                  data-member-name="<?= e($m['member_name']) ?>"
+                  data-price="<?= e((string) (MEMBERSHIP_PRICE[$m['membership_type']] ?? 0)) ?>"
+                  data-membership="<?= e($m['membership_type']) ?>"></span>
           <?php endforeach; ?>
-        </select>
+        </div>
       </div>
 
       <div class="form-grid">
@@ -230,10 +243,140 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-function suggest() {
-  const opt = document.getElementById('paySelect').selectedOptions[0];
-  if (opt && opt.dataset.price) document.getElementById('payAmount').value = opt.dataset.price;
+function openPaymentModal() {
+  const form = document.querySelector('#mPay form');
+  form.reset();
+  document.getElementById('paymentMemberId').value = '';
+  openModal('mPay');
+  window.setTimeout(() => document.getElementById('paymentMemberSearch').focus(), 0);
 }
+
+(() => {
+  const picker = document.querySelector('[data-member-picker]');
+  if (!picker) return;
+
+  const input = picker.querySelector('#paymentMemberSearch');
+  const memberId = picker.querySelector('#paymentMemberId');
+  const results = picker.querySelector('#paymentMemberResults');
+  const amount = document.getElementById('payAmount');
+  const members = Array.from(picker.querySelectorAll('.member-picker-options [data-member-id]'))
+    .map(option => ({
+      id: option.dataset.memberId,
+      name: option.dataset.memberName,
+      price: option.dataset.price,
+      membership: option.dataset.membership,
+      label: `${option.dataset.memberName} · ${option.dataset.memberId}`
+    }));
+  let matches = [];
+  let activeIndex = -1;
+
+  const closeResults = () => {
+    results.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  };
+
+  const chooseMember = member => {
+    input.value = member.label;
+    memberId.value = member.id;
+    input.setCustomValidity('');
+    if (member.price !== '') amount.value = member.price;
+    closeResults();
+  };
+
+  const renderResults = () => {
+    const query = input.value.trim().toLocaleLowerCase();
+    memberId.value = '';
+    input.setCustomValidity(query ? 'Choose a member from the search results.' : '');
+    results.replaceChildren();
+    activeIndex = -1;
+
+    if (!query) {
+      closeResults();
+      return;
+    }
+
+    matches = members.filter(member =>
+      `${member.name} ${member.id}`.toLocaleLowerCase().includes(query)
+    ).slice(0, 8);
+
+    if (!matches.length) {
+      const empty = document.createElement('div');
+      empty.className = 'member-picker-empty';
+      empty.textContent = 'No matching members.';
+      results.appendChild(empty);
+    } else {
+      matches.forEach((member, index) => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'member-picker-option';
+        option.id = `paymentMemberOption${index}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', 'false');
+
+        const name = document.createElement('span');
+        name.textContent = member.name;
+        const details = document.createElement('small');
+        details.textContent = `${member.id} · ${member.membership}`;
+        option.append(name, details);
+        option.addEventListener('click', () => chooseMember(member));
+        results.appendChild(option);
+      });
+    }
+
+    results.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  };
+
+  input.addEventListener('input', renderResults);
+  input.addEventListener('keydown', event => {
+    if (results.hidden) return;
+    if (event.key === 'ArrowDown' && matches.length) {
+      event.preventDefault();
+      activeIndex = (activeIndex + 1) % matches.length;
+    } else if (event.key === 'ArrowUp' && matches.length) {
+      event.preventDefault();
+      activeIndex = (activeIndex - 1 + matches.length) % matches.length;
+    } else if (event.key === 'Enter' && activeIndex >= 0) {
+      event.preventDefault();
+      chooseMember(matches[activeIndex]);
+      return;
+    } else if (event.key === 'Escape') {
+      closeResults();
+      return;
+    } else {
+      return;
+    }
+
+    Array.from(results.querySelectorAll('[role="option"]')).forEach((option, index) => {
+      const active = index === activeIndex;
+      option.classList.toggle('active', active);
+      option.setAttribute('aria-selected', String(active));
+    });
+    input.setAttribute('aria-activedescendant', `paymentMemberOption${activeIndex}`);
+  });
+
+  input.form.addEventListener('submit', event => {
+    if (!memberId.value) {
+      event.preventDefault();
+      input.setCustomValidity('Choose a member from the search results.');
+      input.reportValidity();
+    }
+  });
+
+  input.form.addEventListener('reset', () => {
+    window.setTimeout(() => {
+      memberId.value = '';
+      input.setCustomValidity('');
+      closeResults();
+    });
+  });
+
+  document.addEventListener('click', event => {
+    if (!picker.contains(event.target)) closeResults();
+  });
+})();
 </script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
