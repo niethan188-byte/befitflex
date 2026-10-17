@@ -88,9 +88,18 @@ function csrf_field(): string
 function csrf_check(): void
 {
     $sent = $_POST['csrf'] ?? '';
-    if (!is_string($sent) || !hash_equals($_SESSION['csrf'] ?? '', $sent)) {
+    $sessionToken = $_SESSION['csrf'] ?? '';
+    if (!is_string($sent) || !is_string($sessionToken) || $sessionToken === '' || !hash_equals($sessionToken, $sent)) {
         http_response_code(419);
-        exit('Session expired. Go back, reload the page, and try again.');
+        header('Content-Type: text/html; charset=UTF-8');
+        $formUrl = e((string) ($_SERVER['SCRIPT_NAME'] ?? '/'));
+        exit(
+            '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            . '<title>Session expired</title><body style="font:16px system-ui;max-width:36rem;margin:4rem auto;padding:0 1rem">'
+            . '<h1>Session expired</h1><p>Your security token is out of date or your session has changed. '
+            . 'Reload the form and submit it again. This request was not processed.</p>'
+            . '<p><a href="' . $formUrl . '">Reload form</a></p></body></html>'
+        );
     }
 }
 
