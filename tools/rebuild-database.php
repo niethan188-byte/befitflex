@@ -21,6 +21,11 @@ $port = (int) ($options['port'] ?? DB['port']);
 $user = (string) ($options['user'] ?? DB['user']);
 $pass = array_key_exists('pass', $options) ? (string) $options['pass'] : (string) DB['pass'];
 $database = (string) ($options['database'] ?? DB['name']);
+$database = trim($database);
+if (!preg_match('/^[A-Za-z0-9_]+$/', $database)) {
+    fwrite(STDERR, "Invalid database name. Use only letters, numbers, and underscores." . PHP_EOL);
+    exit(1);
+}
 $sqlPath = (string) ($options['sql'] ?? __DIR__ . '/../database/befitflex_gym.sql');
 $sqlPath = is_file($sqlPath) ? realpath($sqlPath) : $sqlPath;
 
@@ -33,6 +38,22 @@ $sql = file_get_contents($sqlPath);
 if ($sql === false) {
     fwrite(STDERR, "Unable to read SQL dump: {$sqlPath}" . PHP_EOL);
     exit(1);
+}
+
+if ($database !== 'befitflex_gym') {
+    $sql = str_replace(
+        [
+            'DROP DATABASE IF EXISTS befitflex_gym;',
+            'CREATE DATABASE befitflex_gym DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;',
+            'USE befitflex_gym;',
+        ],
+        [
+            "DROP DATABASE IF EXISTS `{$database}`;",
+            "CREATE DATABASE `{$database}` DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+            "USE `{$database}`;",
+        ],
+        $sql
+    );
 }
 
 $connection = @new mysqli($host, $user, $pass, '', $port);
