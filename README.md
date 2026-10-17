@@ -35,8 +35,8 @@ drifting light field behind everything.
 6. If upgrading an existing installation instead of importing the fresh schema,
   import `database/upgrade.sql` once to add email verification fields.
 
-For announcement videos up to 1 GB, restart Laragon after installation so PHP
-reloads the upload limits in `.user.ini`.
+For announcement videos up to 1 GB, restart Apache from the XAMPP Control Panel
+after installation so PHP reloads the upload limits in `.user.ini`.
 
 There is no front-end build step.
 
@@ -62,7 +62,8 @@ announcements. In-app notifications continue to work if email is not configured.
   [Environment]::SetEnvironmentVariable('MAILTRAP_REPLY_TO', 'befitgymlaguna@gmail.com', 'User')
   ```
 
-3. Restart Laragon so Apache can read the variables.
+3. Fully exit and reopen the XAMPP Control Panel, then start Apache so it can
+   read the variables.
 4. Confirm PHP cURL is enabled in `php.ini` with `extension=curl`.
 5. Send an announcement from `admin/announcements.php` and check the Mailtrap
   dashboard and the `notifications.email_sent` column.

@@ -62,7 +62,9 @@ This installs Dompdf for downloadable payment invoices.
 
 For an existing database, import `database/upgrade.sql` after the main schema.
 
-Optional integration variables:
+Configure `BEFITFLEX_ENCRYPTION_KEY` before creating accounts or saving member
+contact details. The key is required by the web application. The other variables
+below are optional integrations:
 
 ```powershell
 [Environment]::SetEnvironmentVariable('MAYA_PUBLIC_KEY', 'your_public_key', 'User')

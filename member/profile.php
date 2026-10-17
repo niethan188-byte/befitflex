@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($act === 'profile') {
       if (!encryption_available()) {
-        flash('PII encryption is unavailable in the web server. Restart Laragon and try again.', 'err');
+        flash('PII encryption is unavailable. Configure BEFITFLEX_ENCRYPTION_KEY for Apache, then restart Apache from the XAMPP Control Panel.', 'err');
         redirect('profile.php');
       }
         $contact = trim((string) $_POST['contact_number']);

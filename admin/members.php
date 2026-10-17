@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('members.php');
       }
       if (!encryption_available()) {
-        flash('PII encryption is unavailable in the web server. Restart Laragon and try again.', 'err');
+        flash('PII encryption is unavailable. Configure BEFITFLEX_ENCRYPTION_KEY for Apache, then restart Apache from the XAMPP Control Panel.', 'err');
         redirect('members.php');
       }
         $email = trim((string) $_POST['email']);
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('members.php');
       }
       if (!encryption_available()) {
-        flash('PII encryption is unavailable in the web server. Restart Laragon and try again.', 'err');
+        flash('PII encryption is unavailable. Configure BEFITFLEX_ENCRYPTION_KEY for Apache, then restart Apache from the XAMPP Control Panel.', 'err');
         redirect('members.php');
       }
         db()->prepare(
