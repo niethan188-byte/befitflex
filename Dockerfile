@@ -3,6 +3,10 @@ FROM php:8.3-apache
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libcurl4-openssl-dev libonig-dev libpng-dev libxml2-dev libzip-dev \
     && docker-php-ext-install -j"$(nproc)" curl dom gd mbstring mysqli pdo_mysql zip \
+    && for mpm in event worker; do \
+        if [ -e "/etc/apache2/mods-enabled/mpm_${mpm}.load" ]; then a2dismod "mpm_${mpm}"; fi; \
+    done \
+    && a2enmod mpm_prefork \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
