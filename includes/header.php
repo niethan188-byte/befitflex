@@ -100,10 +100,6 @@ try {
         <i id="themeIcon" class="fa-solid fa-sun"></i>
       </button>
 
-      <button class="icon-btn" onclick="toggleDensity()" title="Row height" aria-label="Toggle density">
-        <i id="densityIcon" class="fa-solid fa-bars"></i>
-      </button>
-
       <div class="notification-menu" id="notificationMenu">
         <button class="btn icon notification-trigger" id="notificationTrigger" type="button"
                 aria-label="Notifications<?= $unread ? ', ' . $unread . ' unread' : '' ?>"

@@ -113,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page = 'members';
 $title = 'Members';
 $subtitle = 'Enrollment, membership type and status.';
+$bodyClass = 'admin-members';
 
 $filter = $_GET['status'] ?? 'all';
 $joinedWindow = (int) ($_GET['joined'] ?? 0);
@@ -173,7 +174,8 @@ include __DIR__ . '/../includes/header.php';
           'Try another status tab, or enrol someone new.',
           ['label' => 'Add a member', 'href' => '#', 'icon' => 'plus']) ?>
   <?php else: ?>
-  <div class="table-wrap"><table id="tblMembers">
+  <div class="table-wrap"><table id="tblMembers" class="members-table keep-table-mobile"
+      data-page-size-options="10,25,50,100">
     <thead><tr>
       <th data-nosort style="width:34px"><input type="checkbox" class="pick" id="pickAll" aria-label="Select all"></th>
       <th>Member</th><th>Contact</th><th>Membership</th><th>Joined</th><th>Status</th><th data-nosort></th>

@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page = 'sessions';
 $title = 'Sessions';
 $subtitle = 'Member sessions and scheduled check-ins.';
+$bodyClass = 'admin-sessions';
 
 $sessions = rows(
     'SELECT s.*, m.member_name
@@ -123,13 +124,21 @@ include __DIR__ . '/../includes/header.php';
         <input type="text" name="session_name" required placeholder="Anna — Squat technique"></div>
 
       <div class="form-grid">
-        <div class="field-row"><label>Member</label>
-          <select name="member_id">
-            <option value="">— open session —</option>
+        <div class="field-row member-picker" data-member-picker>
+          <label for="sessionMemberSearch">Member</label>
+          <input type="search" id="sessionMemberSearch" placeholder="Search members…"
+                 autocomplete="off" aria-autocomplete="list" aria-controls="sessionMemberResults"
+                 aria-expanded="false">
+          <input type="hidden" name="member_id" id="sessionMemberId">
+          <div class="member-picker-results" id="sessionMemberResults" role="listbox" hidden></div>
+          <small class="member-picker-hint">Leave blank for an open session.</small>
+          <div class="member-picker-options" hidden>
             <?php foreach ($members as $m): ?>
-              <option value="<?= e($m['member_id']) ?>"><?= e($m['member_name']) ?></option>
+              <span data-member-id="<?= e($m['member_id']) ?>"
+                    data-member-name="<?= e($m['member_name']) ?>"></span>
             <?php endforeach; ?>
-          </select></div>
+          </div>
+        </div>
       </div>
 
       <div class="form-grid">
@@ -152,5 +161,132 @@ include __DIR__ . '/../includes/header.php';
     </form>
   </div>
 </div>
+
+<script>
+(() => {
+  const picker = document.querySelector('[data-member-picker]');
+  if (!picker) return;
+
+  const input = picker.querySelector('#sessionMemberSearch');
+  const memberId = picker.querySelector('#sessionMemberId');
+  const results = picker.querySelector('#sessionMemberResults');
+  const members = Array.from(picker.querySelectorAll('.member-picker-options [data-member-id]'))
+    .map(option => ({
+      id: option.dataset.memberId,
+      name: option.dataset.memberName,
+      label: `${option.dataset.memberName} · ${option.dataset.memberId}`
+    }));
+  let matches = [];
+  let activeIndex = -1;
+
+  const closeResults = () => {
+    results.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  };
+
+  const chooseMember = (member) => {
+    input.value = member.label;
+    memberId.value = member.id;
+    input.setCustomValidity('');
+    closeResults();
+  };
+
+  const renderResults = () => {
+    const query = input.value.trim().toLocaleLowerCase();
+    memberId.value = '';
+    input.setCustomValidity(query
+      ? 'Choose a member from the results, or clear the field for an open session.'
+      : '');
+    results.replaceChildren();
+    activeIndex = -1;
+
+    if (!query) {
+      closeResults();
+      return;
+    }
+
+    matches = members.filter(member =>
+      `${member.name} ${member.id}`.toLocaleLowerCase().includes(query)
+    ).slice(0, 8);
+
+    if (!matches.length) {
+      const empty = document.createElement('div');
+      empty.className = 'member-picker-empty';
+      empty.textContent = 'No matching members.';
+      results.appendChild(empty);
+    } else {
+      matches.forEach((member, index) => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'member-picker-option';
+        option.id = `sessionMemberOption${index}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', 'false');
+
+        const name = document.createElement('span');
+        name.textContent = member.name;
+        const id = document.createElement('small');
+        id.textContent = member.id;
+        option.append(name, id);
+        option.addEventListener('click', () => chooseMember(member));
+        results.appendChild(option);
+      });
+    }
+
+    results.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  };
+
+  input.addEventListener('input', renderResults);
+  input.addEventListener('keydown', event => {
+    if (results.hidden) return;
+    if (event.key === 'ArrowDown' && matches.length) {
+      event.preventDefault();
+      activeIndex = (activeIndex + 1) % matches.length;
+    } else if (event.key === 'ArrowUp' && matches.length) {
+      event.preventDefault();
+      activeIndex = (activeIndex - 1 + matches.length) % matches.length;
+    } else if (event.key === 'Enter' && activeIndex >= 0) {
+      event.preventDefault();
+      chooseMember(matches[activeIndex]);
+      return;
+    } else if (event.key === 'Escape') {
+      closeResults();
+      return;
+    } else {
+      return;
+    }
+
+    Array.from(results.querySelectorAll('[role="option"]')).forEach((option, index) => {
+      const active = index === activeIndex;
+      option.classList.toggle('active', active);
+      option.setAttribute('aria-selected', String(active));
+    });
+    input.setAttribute('aria-activedescendant', `sessionMemberOption${activeIndex}`);
+  });
+
+  input.form.addEventListener('submit', event => {
+    if (input.value.trim() && !memberId.value) {
+      event.preventDefault();
+      input.setCustomValidity('Choose a member from the results, or clear the field for an open session.');
+      input.reportValidity();
+    }
+  });
+
+  input.form.addEventListener('reset', () => {
+    window.setTimeout(() => {
+      memberId.value = '';
+      input.setCustomValidity('');
+      closeResults();
+    });
+  });
+
+  document.addEventListener('click', event => {
+    if (!picker.contains(event.target)) closeResults();
+  });
+})();
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

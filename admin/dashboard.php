@@ -6,6 +6,7 @@ $u = require_role('admin');
 $page = 'dashboard';
 $title = 'Dashboard';
 $subtitle = 'Everything across Santa Rosa and Cabuyao, at a glance.';
+$bodyClass = 'admin-dashboard';
 
 /* One round trip instead of eight separate COUNT/SUM queries. */
 $s = Analytics::snapshot();
@@ -48,11 +49,11 @@ $recentLog = rows(
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="panel glass" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-  <div style="flex:1;min-width:240px">
-    <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">
+<div class="panel glass dashboard-welcome">
+  <div class="dashboard-welcome-copy">
+    <div class="dashboard-date">
       <?= date('l, j F') ?></div>
-    <div style="font-size:17px;font-weight:600;margin-top:4px">
+    <div class="dashboard-greeting">
       <?php
         $h = (int) date('G');
         echo $h < 12 ? 'Good morning' : ($h < 18 ? 'Good afternoon' : 'Good evening');
@@ -65,12 +66,14 @@ include __DIR__ . '/../includes/header.php';
       ?>
     </div>
   </div>
-  <a class="btn red" href="../kiosk.php"><i class="fa-solid fa-door-open"></i> Open check-in station</a>
-  <a class="btn" href="announcements.php"><i class="fa-solid fa-bullhorn"></i> Announce</a>
-  <form method="post" action="backup.php" style="display:inline">
-    <?= csrf_field() ?>
-    <button class="btn" type="submit"><i class="fa-solid fa-database"></i> Backup database</button>
-  </form>
+  <div class="dashboard-actions">
+    <a class="btn red" href="../kiosk.php"><i class="fa-solid fa-door-open"></i> Open check-in station</a>
+    <a class="btn" href="announcements.php"><i class="fa-solid fa-bullhorn"></i> Announce</a>
+    <form method="post" action="backup.php">
+      <?= csrf_field() ?>
+      <button class="btn" type="submit"><i class="fa-solid fa-database"></i> Backup database</button>
+    </form>
+  </div>
 </div>
 
 <div class="stats">
@@ -83,7 +86,7 @@ include __DIR__ . '/../includes/header.php';
   <div class="stat glass hover">
     <div class="ico"><i class="fa-solid fa-peso-sign"></i></div>
     <div class="label">Collected</div>
-    <div class="value" style="font-size:26px"><?= money($revenue) ?></div>
+    <div class="value currency-value"><?= money($revenue) ?></div>
     <div class="note"><?= money($outstanding) ?> still outstanding</div>
     <?= Chart::spark($revSpark) ?>
   </div>

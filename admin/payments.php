@@ -64,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page = 'payments';
 $title = 'Payments';
 $subtitle = 'Dues, methods and outstanding balances.';
+$bodyClass = 'admin-payments';
 
 $filter = $_GET['status'] ?? 'all';
 $sql = 'SELECT p.*, m.member_name FROM payments p JOIN members m ON m.member_id = p.member_id';
@@ -85,13 +86,13 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="stats">
   <div class="stat glass hover"><div class="ico"><i class="fa-solid fa-circle-check"></i></div>
-    <div class="label">Collected</div><div class="value" style="font-size:26px"><?= money($paid) ?></div>
+    <div class="label">Collected</div><div class="value payment-stat-value"><?= money($paid) ?></div>
     <div class="note">Settled payments</div></div>
   <div class="stat glass hover"><div class="ico"><i class="fa-solid fa-hourglass-half"></i></div>
-    <div class="label">Pending</div><div class="value" style="font-size:26px"><?= money($pending) ?></div>
+    <div class="label">Pending</div><div class="value payment-stat-value"><?= money($pending) ?></div>
     <div class="note">Awaiting settlement</div></div>
   <div class="stat glass hover"><div class="ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-    <div class="label">Overdue</div><div class="value" style="font-size:26px"><?= money($overdue) ?></div>
+    <div class="label">Overdue</div><div class="value payment-stat-value"><?= money($overdue) ?></div>
     <div class="note">Needs follow-up</div></div>
 </div>
 
@@ -111,7 +112,8 @@ include __DIR__ . '/../includes/header.php';
   <?php if (!$payments): ?>
     <div class="empty"><i class="fa-solid fa-receipt"></i>Nothing here.</div>
   <?php else: ?>
-  <div class="table-wrap"><table id="tblPay">
+  <div class="table-wrap"><table id="tblPay" class="payment-table keep-table-mobile"
+      data-page-size-options="10,25,50,100">
     <thead><tr><th>Payment</th><th>Member</th><th>Method</th><th class="num">Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($payments as $p): ?>
@@ -123,7 +125,7 @@ include __DIR__ . '/../includes/header.php';
         <td class="num"><b><?= money($p['amount']) ?></b></td>
         <td><?= dt($p['payment_date']) ?></td>
         <td><?= badge($p['payment_status']) ?></td>
-        <td style="white-space:nowrap">
+        <td class="payment-actions" data-label="Actions">
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (!empty($p['maya_checkout_id'])): ?>
               <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i></a>

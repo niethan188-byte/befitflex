@@ -279,7 +279,7 @@ td .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size:
 .field-row label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .03em; }
 
 input[type=text], input[type=email], input[type=password], input[type=number],
-input[type=date], input[type=time], input[type=tel], select, textarea {
+input[type=date], input[type=time], input[type=tel], input[type=search], select, textarea {
   width: 100%; padding: 11px 14px;
   background: rgba(0,0,0,.28); color: var(--text);
   border: 1px solid var(--stroke); border-radius: var(--r-sm);

@@ -33,7 +33,7 @@
     document.documentElement.dataset.density = d;
     prefs.set('density', d);
     const i = $('#densityIcon');
-    if (i) i.className = d === 'compact' ? 'fa-solid fa-bars-staggered' : 'fa-solid fa-bars';
+    if (i) i.className = d === 'compact' ? 'fa-solid fa-compress' : 'fa-solid fa-arrows-up-down';
   }
 
   applyTheme(prefs.get('theme', 'dark'));
@@ -267,14 +267,16 @@
     const rows = Array.from(tbody.rows);
     const heads = Array.from(head.rows[0].cells);
 
-    /* Stack into cards on a phone, using the header text as the label. */
-    table.classList.add('stackable');
-    rows.forEach((tr) => {
-      Array.from(tr.cells).forEach((td, i) => {
-        const label = (heads[i]?.textContent || '').trim();
-        if (label) td.setAttribute('data-label', label);
+    if (!table.classList.contains('keep-table-mobile')) {
+      /* Stack into cards on a phone, using the header text as the label. */
+      table.classList.add('stackable');
+      rows.forEach((tr) => {
+        Array.from(tr.cells).forEach((td, i) => {
+          const label = (heads[i]?.textContent || '').trim();
+          if (label) td.setAttribute('data-label', label);
+        });
       });
-    });
+    }
 
     /* Click-to-sort on every column that carries a heading. */
     heads.forEach((th, i) => {
@@ -301,7 +303,7 @@
       });
     });
 
-    if (rows.length > PAGE) buildFooter(table);
+    if (rows.length > PAGE || table.dataset.pageSizeOptions) buildFooter(table);
     paginate(table, 1);
   }
 
@@ -309,9 +311,28 @@
     const wrap = table.closest('.table-wrap') || table.parentElement;
     const foot = document.createElement('div');
     foot.className = 'table-foot';
-    foot.innerHTML = '<span class="count"></span><span class="spacer"></span><div class="pager"></div>';
+    foot.innerHTML = '<span class="count"></span><span class="spacer"></span><label class="page-size-control">Show <select aria-label="Rows per page"></select></label><div class="pager"></div>';
     wrap.after(foot);
     table._foot = foot;
+
+    const pageSize = foot.querySelector('select');
+    const options = (table.dataset.pageSizeOptions || String(PAGE))
+      .split(',')
+      .map(value => Number(value.trim()))
+      .filter(value => Number.isInteger(value) && value > 0);
+    if (!options.includes(PAGE)) options.unshift(PAGE);
+    options.forEach((size) => {
+      const option = document.createElement('option');
+      option.value = String(size);
+      option.textContent = String(size);
+      pageSize.appendChild(option);
+    });
+    table._pageSize = PAGE;
+    pageSize.value = String(table._pageSize);
+    pageSize.addEventListener('change', () => {
+      table._pageSize = Number(pageSize.value);
+      paginate(table, 1);
+    });
   }
 
   function visibleRows(table) {
@@ -328,16 +349,17 @@
       return;
     }
 
-    const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+    const pageSize = table._pageSize || PAGE;
+    const pages = Math.max(1, Math.ceil(rows.length / pageSize));
     page = Math.min(page, pages);
     table._page = page;
 
     Array.from(table.tBodies[0].rows).forEach(r => r.classList.add('row-hidden'));
-    rows.slice((page - 1) * PAGE, page * PAGE).forEach(r => r.classList.remove('row-hidden'));
+    rows.slice((page - 1) * pageSize, page * pageSize).forEach(r => r.classList.remove('row-hidden'));
 
-    const from = rows.length ? (page - 1) * PAGE + 1 : 0;
+    const from = rows.length ? (page - 1) * pageSize + 1 : 0;
     foot.querySelector('.count').textContent =
-      'Showing ' + from + '–' + Math.min(page * PAGE, rows.length) + ' of ' + rows.length;
+      'Showing ' + from + '–' + Math.min(page * pageSize, rows.length) + ' of ' + rows.length;
 
     const pager = foot.querySelector('.pager');
     pager.innerHTML = '';
@@ -484,8 +506,6 @@
   const NAV = (window.CMD_NAV || []).map(n => Object.assign({ kind: 'nav' }, n));
   const ACTIONS = [
     { kind: 'act', icon: 'moon',        label: 'Toggle light / dark theme', run: () => toggleTheme() },
-    { kind: 'act', icon: 'bars-staggered', label: 'Toggle compact rows',    run: () => toggleDensity() },
-    { kind: 'act', icon: 'print',       label: 'Print this page',           run: () => window.print() },
     { kind: 'act', icon: 'keyboard',    label: 'Keyboard shortcuts',        run: () => openModal('shortcutHelp') },
     { kind: 'act', icon: 'right-from-bracket', label: 'Sign out',           run: () => location.href = BASE + 'logout.php' },
   ];
@@ -543,7 +563,7 @@
     const ql = q.toLowerCase();
     const out = [];
     NAV.filter(n => !q || n.label.toLowerCase().includes(ql))
-       .forEach(n => out.push(Object.assign({ group: 'Go to', icon: n.icon, href: BASE + n.href }, n)));
+       .forEach(n => out.push(Object.assign({}, n, { group: 'Go to', icon: n.icon, href: BASE + n.href })));
     ACTIONS.filter(a => !q || a.label.toLowerCase().includes(ql))
        .forEach(a => out.push(Object.assign({ group: 'Actions' }, a)));
     return out;
