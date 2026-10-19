@@ -60,9 +60,16 @@ if ($passId !== '' && preg_match('/^DAY\d{5,}$/', $passId)) {
         echo json_encode(['ok' => true, 'action' => 'check_out', 'member' => $pass['visitor_name'], 'minutes' => $mins]);
     } else {
         $aid = next_id('attendance', 'attendance_id', 'ATT', 6);
-        db()->prepare('INSERT INTO attendance (attendance_id,member_id,day_pass_id,check_in_time,attendance_date) VALUES (?,NULL,?,NOW(),CURDATE())')
-            ->execute([$aid, $passId]);
-        echo json_encode(['ok' => true, 'action' => 'check_in', 'member' => $pass['visitor_name'], 'at' => date('g:i A'), 'day_pass' => true]);
+        $checkedInAt = date('Y-m-d H:i:s');
+        db()->prepare('INSERT INTO attendance (attendance_id,member_id,day_pass_id,check_in_time,attendance_date) VALUES (?,NULL,?,?,?)')
+            ->execute([$aid, $passId, $checkedInAt, date('Y-m-d')]);
+        echo json_encode([
+            'ok' => true,
+            'action' => 'check_in',
+            'member' => $pass['visitor_name'],
+            'at' => date('g:i:s A', strtotime($checkedInAt)),
+            'day_pass' => true,
+        ]);
     }
     exit;
 }
@@ -106,7 +113,13 @@ if ($open) {
     echo json_encode(['ok' => true, 'action' => 'check_out', 'member' => $member['member_name'], 'minutes' => $mins]);
 } else {
     $aid = next_id('attendance', 'attendance_id', 'ATT', 6);
-    db()->prepare('INSERT INTO attendance (attendance_id,member_id,check_in_time,attendance_date) VALUES (?,?,NOW(),CURDATE())')
-        ->execute([$aid, $memberId]);
-    echo json_encode(['ok' => true, 'action' => 'check_in', 'member' => $member['member_name'], 'at' => date('g:i A')]);
+    $checkedInAt = date('Y-m-d H:i:s');
+    db()->prepare('INSERT INTO attendance (attendance_id,member_id,check_in_time,attendance_date) VALUES (?,?,?,?)')
+        ->execute([$aid, $memberId, $checkedInAt, date('Y-m-d')]);
+    echo json_encode([
+        'ok' => true,
+        'action' => 'check_in',
+        'member' => $member['member_name'],
+        'at' => date('g:i:s A', strtotime($checkedInAt)),
+    ]);
 }

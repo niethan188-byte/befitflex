@@ -100,8 +100,8 @@ include __DIR__ . '/../includes/header.php';
         : null; ?>
       <tr>
         <td><b><?= e($a['member_name']) ?></b><div class="mono"><?= e($a['pass_id'] ?: $a['member_id']) ?></div></td>
-        <td><?= date('g:i A', strtotime($a['check_in_time'])) ?></td>
-        <td><?= $a['check_out_time'] ? date('g:i A', strtotime($a['check_out_time'])) : '<span class="chip warn">inside</span>' ?></td>
+        <td><?= date('g:i:s A', strtotime($a['check_in_time'])) ?></td>
+        <td><?= $a['check_out_time'] ? date('g:i:s A', strtotime($a['check_out_time'])) : '<span class="chip warn">inside</span>' ?></td>
         <td><?= $mins !== null ? $mins . ' min' : '—' ?></td>
         <td>
           <?php if (!$a['check_out_time']): ?>
@@ -131,8 +131,8 @@ include __DIR__ . '/../includes/header.php';
         <tr>
           <td><?= e($a['member_name']) ?></td>
           <td><?= dt($a['attendance_date']) ?></td>
-          <td><?= date('g:i A', strtotime($a['check_in_time'])) ?></td>
-          <td><?= $a['check_out_time'] ? date('g:i A', strtotime($a['check_out_time'])) : '—' ?></td>
+          <td><?= date('g:i:s A', strtotime($a['check_in_time'])) ?></td>
+          <td><?= $a['check_out_time'] ? date('g:i:s A', strtotime($a['check_out_time'])) : '—' ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>

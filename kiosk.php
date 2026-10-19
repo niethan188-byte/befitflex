@@ -66,7 +66,7 @@ $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
         <b id="insideN"><?= count($inside) ?></b> on the floor now</div>
       <div class="kiosk-inside" id="insideList">
         <?php foreach ($inside as $p): ?>
-          <span class="who"><?= e($p['member_name']) ?> · <?= date('g:i A', strtotime($p['check_in_time'])) ?></span>
+          <span class="who"><?= e($p['member_name']) ?> · <?= date('g:i:s A', strtotime($p['check_in_time'])) ?></span>
         <?php endforeach; ?>
       </div>
     </div>

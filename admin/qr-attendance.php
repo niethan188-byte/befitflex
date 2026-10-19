@@ -60,7 +60,7 @@ $hasLogo = is_file(__DIR__ . '/../assets/img/logo.png');
       <div class="note"><b id="todayN"><?= $todayCount ?></b> check-ins today · <b id="insideN"><?= count($inside) ?></b> on the floor now</div>
       <div class="kiosk-inside" id="insideList">
         <?php foreach ($inside as $p): ?>
-          <span class="who"><?= e($p['member_name']) ?> · <?= date('g:i A', strtotime($p['check_in_time'])) ?></span>
+          <span class="who"><?= e($p['member_name']) ?> · <?= date('g:i:s A', strtotime($p['check_in_time'])) ?></span>
         <?php endforeach; ?>
       </div>
     </div>
@@ -182,7 +182,13 @@ async function submit(rawCode) {
     scanField.value = '';
     setTimeout(() => { location.reload(); }, 3600);
   } catch (error) {
-    showResult('err', 'wifi', 'Scan failed', error.message || 'The attendance service is unavailable.');
+    const errors = {
+      day_pass_not_found: 'No day pass matches this QR code.',
+      day_pass_wrong_date: 'This day pass is not valid today.',
+      day_pass_unpaid: 'This day pass has not been paid.',
+      not_authorised: 'Sign in as an administrator to scan attendance.',
+    };
+    showResult('err', 'wifi', 'Scan failed', errors[error.message] || error.message || 'The attendance service is unavailable.');
   }
 }
 

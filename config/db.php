@@ -24,6 +24,8 @@ function db(): PDO
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
+        // Keep SQL NOW()/CURDATE() aligned with the app's Asia/Manila timezone.
+        $pdo->exec("SET time_zone = '+08:00'");
     } catch (PDOException $e) {
         http_response_code(500);
         error_log('Database connection failed: ' . $e->getMessage());

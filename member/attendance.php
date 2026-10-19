@@ -66,7 +66,7 @@ include __DIR__ . '/../includes/header.php';
   <h2><i class="fa-solid fa-door-open"></i> Check in / out</h2>
   <?php if ($open): ?>
     <p class="note" style="margin-bottom:14px">
-      You checked in at <b><?= date('g:i A', strtotime($open['check_in_time'])) ?></b> today.</p>
+      You checked in at <b><?= date('g:i:s A', strtotime($open['check_in_time'])) ?></b> today.</p>
     <form method="post">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="check_out">
@@ -95,8 +95,8 @@ include __DIR__ . '/../includes/header.php';
       <tr>
         <td><?= dt($a['attendance_date']) ?></td>
         <td class="mono"><?= date('l', strtotime($a['attendance_date'])) ?></td>
-        <td><?= date('g:i A', strtotime($a['check_in_time'])) ?></td>
-        <td><?= $a['check_out_time'] ? date('g:i A', strtotime($a['check_out_time'])) : '<span class="chip warn">open</span>' ?></td>
+        <td><?= date('g:i:s A', strtotime($a['check_in_time'])) ?></td>
+        <td><?= $a['check_out_time'] ? date('g:i:s A', strtotime($a['check_out_time'])) : '<span class="chip warn">open</span>' ?></td>
         <td><?= $d !== null ? $d . ' min' : '—' ?></td>
       </tr>
     <?php endforeach; ?>

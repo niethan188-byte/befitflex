@@ -33,7 +33,8 @@ drifting light field behind everything.
   ```
 
 6. If upgrading an existing installation instead of importing the fresh schema,
-  import `database/upgrade.sql` once to add email verification fields.
+  import `database/upgrade.sql` once. It includes the day-pass/member link
+  required for member day-pass QR codes, along with other schema upgrades.
 
 For announcement videos up to 1 GB, restart Apache from the XAMPP Control Panel
 after installation so PHP reloads the upload limits in `.user.ini`.
