@@ -21,12 +21,13 @@ $me = row(
   [$mid]
 );
 $dayPass = $me ? row(
-  "SELECT pass_id FROM day_passes
+  "SELECT pass_id, visit_date FROM day_passes
     WHERE member_id = ? AND visit_date >= CURDATE() AND pass_status = 'Paid'
     ORDER BY visit_date, created_at DESC, pass_id DESC LIMIT 1",
   [$mid]
 ) : null;
 $monthlyQrAvailable = $me && $me['status'] === 'Active' && $me['latest_payment_status'] === 'Paid';
+$usingDayPassQr = !$monthlyQrAvailable && $dayPass !== null;
 $qrAvailable = $monthlyQrAvailable || $dayPass !== null;
 
 $hasLogo = is_file(__DIR__ . '/../assets/img/logo.png');
@@ -54,9 +55,9 @@ include __DIR__ . '/../includes/header.php';
         <div class="mid" data-copy="<?= e($me['member_id']) ?>"><?= e($me['member_id']) ?></div>
 
         <div class="rowline">
-          <div>MEMBERSHIP<b><?= e($me['membership_type']) ?></b></div>
-          <div>SINCE<b><?= dt($me['join_date'], 'M Y') ?></b></div>
-          <div>STATUS<b><?= e($me['status']) ?></b></div>
+          <div><?= $usingDayPassQr ? 'ACCESS' : 'MEMBERSHIP' ?><b><?= $usingDayPassQr ? 'Day Pass' : e($me['membership_type']) ?></b></div>
+          <div><?= $usingDayPassQr ? 'VISIT DATE' : 'SINCE' ?><b><?= $usingDayPassQr ? dt($dayPass['visit_date'], 'M j, Y') : dt($me['join_date'], 'M Y') ?></b></div>
+          <div><?= $usingDayPassQr ? 'PASS STATUS' : 'STATUS' ?><b><?= $usingDayPassQr ? 'Paid' : e($me['status']) ?></b></div>
         </div>
 
         <div class="idcard-qr-frame">
