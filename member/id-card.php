@@ -20,7 +20,14 @@ $me = row(
      FROM members m WHERE m.member_id = ?",
   [$mid]
 );
-$qrAvailable = $me && $me['status'] === 'Active' && $me['latest_payment_status'] === 'Paid';
+$dayPass = $me ? row(
+  "SELECT pass_id FROM day_passes
+    WHERE member_id = ? AND visit_date >= CURDATE() AND pass_status = 'Paid'
+    ORDER BY visit_date, created_at DESC, pass_id DESC LIMIT 1",
+  [$mid]
+) : null;
+$monthlyQrAvailable = $me && $me['status'] === 'Active' && $me['latest_payment_status'] === 'Paid';
+$qrAvailable = $monthlyQrAvailable || $dayPass !== null;
 
 $hasLogo = is_file(__DIR__ . '/../assets/img/logo.png');
 $b = base_url();
@@ -55,7 +62,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="idcard-qr-frame">
           <?php if ($qrAvailable): ?>
             <img
-              src="<?= $b ?>api/qr.php?type=member&amp;id=<?= rawurlencode((string) $mid) ?>&amp;v=<?= rawurlencode((string) ($me['latest_payment_updated_at'] ?? '')) ?>"
+              src="<?= $b ?>api/qr.php?type=member&amp;id=<?= rawurlencode((string) $mid) ?>&amp;v=<?= rawurlencode((string) ($me['latest_payment_updated_at'] ?? '') . '|' . ($dayPass['pass_id'] ?? '')) ?>"
               alt="Member check-in QR code"
               width="120"
               height="120"
@@ -63,14 +70,14 @@ include __DIR__ . '/../includes/header.php';
             >
             <span class="qr-load-error" role="status" hidden>QR code could not be loaded. Refresh the page or show your member number at the front desk.</span>
           <?php else: ?>
-            <span style="font-size:11px;color:#333;text-align:center">QR available when membership is active and paid</span>
+            <span style="font-size:11px;color:#333;text-align:center">QR available with an active paid membership or an upcoming paid day pass</span>
           <?php endif; ?>
         </div>
       </div>
     </div>
 
     <p class="note" style="text-align:center;margin-top:16px">
-      Show this QR code to the gym's check-in scanner. Your membership must be active and paid.
+      Show this QR code to the gym's check-in scanner. Access requires an active paid membership or a valid paid day pass.
     </p>
   </div>
 

@@ -56,6 +56,7 @@ CREATE TABLE gyms (
 
 CREATE TABLE day_passes (
     pass_id VARCHAR(50) PRIMARY KEY,
+    member_id VARCHAR(50) NULL,
     visitor_name VARCHAR(255) NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     visit_date DATE NOT NULL,
@@ -64,7 +65,9 @@ CREATE TABLE day_passes (
     pass_status ENUM('Paid','Pending','Cancelled') NOT NULL DEFAULT 'Paid',
     notes VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_day_pass_date (visit_date), INDEX idx_day_pass_status (pass_status)
+    CONSTRAINT day_passes_member_fk FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE SET NULL,
+    INDEX idx_day_pass_date (visit_date), INDEX idx_day_pass_status (pass_status),
+    INDEX idx_day_pass_member_id (member_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE sessions (

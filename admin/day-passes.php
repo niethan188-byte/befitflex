@@ -20,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         };
         $existingMember = $memberId !== ''
             ? row(
-                "SELECT m.member_id, m.membership_type, m.status,
+                "SELECT m.member_id, m.member_name, m.contact_number, m.contact_number_encrypted,
+                        m.membership_type, m.status,
                         (SELECT p.payment_status FROM payments p
                           WHERE p.member_id = m.member_id
                           ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status
@@ -28,6 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$memberId]
             )
             : null;
+        $memberIdentityValid = $memberId === ''
+            || ($existingMember !== null
+                && hash_equals(trim((string) $existingMember['member_name']), $name)
+                && hash_equals(trim(member_contact($existingMember)), $contact));
+        $linkedMemberId = $memberIdentityValid && $existingMember ? $existingMember['member_id'] : null;
         $eligibleMonthlyMember = $existingMember !== null
             && $existingMember['membership_type'] === 'Monthly'
             && $existingMember['status'] === 'Active'
@@ -53,16 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if ($eligibleMonthlyMember) {
+        if (!$memberIdentityValid) {
+            flash('The selected member name or contact number does not match their account.', 'err');
+        } elseif ($eligibleMonthlyMember) {
             flash('This member already has an active monthly membership and cannot buy a day pass.', 'err');
         } elseif ($name === '' || $contact === '' || $date < date('Y-m-d') || $amount === null) {
             flash('Enter a valid visitor, contact number, date and amount.', 'err');
         } else {
             $passId = next_id('day_passes', 'pass_id', 'DAY', 5);
             db()->prepare(
-                'INSERT INTO day_passes (pass_id,visitor_name,contact_number,visit_date,amount,payment_method,pass_status,notes)
-                 VALUES (?,?,?,?,?,?,?,?)'
-            )->execute([$passId, $name, $contact, $date, $amount, $_POST['payment_method'], $_POST['pass_status'], trim((string) ($_POST['notes'] ?? ''))]);
+                'INSERT INTO day_passes (pass_id,member_id,visitor_name,contact_number,visit_date,amount,payment_method,pass_status,notes)
+                 VALUES (?,?,?,?,?,?,?,?,?)'
+            )->execute([$passId, $linkedMemberId, $name, $contact, $date, $amount, $_POST['payment_method'], $_POST['pass_status'], trim((string) ($_POST['notes'] ?? ''))]);
             log_activity('Create day pass', 'Day Passes', $passId . ' - ' . $name);
             flash('Day pass ' . $passId . ' created. Its QR code is ready to share.');
         }
@@ -98,7 +106,7 @@ include __DIR__ . '/../includes/header.php';
     <span class="spacer"></span>
     <button class="btn red sm" onclick="openModal('mDayPass')"><i class="fa-solid fa-plus"></i> New day pass</button>
   </h2>
-  <p class="note">After payment, open or download the QR below and share it with the visitor. They can show it on their phone to check in.</p>
+  <p class="note">After payment, open or download the QR below and share it with the visitor. Linked members can also use the day-pass QR displayed on their member card for the visit date.</p>
 </div>
 
 <div class="panel glass">

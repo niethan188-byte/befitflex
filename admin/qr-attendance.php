@@ -40,8 +40,8 @@ $hasLogo = is_file(__DIR__ . '/../assets/img/logo.png');
       <?php else: ?><svg viewBox="0 0 100 100" fill="none" style="width:64px;height:64px"><path d="M50 4 92 28v48L50 100 8 76V28z" stroke="#E53935" stroke-width="6"/><path d="M34 30h26M34 50h22M34 70h26" stroke="#E53935" stroke-width="7" stroke-linecap="round"/></svg><?php endif; ?>
     </div>
 
-    <h1>Scan member QR</h1>
-    <p class="note">Position a member's QR inside the frame. The scan is validated and recorded on the server.</p>
+    <h1>Scan attendance QR</h1>
+    <p class="note">Position a member or day-pass QR inside the frame. The scan is validated and recorded on the server.</p>
 
     <div id="cameraWrap" style="position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:16px;background:#080808;border:1px solid var(--stroke)">
       <video id="camera" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
@@ -50,8 +50,8 @@ $hasLogo = is_file(__DIR__ . '/../assets/img/logo.png');
     </div>
 
     <div class="field-row" style="margin-top:18px;text-align:left">
-      <label for="scanCode">Or enter the QR value</label>
-      <input id="scanCode" type="text" autocomplete="off" autocapitalize="characters" placeholder="BEFITFLEX:MEM0001" autofocus>
+      <label for="scanCode">Or enter the member or day-pass QR value</label>
+      <input id="scanCode" type="text" autocomplete="off" autocapitalize="characters" placeholder="BEFITFLEX:MEM0001 or BEFITFLEX:DAY00001" autofocus>
     </div>
 
     <div id="result"></div>
@@ -150,8 +150,13 @@ startButton.addEventListener('click', () => cameraStream ? stopCamera() : startC
 
 async function submit(rawCode) {
   const code = rawCode.trim().toUpperCase().replace(/^BEFITFLEX:/, '');
-  if (!/^(?:MEM|DUMMY)\d{4,}$/.test(code)) {
-    showResult('err', 'circle-exclamation', 'QR not recognized', 'Show a valid member QR code.');
+  const payload = /^(?:MEM|DUMMY)\d{4,}$/.test(code)
+    ? { member_id: code, scan_only: true }
+    : /^DAY\d{5,}$/.test(code)
+      ? { pass_id: code, scan_only: true }
+      : null;
+  if (!payload) {
+    showResult('err', 'circle-exclamation', 'QR not recognized', 'Show a valid member or day-pass QR code.');
     return;
   }
 
@@ -161,7 +166,7 @@ async function submit(rawCode) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ member_id: code, scan_only: true })
+      body: JSON.stringify(payload)
     });
     const data = await response.json();
 

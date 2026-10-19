@@ -89,6 +89,33 @@ ALTER TABLE day_passes ALTER COLUMN amount SET DEFAULT 150.00;
 
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'day_passes' AND column_name = 'member_id'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE day_passes ADD COLUMN member_id VARCHAR(50) NULL AFTER pass_id',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*) FROM information_schema.statistics
+     WHERE table_schema = DATABASE() AND table_name = 'day_passes' AND index_name = 'idx_day_pass_member_id'
+);
+SET @sql = IF(@index_exists = 0,
+    'ALTER TABLE day_passes ADD INDEX idx_day_pass_member_id (member_id)',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @constraint_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE table_schema = DATABASE() AND table_name = 'day_passes' AND constraint_name = 'day_passes_member_fk'
+);
+SET @sql = IF(@constraint_exists = 0,
+    'ALTER TABLE day_passes ADD CONSTRAINT day_passes_member_fk FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE SET NULL',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
      WHERE table_schema = DATABASE() AND table_name = 'attendance' AND column_name = 'day_pass_id'
 );
 SET @sql = IF(@column_exists = 0,

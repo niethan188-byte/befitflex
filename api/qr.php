@@ -28,20 +28,27 @@ if ($type === 'member' && preg_match('/^(?:MEM|DUMMY)\d{4,}$/', $id)) {
         http_response_code(404);
         exit('Member not found');
     }
-    if ($member['status'] !== 'Active') {
-        http_response_code(403);
-        exit('Membership is not active');
+
+    if ($member['status'] === 'Active' && $member['latest_payment_status'] === 'Paid') {
+        $payload = 'BEFITFLEX:' . $id;
+    } else {
+        $pass = row(
+            "SELECT pass_id FROM day_passes
+              WHERE member_id = ? AND visit_date >= CURDATE() AND pass_status = 'Paid'
+              ORDER BY visit_date, created_at DESC, pass_id DESC LIMIT 1",
+            [$id]
+        );
+        if (!$pass) {
+            http_response_code(403);
+            exit('No active paid membership or upcoming paid day pass');
+        }
+        $payload = 'BEFITFLEX:' . $pass['pass_id'];
     }
-    if ($member['latest_payment_status'] !== 'Paid') {
-        http_response_code(403);
-        exit('Latest membership payment is not paid');
-    }
-    $payload = 'BEFITFLEX:' . $id;
 } elseif ($type === 'day_pass' && preg_match('/^DAY\d{5,}$/', $id)) {
     require_role('admin');
-    if (!row('SELECT pass_id FROM day_passes WHERE pass_id = ?', [$id])) {
+    if (!row("SELECT pass_id FROM day_passes WHERE pass_id = ? AND visit_date >= CURDATE() AND pass_status = 'Paid'", [$id])) {
         http_response_code(404);
-        exit('Day pass not found');
+        exit('Paid, current or upcoming day pass not found');
     }
     $payload = 'BEFITFLEX:' . $id;
 } else {
