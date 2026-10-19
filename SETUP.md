@@ -192,13 +192,19 @@ no framework or frontend build step.
 
    - `BEFITFLEX_ENCRYPTION_KEY`: base64-encoded 32-byte key
    - `BEFITFLEX_API_SECRET`: long random API secret
-   - `BEFITFLEX_APP_URL`: the deployed HTTPS origin, for example
-     `https://your-app.up.railway.app`
+   - `BEFITFLEX_APP_URL`: `https://befitflex.up.railway.app`
+   - `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`: keys for the Cloudflare
+     Turnstile widget. Create a Managed widget in the Cloudflare dashboard and
+     allow `befitflex.up.railway.app` in its hostname settings (hostname only,
+     without `https://`). Put the site key and secret in the Railway web
+     service's Variables; never put the secret in source code. Both keys and
+     PHP cURL are required, and sign-in and registration fail closed if
+     verification is not configured or Cloudflare cannot verify a token.
 
    For Maya sandbox checkout, also set `MAYA_PUBLIC_KEY` and `MAYA_SECRET_KEY`
    to sandbox credentials; the sandbox endpoint is the default. Set
    `MAYA_WEBHOOK_SECRET` if using the webhook, and configure that webhook in
-   Maya to `https://your-app.up.railway.app/api/maya-webhook.php`.
+   Maya to `https://befitflex.up.railway.app/api/maya-webhook.php`.
 
    Configure the Mailtrap Sandbox SMTP variables `MAIL_MAILER=smtp`,
    `MAIL_HOST=sandbox.smtp.mailtrap.io`, `MAIL_PORT=2525`,
@@ -214,6 +220,14 @@ no framework or frontend build step.
    ```sh
    php tools/health-check.php
    ```
+
+Turnstile works with this Railway deployment without routing the site through
+Cloudflare. Cloudflare currently offers Turnstile on its Free plan with
+unlimited challenges and verification requests. For local development, use
+Cloudflare's documented [dummy test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/):
+site key `1x00000000000000000000AA` and secret key
+`1x0000000000000000000000000000000AA`. They work on localhost, always pass,
+and are for testing only; never use them in Railway production variables.
 
 The seeded administrator and member passwords in `README.md` are demo
 credentials; replace or remove demo accounts before opening the deployment to

@@ -11,6 +11,11 @@ if (current_user()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
+    if (!turnstile_verify_token((string) ($_POST['cf-turnstile-response'] ?? ''), 'register')) {
+        flash('Security verification failed or is unavailable. Please try again or contact the gym.', 'err');
+        redirect('register.php');
+    }
+
     $name    = trim((string) ($_POST['member_name'] ?? ''));
     $email   = trim((string) ($_POST['email'] ?? ''));
     $contact = trim((string) ($_POST['contact_number'] ?? ''));
@@ -156,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $flashes = take_flash();
+$turnstileReady = turnstile_is_configured();
 $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
 ?>
 <!DOCTYPE html>
@@ -231,12 +237,18 @@ $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
         <a href="privacy.php" style="color:var(--red-hot)">Read the notice</a>.</span>
       </label>
 
-      <button class="btn red full" type="submit"><i class="fa-solid fa-user-plus"></i> Create my account</button>
+      <?php if ($turnstileReady): ?>
+      <div class="field-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="register"></div></div>
+      <?php else: ?>
+      <p class="note">Registration is temporarily unavailable because security verification is not configured. Please contact the gym.</p>
+      <?php endif; ?>
+      <button class="btn red full" type="submit" <?= $turnstileReady ? '' : 'disabled' ?>><i class="fa-solid fa-user-plus"></i> Create my account</button>
     </form>
 
     <p class="auth-alt">Already a member? <a href="index.php">Sign in</a></p>
   </div>
 </div>
+<?php if ($turnstileReady): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><?php endif; ?>
 <script src="assets/js/app.js"></script>
 </body>
 </html>

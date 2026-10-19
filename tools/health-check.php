@@ -7,6 +7,7 @@ $checks = [
     'PHP version' => PHP_VERSION,
     'Database' => (string) db()->query('SELECT VERSION()')->fetchColumn(),
     'cURL' => function_exists('curl_init') ? 'enabled' : 'missing',
+    'Turnstile' => turnstile_is_configured() ? 'configured' : 'missing keys or cURL',
     'OpenSSL' => extension_loaded('openssl') ? 'enabled' : 'missing',
     'Mailtrap SMTP' => mailtrap_smtp_configured() ? 'configured' : 'not configured',
     'Maya checkout' => maya_payment_flow_configured() ? 'ready' : 'missing keys or cURL',

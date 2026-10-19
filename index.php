@@ -10,19 +10,24 @@ if (current_user()) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $email = trim((string) ($_POST['email'] ?? ''));
-    $pass  = (string) ($_POST['password'] ?? '');
+    if (!turnstile_verify_token((string) ($_POST['cf-turnstile-response'] ?? ''), 'login')) {
+        flash('Security verification failed or is unavailable. Please try again or contact the gym.', 'err');
+    } else {
+        $email = trim((string) ($_POST['email'] ?? ''));
+        $pass  = (string) ($_POST['password'] ?? '');
 
-    $user = attempt_login($email, $pass);
-    if ($user) {
-        start_session_for($user);
-        log_activity('Sign in', 'Authentication', 'Signed in as ' . $user['user_type']);
-        redirect(home_for($user['user_type']));
+        $user = attempt_login($email, $pass);
+        if ($user) {
+            start_session_for($user);
+            log_activity('Sign in', 'Authentication', 'Signed in as ' . $user['user_type']);
+            redirect(home_for($user['user_type']));
+        }
+        flash('That email and password do not match an account.', 'err');
     }
-    flash('That email and password do not match an account.', 'err');
 }
 
 $flashes = take_flash();
+$turnstileReady = turnstile_is_configured();
 $hasLogo   = is_file(__DIR__ . '/assets/img/logo.png');
 $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 ?>
@@ -76,7 +81,12 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required placeholder="••••••••">
       </div>
-      <button class="btn red full" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Sign in</button>
+      <?php if ($turnstileReady): ?>
+      <div class="field-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="login"></div></div>
+      <?php else: ?>
+      <p class="note">Sign-in verification is temporarily unavailable. Please contact the gym.</p>
+      <?php endif; ?>
+      <button class="btn red full" type="submit" <?= $turnstileReady ? '' : 'disabled' ?>><i class="fa-solid fa-right-to-bracket"></i> Sign in</button>
     </form>
 
     <p class="auth-alt">New here? <a href="register.php">Create a member account</a></p>
@@ -99,6 +109,7 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
   </div>
 </div>
 
+<?php if ($turnstileReady): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><?php endif; ?>
 <script>
 function fill(email, pass) {
   document.getElementById('email').value = email;

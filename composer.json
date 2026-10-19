@@ -8,6 +8,7 @@
         "smoke": "php tests/smoke.php",
         "test:maya": "php tests/maya.php",
         "test:email": "php tests/email.php",
+        "test:turnstile": "php tests/turnstile.php",
         "health": "php tools/health-check.php",
         "encrypt-contacts": "php tools/encrypt-contacts.php",
         "db:reset": "php tools/rebuild-database.php",
