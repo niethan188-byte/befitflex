@@ -82,7 +82,7 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
         <input type="password" id="password" name="password" required placeholder="••••••••">
       </div>
       <?php if ($turnstileReady): ?>
-      <div class="field-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="login"></div></div>
+      <div class="turnstile-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="login"></div></div>
       <?php else: ?>
       <p class="note">Sign-in verification is temporarily unavailable. Please contact the gym.</p>
       <?php endif; ?>

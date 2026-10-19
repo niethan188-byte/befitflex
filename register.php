@@ -238,7 +238,7 @@ $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
       </label>
 
       <?php if ($turnstileReady): ?>
-      <div class="field-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="register"></div></div>
+      <div class="turnstile-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="register"></div></div>
       <?php else: ?>
       <p class="note">Registration is temporarily unavailable because security verification is not configured. Please contact the gym.</p>
       <?php endif; ?>
