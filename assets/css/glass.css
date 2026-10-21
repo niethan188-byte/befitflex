@@ -363,8 +363,8 @@ textarea { resize: vertical; min-height: 84px; }
 .demo-key b { color: var(--text); font-weight: 600; min-width: 58px; }
 
 @media (max-width: 480px) {
-  .auth-wrap { padding: 12px; }
-  .auth-card { padding: 24px 18px; border-radius: 20px; }
+  .auth-wrap { width: 100%; grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .auth-card { justify-self: center; max-width: 100%; padding: 24px 18px; border-radius: 20px; }
   .auth-logo { margin-bottom: 16px; }
   .auth-logo img, .auth-logo svg { width: 72px; height: 72px; }
   .auth-card h1 { font-size: clamp(20px, 6vw, 24px); }
