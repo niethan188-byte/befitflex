@@ -167,7 +167,7 @@ include __DIR__ . '/../includes/header.php';
       <div class="field-row">
         <label for="dayPassName">Customer name</label>
         <input type="text" name="visitor_name" id="dayPassName" required autofocus autocomplete="off" aria-autocomplete="list" aria-controls="dayPassMemberSuggestions">
-        <div id="dayPassMemberSuggestions" role="listbox" aria-label="Matching members" style="display:none;position:relative;z-index:5;background:var(--panel, #202329);border:1px solid var(--line, #444);border-radius:10px;margin-top:4px;max-height:220px;overflow-y:auto"></div>
+        <div id="dayPassMemberSuggestions" class="day-pass-member-suggestions" role="listbox" aria-label="Matching members" style="display:none"></div>
         <div id="dayPassMemberStatus" class="note" aria-live="polite"></div>
       </div>
       <div class="field-row"><label for="dayPassContact">Contact number</label><input type="tel" name="contact_number" id="dayPassContact" required></div>
@@ -239,7 +239,7 @@ dayPassName.addEventListener('input', () => {
         option.type = 'button';
         option.setAttribute('role', 'option');
         option.setAttribute('aria-selected', 'false');
-        option.style.cssText = 'display:block;width:100%;padding:10px 12px;text-align:left;border:0;border-bottom:1px solid var(--line, #444);background:transparent;color:inherit;cursor:pointer';
+        option.className = 'day-pass-member-option';
         option.textContent = `${member.name}${member.contact ? ` · ${member.contact}` : ''}${member.active_monthly ? ' · Active monthly membership' : ''}`;
         option.addEventListener('click', () => {
           dayPassName.value = member.name;
