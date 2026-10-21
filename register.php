@@ -168,13 +168,14 @@ $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Join · <?= APP_NAME ?></title>
 <link rel="stylesheet" href="assets/css/glass.css">
+<link rel="stylesheet" href="assets/css/login.css?v=3">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="auth-page">
 <div class="field"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
 
 <?php if ($flashes): ?>
@@ -189,7 +190,7 @@ $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
 <?php endif; ?>
 
 <div class="auth-wrap">
-  <div class="auth-card glass" style="width:min(560px,100%)">
+  <div class="auth-card glass register-card">
     <div class="auth-logo">
       <?php if ($hasLogo): ?><img src="assets/img/logo.png" alt="">
       <?php else: ?><svg viewBox="0 0 100 100" fill="none"><path d="M50 4 92 28v48L50 100 8 76V28z" stroke="#E53935" stroke-width="6"/><path d="M34 30h26M34 50h22M34 70h26" stroke="#E53935" stroke-width="7" stroke-linecap="round"/></svg><?php endif; ?>
@@ -238,7 +239,7 @@ $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
       </label>
 
       <?php if ($turnstileReady): ?>
-      <div class="turnstile-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="register"></div></div>
+      <div class="turnstile-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="register" data-size="flexible"></div></div>
       <?php else: ?>
       <p class="note">Registration is temporarily unavailable because security verification is not configured. Please contact the gym.</p>
       <?php endif; ?>

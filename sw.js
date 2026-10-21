@@ -1,10 +1,11 @@
-const VERSION = 'bff-mobile-v2';
+const VERSION = 'bff-mobile-v3';
 const STATIC_CACHE = VERSION + '-static';
 const STATIC_ASSETS = [
   './',
   './kiosk.php',
   './manifest.webmanifest',
   './assets/css/glass.css',
+  './assets/css/login.css?v=3',
   './assets/css/ui.css',
   './assets/js/app.js',
   './assets/js/ui.js',

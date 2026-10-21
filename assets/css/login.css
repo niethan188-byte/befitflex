@@ -1,0 +1,235 @@
+/* ============================================================
+   BE FIT FLEX GYM — authentication pages
+   Loaded after glass.css; only overrides auth components so
+   the rest of the design system is untouched.
+   ============================================================ */
+
+/* ---------- page shell ---------- */
+
+body.auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.field {
+  overflow: hidden;
+}
+
+.auth-wrap {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* safe-area aware gutters (notches, home indicator, landscape cutouts) */
+  padding:
+    max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+/* margin:auto centres when there is room but never clips the top of the
+   card when the on-screen keyboard shrinks the viewport (grid centring does). */
+.auth-card {
+  width: min(420px, 100%);
+  min-width: 0;
+  margin: auto;
+  padding: 36px 32px 28px;
+  border-radius: 28px;
+}
+
+.auth-card.register-card { width: min(560px, 100%); }
+
+/* ---------- brand ---------- */
+
+.auth-brand { text-align: center; margin-bottom: 26px; }
+.auth-logo { display: grid; place-items: center; margin-bottom: 14px; }
+.auth-logo img, .auth-logo svg {
+  width: 84px; height: 84px; object-fit: contain;
+  filter: drop-shadow(0 0 24px rgba(225,6,0,.6));
+}
+.auth-card h1 {
+  font-size: 23px; font-weight: 700; letter-spacing: -.01em; line-height: 1.15;
+}
+.auth-card .tag {
+  margin: 8px 0 0; font-size: 11px; letter-spacing: .32em; text-indent: .32em;
+  text-transform: uppercase; color: var(--red-hot);
+}
+.auth-lead {
+  margin-top: 14px; font-size: 13.5px; color: var(--muted); line-height: 1.5;
+}
+
+/* ---------- form ---------- */
+
+.auth-card .field-row { margin-bottom: 16px; }
+.auth-card .field-row label {
+  font-size: 12.5px; font-weight: 500; margin-bottom: 7px;
+}
+
+.auth-card input[type=email],
+.auth-card input[type=password],
+.auth-card input[type=text] {
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 16px;               /* stops iOS Safari zooming on focus */
+  border-radius: 12px;
+}
+
+.input-icon { position: relative; }
+.input-icon > i {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; color: var(--dim); pointer-events: none;
+  transition: color .2s;
+}
+.input-icon > input { padding-left: 42px; }
+.input-icon:focus-within > i { color: var(--red-hot); }
+
+.pw-wrap > input { padding-right: 52px; }
+.pw-toggle {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; display: grid; place-items: center;
+  background: none; border: 0; border-radius: 10px;
+  color: var(--muted); font-size: 15px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pw-toggle:hover { color: var(--text); }
+.pw-toggle:focus-visible { outline: 2px solid var(--red-hot); outline-offset: -2px; }
+
+.auth-card :focus-visible { outline: 2px solid var(--red-hot); outline-offset: 2px; }
+.auth-card input:focus-visible { outline: 0; }
+
+.turnstile-row {
+  display: flex; justify-content: center; align-items: center;
+  min-height: 65px;               /* reserves space so the layout doesn't jump when the widget loads */
+  margin-bottom: 16px; overflow: hidden; border-radius: 12px;
+}
+.turnstile-row .cf-turnstile { width: 100%; max-width: 100%; margin: 0; }
+
+.auth-card .btn.full {
+  min-height: 50px; border-radius: 12px; font-size: 15px; font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-card .btn.full:active:not(:disabled) { transform: scale(.985); }
+.auth-card .btn.full:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; transform: none; }
+.auth-card .btn.full.loading { pointer-events: none; }
+.auth-card .btn.full.loading i { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.auth-card .note { text-align: center; margin-bottom: 14px; }
+
+.auth-alt { margin-top: 20px; font-size: 14px; }
+.auth-alt a {
+  display: inline-block; padding: 8px 4px; margin: -8px 0;  /* bigger tap area, same visual size */
+}
+
+/* ---------- demo accounts (collapsed by default) ---------- */
+
+.demo-keys {
+  margin-top: 20px; padding-top: 4px; border-top: 1px solid var(--stroke);
+}
+.demo-keys summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 44px; list-style: none; cursor: pointer;
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  -webkit-tap-highlight-color: transparent;
+}
+.demo-keys summary::-webkit-details-marker { display: none; }
+.demo-keys summary i { transition: transform .25s; font-size: 11px; }
+.demo-keys[open] summary i { transform: rotate(180deg); }
+
+.demo-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 4px; }
+.demo-key {
+  display: grid; grid-template-columns: auto 1fr; align-items: center;
+  column-gap: 10px; row-gap: 1px; width: 100%; min-width: 0; min-height: 52px;
+  margin: 0; padding: 9px 12px; text-align: left; border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+.demo-key i { grid-row: span 2; font-size: 15px; color: var(--red-hot); }
+.demo-key b { min-width: 0; font-size: 13px; line-height: 1.2; }
+.demo-key span {
+  min-width: 0; font-size: 11.5px; color: var(--dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.demo-key:active { background: rgba(225,6,0,.2); }
+
+/* ---------- offers ---------- */
+
+.offers { justify-content: center; margin-top: 20px; gap: 6px; }
+.offer { padding: 5px 11px; font-size: 11.5px; }
+
+/* ---------- flash messages ---------- */
+
+.flash-stack {
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+}
+.flash { align-items: flex-start; line-height: 1.45; }
+.flash i { margin-top: 2px; }
+
+/* ---------- lighter background on small devices ---------- */
+
+@media (max-width: 640px) {
+  /* huge blurred blobs are expensive to paint on phones */
+  .blob { filter: blur(70px); }
+  .blob.a { width: 360px; height: 360px; top: -120px; left: -120px; }
+  .blob.b { width: 320px; height: 320px; bottom: -140px; right: -120px; }
+  .blob.c { display: none; }
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 480px) {
+  .auth-wrap {
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+  .auth-card { padding: 28px 20px 22px; border-radius: 24px; }
+  .auth-brand { margin-bottom: 22px; }
+  .auth-logo img, .auth-logo svg { width: 72px; height: 72px; }
+  .auth-card h1 { font-size: clamp(20px, 6vw, 23px); }
+
+  .flash-stack {
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    max-width: none;
+  }
+}
+
+/* very narrow phones (≤ 360px): stack the demo buttons */
+@media (max-width: 360px) {
+  .auth-card { padding: 24px 16px 20px; }
+  .demo-list { grid-template-columns: 1fr; }
+  .auth-card .tag { letter-spacing: .24em; text-indent: .24em; }
+}
+
+/* short viewports (landscape phones, keyboard open): tighten vertical rhythm */
+@media (max-height: 640px) {
+  .auth-card { padding-top: 22px; padding-bottom: 18px; }
+  .auth-brand { margin-bottom: 16px; }
+  .auth-logo { margin-bottom: 8px; }
+  .auth-logo img, .auth-logo svg { width: 56px; height: 56px; }
+  .auth-lead { display: none; }
+  .auth-card .field-row { margin-bottom: 12px; }
+}
+
+/* devices without hover shouldn't keep a "stuck" lifted state after tapping */
+@media (hover: none) {
+  .auth-card .btn:hover { transform: none; }
+}
+
+/* browsers without backdrop-filter get a solid, readable card */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .auth-card { background: rgba(26,18,18,.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card .btn.full.loading i { animation-duration: 2s; }
+  .demo-keys summary i { transition: none; }
+}
