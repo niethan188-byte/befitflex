@@ -148,19 +148,48 @@ async function scanLoop() {
 
 startButton.addEventListener('click', () => cameraStream ? stopCamera() : startCamera());
 
+function parseAttendanceQr(rawCode) {
+  let code = String(rawCode)
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .trim();
+
+  if (/^https?:\/\//i.test(code)) {
+    try {
+      const url = new URL(code);
+      code = url.searchParams.get('id') || url.pathname.split('/').pop() || code;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  code = code.toUpperCase().replace(/^BEFITFLEX\s*:\s*/, '').trim();
+  const match = code.match(/^(MEM|DUMMY|DAY)[\s-]*(\d+)$/);
+  if (!match) return null;
+
+  const id = match[1] + match[2];
+  if (/^(?:MEM|DUMMY)\d{4,}$/.test(id)) {
+    return { member_id: id, scan_only: true };
+  }
+  if (/^DAY\d{5,}$/.test(id)) {
+    return { pass_id: id, scan_only: true };
+  }
+  return null;
+}
+
 async function submit(rawCode) {
-  const code = rawCode.trim().toUpperCase().replace(/^BEFITFLEX:/, '');
-  const payload = /^(?:MEM|DUMMY)\d{4,}$/.test(code)
-    ? { member_id: code, scan_only: true }
-    : /^DAY\d{5,}$/.test(code)
-      ? { pass_id: code, scan_only: true }
-      : null;
+  const payload = parseAttendanceQr(rawCode);
   if (!payload) {
-    showResult('err', 'circle-exclamation', 'QR not recognized', 'Show a valid member or day-pass QR code.');
+    showResult(
+      'err',
+      'circle-exclamation',
+      'QR not recognized',
+      'Scanned value: ' + String(rawCode).slice(0, 100) + '. Show a valid member or day-pass QR code.'
+    );
     return;
   }
 
-  showResult('in', 'circle-check', 'Reading QR…', code);
+  showResult('in', 'circle-check', 'Reading QR…', payload.member_id || payload.pass_id);
   try {
     const response = await fetch('../api/check-in.php', {
       method: 'POST',
