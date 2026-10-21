@@ -362,6 +362,21 @@ textarea { resize: vertical; min-height: 84px; }
 .demo-key:hover { background: rgba(225,6,0,.14); border-color: rgba(225,6,0,.4); color: var(--text); }
 .demo-key b { color: var(--text); font-weight: 600; min-width: 58px; }
 
+@media (max-width: 480px) {
+  .auth-wrap { padding: 12px; }
+  .auth-card { padding: 24px 18px; border-radius: 20px; }
+  .auth-logo { margin-bottom: 16px; }
+  .auth-logo img, .auth-logo svg { width: 72px; height: 72px; }
+  .auth-card h1 { font-size: clamp(20px, 6vw, 24px); }
+  .auth-card .tag { margin-bottom: 20px; }
+  .turnstile-row { min-width: 0; }
+  .turnstile-row .cf-turnstile { width: 100%; max-width: 300px; }
+  .demo-key { min-width: 0; min-height: 44px; gap: 8px; padding: 9px 10px; overflow-wrap: anywhere; }
+  .demo-key b { min-width: 52px; }
+  .flash-stack { top: 12px; right: 12px; left: 12px; max-width: none; }
+  .auth-card input[type=email], .auth-card input[type=password] { font-size: 16px; }
+}
+
 /* ---------- misc ---------- */
 
 .offers { display: flex; flex-wrap: wrap; gap: 8px; }
