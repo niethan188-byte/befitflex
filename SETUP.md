@@ -160,8 +160,11 @@ no framework or frontend build step.
    Import it only into a new, disposable database after confirming the
    database credentials have permission to create and select that database.
    Never run it against a database containing data you need to keep. For an
-   existing BeFitFlex database, back it up first and apply only the required
-   SQL from `database/upgrade.sql`.
+   existing BeFitFlex database, back it up first and apply
+   `database/upgrade.sql` to the database configured by `MYSQLDATABASE` (or
+   `DB_NAME`). This upgrade adds schema required by current features, including
+   the day-pass/member link. Ensure the script's `USE` statement targets that
+   same database. Do not rerun the destructive seed to fix a schema mismatch.
 
    To initialize a fresh database and then add the 100 dummy members and
    payments from `tools/seed-dummy-members.php`, open the web service's Railway
