@@ -1132,6 +1132,123 @@ body.admin-analytics .grid > .panel {
   }
 }
 
+@media print {
+    body.admin-reports {
+      background: #fff !important;
+      color: #111 !important;
+      overflow: visible;
+    }
+
+    body.admin-reports .skip,
+    body.admin-reports .field,
+    body.admin-reports .sidebar,
+    body.admin-reports .tabbar,
+    body.admin-reports .cmd,
+    body.admin-reports .flash-stack,
+    body.admin-reports .topbar .menu-btn,
+    body.admin-reports .topbar .spacer,
+    body.admin-reports .topbar .cmd-trigger,
+    body.admin-reports .topbar .icon-btn,
+    body.admin-reports .topbar .notification-menu,
+    body.admin-reports .topbar .pill-user,
+    body.admin-reports .panel > h2 .btn {
+      display: none !important;
+    }
+
+    body.admin-reports .shell {
+      display: block;
+      min-height: 0;
+    }
+
+    body.admin-reports .main {
+      width: auto;
+      max-width: none;
+      padding: 0;
+    }
+
+    body.admin-reports .topbar {
+      margin-bottom: 18px;
+    }
+
+    body.admin-reports .topbar h1,
+    body.admin-reports .topbar .sub,
+    body.admin-reports .panel > h2 {
+      color: #111 !important;
+    }
+
+    body.admin-reports .stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    body.admin-reports .grid.c2 {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    body.admin-reports .stat,
+    body.admin-reports .panel {
+      background: #fff !important;
+      border: 1px solid #ccc !important;
+      border-radius: 4px;
+      box-shadow: none !important;
+      color: #111 !important;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    body.admin-reports .glass::before {
+      display: none;
+    }
+
+    body.admin-reports .stat .label,
+    body.admin-reports .stat .note,
+    body.admin-reports .panel [style*="color:var(--muted)"] {
+      color: #444 !important;
+    }
+
+    body.admin-reports .stat .value,
+    body.admin-reports .panel td,
+    body.admin-reports .panel th,
+    body.admin-reports .panel span {
+      color: #111 !important;
+    }
+
+    body.admin-reports .table-wrap {
+      overflow: visible;
+      margin: 0;
+      padding: 0;
+    }
+
+    body.admin-reports table {
+      border-collapse: collapse;
+    }
+
+    body.admin-reports thead th,
+    body.admin-reports tbody td {
+      border-color: #bbb !important;
+    }
+
+    body.admin-reports .bar {
+      border: 1px solid #888;
+      background: #eee;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    body.admin-reports .bar > span {
+      background: #555 !important;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    body.admin-reports .stat,
+    body.admin-reports tbody tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+}
+
 @media (max-width: 420px) {
   body.admin-analytics .analytics-tabs-actions {
     display: grid;

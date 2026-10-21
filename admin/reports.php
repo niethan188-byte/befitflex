@@ -4,6 +4,7 @@ require __DIR__ . '/../includes/auth.php';
 $u = require_role('admin');
 
 $page = 'reports';
+$bodyClass = 'admin-reports';
 $title = 'Reports';
 $subtitle = 'Revenue, retention and utilisation.';
 
