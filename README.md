@@ -33,8 +33,13 @@ drifting light field behind everything.
   ```
 
 6. If upgrading an existing installation instead of importing the fresh schema,
-  import `database/upgrade.sql` once. It includes the day-pass/member link
-  required for member day-pass QR codes, along with other schema upgrades.
+  import `database/upgrade.sql` once. It includes the remember-me token table,
+  day-pass/member link required for member day-pass QR codes, and other schema
+  upgrades.
+
+The login page's optional **Remember me on this device** setting keeps the
+account signed in for up to 30 days. Use it only on a trusted device; signing
+out revokes its remembered login.
 
 For announcement videos up to 1 GB, restart Apache from the XAMPP Control Panel
 after installation so PHP reloads the upload limits in `.user.ini`.

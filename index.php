@@ -19,6 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = attempt_login($email, $pass);
         if ($user) {
             start_session_for($user);
+            if (($_POST['remember_me'] ?? null) === '1') {
+                issue_remember_token((int) $user['user_id']);
+            } else {
+                clear_remember_cookie();
+            }
             log_activity('Sign in', 'Authentication', 'Signed in as ' . $user['user_type']);
             redirect(home_for($user['user_type']));
         }
@@ -81,6 +86,13 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
       <div class="field-row">
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required placeholder="••••••••">
+      </div>
+      <div class="remember-row">
+        <label for="remember_me">
+          <input type="checkbox" id="remember_me" name="remember_me" value="1"
+                 <?= isset($_POST['remember_me']) ? 'checked' : '' ?>>
+          Remember me on this device
+        </label>
       </div>
       <?php if ($turnstileReady): ?>
       <div class="turnstile-row"><div class="cf-turnstile" data-sitekey="<?= e(turnstile_site_key()) ?>" data-action="login" data-size="flexible"></div></div>

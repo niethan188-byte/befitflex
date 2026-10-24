@@ -26,6 +26,17 @@ CREATE TABLE users (
     INDEX idx_email (email), INDEX idx_user_type (user_type)
 ) ENGINE=InnoDB;
 
+CREATE TABLE remember_tokens (
+    selector CHAR(32) PRIMARY KEY,
+    token_hash CHAR(64) NOT NULL,
+    user_id INT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_remember_tokens_user (user_id),
+    INDEX idx_remember_tokens_expires (expires_at)
+) ENGINE=InnoDB;
+
 CREATE TABLE members (
     member_id VARCHAR(50) PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,

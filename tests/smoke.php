@@ -11,6 +11,14 @@ $columnNames = array_column($columns, 'Field');
 $checks['email verification schema'] = count(array_intersect([
     'email_verified_at', 'email_verification_token', 'email_verification_expires_at',
 ], $columnNames)) === 3;
+$rememberTokensTable = db()->query("SHOW TABLES LIKE 'remember_tokens'")->fetchColumn();
+$rememberTokenColumns = $rememberTokensTable
+    ? db()->query('SHOW COLUMNS FROM remember_tokens')->fetchAll()
+    : [];
+$checks['remember-me token schema'] = count(array_intersect(
+    ['selector', 'token_hash', 'user_id', 'expires_at'],
+    array_column($rememberTokenColumns, 'Field')
+)) === 4;
 $memberColumns = db()->query('SHOW COLUMNS FROM members')->fetchAll();
 $contactColumn = array_values(array_filter(
     $memberColumns,

@@ -79,6 +79,18 @@ body {
   border-radius: 12px;
 }
 
+.remember-row {
+  margin: -2px 0 16px;
+}
+.remember-row label {
+  display: inline-flex; align-items: center; gap: 9px;
+  min-height: 24px; font-size: 13px; color: var(--muted);
+  cursor: pointer;
+}
+.remember-row input[type=checkbox] {
+  width: 17px; height: 17px; margin: 0; accent-color: var(--red-hot);
+}
+
 .input-icon { position: relative; }
 .input-icon > i {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);

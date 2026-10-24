@@ -1,6 +1,17 @@
 -- Non-destructive upgrade for installations created before the verification feature.
 USE befitflex_gym;
 
+CREATE TABLE IF NOT EXISTS remember_tokens (
+    selector CHAR(32) PRIMARY KEY,
+    token_hash CHAR(64) NOT NULL,
+    user_id INT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_remember_tokens_user (user_id),
+    INDEX idx_remember_tokens_expires (expires_at)
+) ENGINE=InnoDB;
+
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns
      WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'image_path'

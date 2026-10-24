@@ -33,6 +33,92 @@ function base_url(): string
     return defined('IN_SUBDIR') && IN_SUBDIR ? '../' : '';
 }
 
+const REMEMBER_COOKIE = 'BEFITREMEMBER';
+const REMEMBER_DAYS = 30;
+
+function remember_cookie_options(int $expires): array
+{
+    return [
+        'expires'  => $expires,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ];
+}
+
+function clear_remember_cookie(): void
+{
+    $cookie = (string) ($_COOKIE[REMEMBER_COOKIE] ?? '');
+    if (preg_match('/^([a-f0-9]{32}):[a-f0-9]{64}$/', $cookie, $matches)) {
+        db()->prepare('DELETE FROM remember_tokens WHERE selector = ?')->execute([$matches[1]]);
+    }
+
+    if (!setcookie(REMEMBER_COOKIE, '', remember_cookie_options(time() - 3600))) {
+        throw new RuntimeException('Unable to clear the remember-me cookie.');
+    }
+    unset($_COOKIE[REMEMBER_COOKIE]);
+}
+
+function issue_remember_token(int $userId): void
+{
+    $selector = bin2hex(random_bytes(16));
+    $validator = bin2hex(random_bytes(32));
+    $expiresAt = date('Y-m-d H:i:s', time() + REMEMBER_DAYS * 86400);
+
+    db()->prepare('DELETE FROM remember_tokens WHERE expires_at <= NOW()')->execute();
+    db()->prepare(
+        'INSERT INTO remember_tokens (selector, token_hash, user_id, expires_at)
+         VALUES (?, ?, ?, ?)'
+    )->execute([$selector, hash('sha256', $validator), $userId, $expiresAt]);
+
+    if (!setcookie(
+        REMEMBER_COOKIE,
+        $selector . ':' . $validator,
+        remember_cookie_options(strtotime($expiresAt))
+    )) {
+        db()->prepare('DELETE FROM remember_tokens WHERE selector = ?')->execute([$selector]);
+        throw new RuntimeException('Unable to set the remember-me cookie.');
+    }
+    $_COOKIE[REMEMBER_COOKIE] = $selector . ':' . $validator;
+}
+
+function restore_remembered_session(): void
+{
+    if (current_user()) {
+        return;
+    }
+
+    $cookie = (string) ($_COOKIE[REMEMBER_COOKIE] ?? '');
+    if (!preg_match('/^([a-f0-9]{32}):([a-f0-9]{64})$/', $cookie, $matches)) {
+        if ($cookie !== '') {
+            clear_remember_cookie();
+        }
+        return;
+    }
+
+    $statement = db()->prepare(
+        'SELECT rt.token_hash, u.*
+           FROM remember_tokens rt
+           JOIN users u ON u.user_id = rt.user_id
+          WHERE rt.selector = ? AND rt.expires_at > NOW()
+          LIMIT 1'
+    );
+    $statement->execute([$matches[1]]);
+    $record = $statement->fetch();
+    if (!$record || !hash_equals((string) $record['token_hash'], hash('sha256', $matches[2]))
+        || !in_array($record['user_type'], ['admin', 'member'], true)
+        || $record['email_verified_at'] === null) {
+        clear_remember_cookie();
+        return;
+    }
+
+    db()->prepare('DELETE FROM remember_tokens WHERE selector = ?')->execute([$matches[1]]);
+    db()->prepare('UPDATE users SET last_login = NOW() WHERE user_id = ?')->execute([$record['user_id']]);
+    start_session_for($record);
+    issue_remember_token((int) $record['user_id']);
+}
+
 /**
  * Demo rows store plain-text passwords so you can sign in right after import.
  * On the first successful login the password is silently re-saved as a bcrypt
@@ -123,3 +209,5 @@ function require_role(string ...$allowed): array
     }
     return $u;
 }
+
+restore_remembered_session();

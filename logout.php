@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/auth.php';
 
 log_activity('Sign out', 'Authentication', '');
+clear_remember_cookie();
 $_SESSION = [];
 
 if (ini_get('session.use_cookies')) {
