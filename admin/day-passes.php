@@ -83,6 +83,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('Day pass cancelled.');
     }
 
+    if ($act === 'mark_paid') {
+        $passId = (string) ($_POST['pass_id'] ?? '');
+        $stmt = db()->prepare(
+            "UPDATE day_passes SET pass_status = 'Paid'
+              WHERE pass_id = ? AND pass_status = 'Pending' AND payment_method <> 'Maya'"
+        );
+        $stmt->execute([$passId]);
+        if ($stmt->rowCount() === 1) {
+            log_activity('Confirm day pass cash payment', 'Day Passes', $passId . ' → Paid');
+            flash('Cash payment confirmed. The pass QR is now active.');
+        } else {
+            flash('This pass cannot be marked paid. Maya payments must be confirmed by Maya.', 'err');
+        }
+    }
+
     redirect('day-passes.php');
 }
 
@@ -107,6 +122,13 @@ include __DIR__ . '/../includes/header.php';
     <button class="btn red sm" onclick="openModal('mDayPass')"><i class="fa-solid fa-plus"></i> New day pass</button>
   </h2>
   <p class="note">After payment, open or download the QR below and share it with the visitor. Linked members can also use the day-pass QR displayed on their member card for the visit date.</p>
+  <div class="mini-row">
+    <span><b>Self-service day-pass QR</b><div class="note">Print this reusable QR for members and walk-in visitors. It opens the public name and payment form.</div></span>
+    <span>
+      <img src="../api/qr.php?type=day_pass_purchase" alt="Scan to purchase a day pass" width="112" height="112">
+      <button class="btn sm" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print QR</button>
+    </span>
+  </div>
 </div>
 
 <div class="panel glass">
@@ -140,6 +162,14 @@ include __DIR__ . '/../includes/header.php';
           <?php else: ?><span class="note">Available after payment</span><?php endif; ?>
         </td>
         <td>
+          <?php if ($pass['pass_status'] === 'Pending' && $pass['payment_method'] !== 'Maya'): ?>
+            <form method="post" onsubmit="return confirm('Confirm that cash has been received?')">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action" value="mark_paid">
+              <input type="hidden" name="pass_id" value="<?= e($pass['pass_id']) ?>">
+              <button class="btn sm" title="Confirm cash payment"><i class="fa-solid fa-cash-register"></i> Mark paid</button>
+            </form>
+          <?php endif; ?>
           <?php if ($pass['pass_status'] !== 'Cancelled' && $pass['visit_date'] >= date('Y-m-d')): ?>
             <form method="post" onsubmit="return confirm('Cancel this day pass?')">
               <?= csrf_field() ?>

@@ -146,6 +146,15 @@ page offers a retry action; it first checks the existing checkout with Maya and
 starts a new one only after Maya confirms failure, cancellation, or expiry.
 Available payment methods depend on the Maya merchant account.
 
+Members can scan the reusable day-pass QR on their member card, and admins can
+print the same QR from **Admin → Day Passes**. Visitors can enter only their
+name, choose a date and rate, then select cash at the front desk or Maya. Cash
+passes remain pending until staff confirm receipt; Maya passes become active
+only after server-side checkout verification. Signed-in active, paid monthly
+members are directed to use their member card instead of buying a day pass.
+Existing deployments must run `database/upgrade.sql` to add the day-pass token
+and Maya checkout columns.
+
 To test online payments:
 
 1. Obtain Maya Checkout public and secret API keys from the Maya Business

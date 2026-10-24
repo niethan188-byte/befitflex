@@ -104,6 +104,13 @@ include __DIR__ . '/../includes/header.php';
       Bring the card, or just your member number. If you lose access to your
       account, the front desk can look you up by name.
     </p>
+    <div class="mini-row">
+      <span><b>Need a day pass?</b><div class="note">Scan this QR to purchase a one-day visit or open the day-pass page.</div></span>
+      <span>
+        <img src="<?= $b ?>api/qr.php?type=day_pass_purchase" alt="Scan to purchase a day pass" width="96" height="96">
+        <a class="btn sm" href="<?= $b ?>day-pass.php">Get a day pass</a>
+      </span>
+    </div>
   </div>
 </div>
 

@@ -10,7 +10,24 @@ $type = (string) ($_GET['type'] ?? '');
 $id = strtoupper(trim((string) ($_GET['id'] ?? '')));
 $payload = '';
 
-if ($type === 'member' && preg_match('/^(?:MEM|DUMMY)\d{4,}$/', $id)) {
+if ($type === 'day_pass_purchase') {
+    require_role('admin', 'member');
+    $configuredBase = getenv('BEFITFLEX_APP_URL');
+    if (is_string($configuredBase) && trim($configuredBase) !== '') {
+        $base = rtrim(trim($configuredBase), '/');
+    } else {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+        $origin = $scheme . '://' . $host;
+        if ($host === '' || filter_var($origin, FILTER_VALIDATE_URL) === false
+            || parse_url($origin, PHP_URL_USER) !== null || parse_url($origin, PHP_URL_PASS) !== null) {
+            http_response_code(400);
+            exit('Application URL is not valid');
+        }
+        $base = rtrim($origin . dirname(dirname($_SERVER['SCRIPT_NAME'])), '/');
+    }
+    $payload = $base . '/day-pass.php';
+} elseif ($type === 'member' && preg_match('/^(?:MEM|DUMMY)\d{4,}$/', $id)) {
     $u = require_role('member', 'admin');
     if ($u['type'] === 'member' && ($_SESSION['member_id'] ?? '') !== $id) {
         http_response_code(403);
@@ -45,10 +62,19 @@ if ($type === 'member' && preg_match('/^(?:MEM|DUMMY)\d{4,}$/', $id)) {
         $payload = 'BEFITFLEX:' . $pass['pass_id'];
     }
 } elseif ($type === 'day_pass' && preg_match('/^DAY\d{5,}$/', $id)) {
-    require_role('admin');
-    if (!row("SELECT pass_id FROM day_passes WHERE pass_id = ? AND visit_date >= CURDATE() AND pass_status = 'Paid'", [$id])) {
+    $user = current_user();
+    $token = (string) ($_GET['token'] ?? '');
+    $pass = row(
+        "SELECT pass_id, public_token FROM day_passes
+          WHERE pass_id = ? AND visit_date >= CURDATE() AND pass_status = 'Paid'",
+        [$id]
+    );
+    $admin = $user && $user['type'] === 'admin';
+    $tokenValid = $pass && $token !== '' && is_string($pass['public_token'])
+        && $pass['public_token'] !== '' && hash_equals($pass['public_token'], $token);
+    if (!$pass || (!$admin && !$tokenValid)) {
         http_response_code(404);
-        exit('Paid, current or upcoming day pass not found');
+        exit('Paid day pass not found');
     }
     $payload = 'BEFITFLEX:' . $id;
 } else {

@@ -89,6 +89,24 @@ ALTER TABLE day_passes ALTER COLUMN amount SET DEFAULT 150.00;
 
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'day_passes' AND column_name = 'public_token'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE day_passes ADD COLUMN public_token CHAR(64) NULL AFTER member_id',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'day_passes' AND column_name = 'maya_checkout_id'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE day_passes ADD COLUMN maya_checkout_id VARCHAR(100) NULL AFTER pass_status',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
      WHERE table_schema = DATABASE() AND table_name = 'day_passes' AND column_name = 'member_id'
 );
 SET @sql = IF(@column_exists = 0,

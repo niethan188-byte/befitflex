@@ -30,9 +30,16 @@ function maya_create_checkout(array $payment, string $successUrl, string $failur
     }
     $publicKey = trim($publicKey);
 
+    $buyer = [
+        'firstName' => (string) ($payment['member_name'] ?? $payment['visitor_name'] ?? 'Member'),
+    ];
+    $email = trim((string) ($payment['email'] ?? ''));
+    if ($email !== '') {
+        $buyer['contact'] = ['email' => $email];
+    }
     $payload = json_encode([
         'totalAmount' => ['value' => (float) $payment['amount'], 'currency' => 'PHP'],
-        'buyer' => ['firstName' => (string) ($payment['member_name'] ?? 'Member'), 'contact' => ['email' => (string) ($payment['email'] ?? '')]],
+        'buyer' => $buyer,
         'items' => [['name' => (string) ($payment['notes'] ?: 'Gym membership payment'), 'amount' => ['value' => (float) $payment['amount'], 'currency' => 'PHP'], 'totalAmount' => ['value' => (float) $payment['amount'], 'currency' => 'PHP']]],
         'redirectUrl' => ['success' => $successUrl, 'failure' => $failureUrl, 'cancel' => $failureUrl],
         'requestReferenceNumber' => (string) $payment['payment_id'],

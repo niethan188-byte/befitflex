@@ -61,10 +61,10 @@ composer install
 This installs Dompdf for downloadable payment invoices.
 
 For an existing database, import `database/upgrade.sql` once after the main
-schema. This non-destructive upgrade adds the `day_passes.member_id` link needed
-to create a day pass for an existing member and show that pass QR on their
-member card. Use the upgrade script rather than re-importing the fresh schema,
-which resets the demo database.
+schema. This non-destructive upgrade adds day-pass member links and the secure
+pass-token and Maya-checkout fields used by the public self-service day-pass QR.
+Use the upgrade script rather than re-importing the fresh schema, which resets
+the demo database.
 The member `contact_number` column must be `TEXT` because the application stores
 the encrypted contact value there for compatibility. Existing deployments
 using the original `VARCHAR(20)` schema must widen it before registration:

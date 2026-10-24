@@ -31,6 +31,38 @@ if ($reference === '' || !in_array($status, [
 
 $confirmed = false;
 if (in_array($status, ['SUCCESS', 'COMPLETED', 'PAYMENT_SUCCESS'], true)) {
+    if (preg_match('/^DAY\d{5,}$/', $reference)) {
+        $pass = row(
+            "SELECT pass_id AS payment_id, amount, pass_status AS payment_status, maya_checkout_id
+               FROM day_passes
+              WHERE pass_id = ? AND pass_status = 'Pending' AND payment_method = 'Maya'",
+            [$reference]
+        );
+        if (!$pass || !maya_webhook_confirms_payment($event, $pass)) {
+            error_log('Maya day-pass webhook did not match a pending pass.');
+            http_response_code(202);
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true, 'confirmed' => false]);
+            exit;
+        }
+
+        $checkoutId = (string) ($event['checkoutId'] ?? $event['id'] ?? '');
+        $stmt = db()->prepare(
+            'UPDATE day_passes
+                SET maya_checkout_id = ?, pass_status = "Paid"
+              WHERE pass_id = ? AND payment_method = "Maya" AND pass_status = "Pending"
+                AND (maya_checkout_id IS NULL OR maya_checkout_id = "" OR maya_checkout_id = ?)'
+        );
+        $stmt->execute([$checkoutId, $reference, $checkoutId]);
+        if ($stmt->rowCount() > 0) {
+            log_activity('Maya webhook', 'Day Passes', $reference . ' → Paid');
+            $confirmed = true;
+        }
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true, 'confirmed' => $confirmed]);
+        exit;
+    }
+
     $payment = row(
         'SELECT payment_id, amount, payment_status, maya_checkout_id
            FROM payments
