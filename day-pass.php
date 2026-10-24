@@ -40,20 +40,25 @@ if ($passId !== '' && preg_match('/^DAY\d{5,}$/', $passId)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $name = trim((string) ($_POST['visitor_name'] ?? ''));
-    $visitDate = trim((string) ($_POST['visit_date'] ?? ''));
+    $name = $member
+        ? trim((string) $member['member_name'])
+        : trim((string) ($_POST['visitor_name'] ?? ''));
+    $visitDate = date('Y-m-d');
     $rate = (string) ($_POST['pass_rate'] ?? '');
     $method = (string) ($_POST['payment_method'] ?? '');
+    $hasAccount = (string) ($_POST['has_account'] ?? '') === '1';
     $amount = match ($rate) {
         'regular' => DAY_PASS_PRICE,
         'student' => STUDENT_DAY_PASS_PRICE,
         default => null,
     };
-    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $visitDate);
+    if ($hasAccount && (!$user || $user['type'] !== 'member' || !$member)) {
+        flash('Sign in with your member account first so the day pass can be linked to you.', 'err');
+        redirect('day-pass.php');
+    }
     if ($name === '' || mb_strlen($name) > 255 || $amount === null
-        || !in_array($method, ['Cash', 'Maya'], true)
-        || !$date || $date->format('Y-m-d') !== $visitDate || $visitDate < date('Y-m-d')) {
-        flash('Enter your name, a valid visit date and pass rate, and a supported payment method.', 'err');
+        || !in_array($method, ['Cash', 'Maya'], true)) {
+        flash('Enter your name, choose a pass rate and a supported payment method.', 'err');
         redirect('day-pass.php');
     }
     if ($activeMonthlyMember) {
@@ -184,12 +189,15 @@ $mayaAvailable = maya_payment_flow_configured();
         <?php else: ?>Pass payment pending<?php endif; ?>
       </h2>
       <p><?= e($pass['visitor_name']) ?> · <?= dt($pass['visit_date']) ?> · <?= money($pass['amount']) ?></p>
+      <?php if ($pass['payment_method'] === 'Cash' && $pass['pass_status'] === 'Pending'): ?>
+        <p class="note">Pass reference: <b><?= e($pass['pass_id']) ?></b>. Show this at the front desk; staff will activate the QR only after receiving your cash payment.</p>
+      <?php endif; ?>
       <?php if ($pass['pass_status'] === 'Paid' && $pass['visit_date'] >= date('Y-m-d')): ?>
         <img src="api/qr.php?type=day_pass&amp;id=<?= rawurlencode($pass['pass_id']) ?>&amp;token=<?= rawurlencode($passToken) ?>"
              alt="Your day-pass check-in QR code" width="180" height="180">
         <p class="note">Show this QR at the gym entrance on your visit date.</p>
       <?php elseif ($pass['payment_method'] === 'Cash' && $pass['pass_status'] === 'Pending'): ?>
-        <p class="note">Pay at the front desk. Staff will activate your pass after receiving cash; reload this page to see the QR.</p>
+        <p class="note">Your QR stays inactive until staff confirm receipt of payment. Reload this page afterward.</p>
       <?php elseif ($pass['pass_status'] === 'Cancelled'): ?>
         <p class="note">This pass is inactive. Contact the gym if you believe it was cancelled by mistake.</p>
       <?php elseif ($pass['pass_status'] === 'Paid'): ?>
@@ -203,16 +211,28 @@ $mayaAvailable = maya_payment_flow_configured();
       <p>Your active, paid monthly membership is already valid for gym visits. No day pass is needed.</p>
       <a class="btn red full" href="member/id-card.php">Open my member card</a>
     <?php else: ?>
-      <p>Enter your name, choose a visit date and rate, then pay by cash at the front desk or securely through Maya.</p>
+      <p>Enter your name and pass rate. This pass is valid only today. Pay by cash at the front desk or securely through Maya.</p>
       <form method="post" autocomplete="on">
         <?= csrf_field() ?>
         <div class="field-row">
-          <label for="visitorName">Your name</label>
-          <input type="text" id="visitorName" name="visitor_name" maxlength="255" required autofocus autocomplete="name">
+          <label>
+            <input type="checkbox" id="hasAccount" name="has_account" value="1"
+              <?= $member ? 'checked disabled' : '' ?>>
+            I already have a BeFitFlex account
+          </label>
+          <p class="note" id="accountNote" aria-live="polite">
+            <?php if ($member): ?>
+              Your signed-in account will be linked to this pass.
+            <?php else: ?>
+              Sign in first to link a pass to your account. New visitors can continue without an account.
+              <a href="index.php">Sign in</a>
+            <?php endif; ?>
+          </p>
         </div>
         <div class="field-row">
-          <label for="visitDate">Visit date</label>
-          <input type="date" id="visitDate" name="visit_date" value="<?= e(date('Y-m-d')) ?>" min="<?= e(date('Y-m-d')) ?>" required>
+          <label for="visitorName">Your name</label>
+          <input type="text" id="visitorName" name="visitor_name" maxlength="255" required autofocus autocomplete="name"
+            value="<?= e((string) ($member['member_name'] ?? '')) ?>" <?= $member ? 'readonly' : '' ?>>
         </div>
         <div class="field-row">
           <label for="passRate">Pass rate</label>
@@ -230,13 +250,31 @@ $mayaAvailable = maya_payment_flow_configured();
         </div>
         <button class="btn red full" type="submit"><i class="fa-solid fa-arrow-right"></i> Continue to payment</button>
       </form>
-      <?php if (!$user): ?>
-        <p class="note">Already a member? <a href="index.php">Sign in</a> first so your pass can be linked to your account. Active paid monthly members can use their member card instead.</p>
-      <?php elseif ($user['type'] === 'member' && !$member): ?>
+      <?php if ($user && $user['type'] === 'member' && !$member): ?>
         <p class="note">Your member record could not be found. Please contact the gym before purchasing.</p>
       <?php endif; ?>
     <?php endif; ?>
   </main>
 </div>
+<?php if (!$member && !$pass && !$activeMonthlyMember): ?>
+<script>
+const accountCheckbox = document.getElementById('hasAccount');
+const accountNote = document.getElementById('accountNote');
+const purchaseButton = document.querySelector('form button[type="submit"]');
+accountCheckbox.addEventListener('change', () => {
+  if (accountCheckbox.checked) {
+    accountNote.textContent = 'To link this pass safely, sign in first: ';
+    const signInLink = document.createElement('a');
+    signInLink.href = 'index.php';
+    signInLink.textContent = 'Sign in';
+    accountNote.append(signInLink);
+    purchaseButton.disabled = true;
+  } else {
+    accountNote.textContent = 'New visitors can continue without an account.';
+    purchaseButton.disabled = false;
+  }
+});
+</script>
+<?php endif; ?>
 </body>
 </html>
