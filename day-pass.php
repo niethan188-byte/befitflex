@@ -40,30 +40,53 @@ if ($passId !== '' && preg_match('/^DAY\d{5,}$/', $passId)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
+    $hasAccount = (string) ($_POST['has_account'] ?? '') === '1';
+    $accountMember = null;
+    if (!$member && $hasAccount) {
+        $accountEmail = trim((string) ($_POST['account_email'] ?? ''));
+        if ($accountEmail === '' || mb_strlen($accountEmail) > 255
+            || filter_var($accountEmail, FILTER_VALIDATE_EMAIL) === false) {
+            flash('Enter a valid email address for your BeFitFlex member account.', 'err');
+            redirect('day-pass.php');
+        }
+        $accountMember = row(
+            "SELECT m.member_id, m.member_name, m.membership_type, m.status,
+                    (SELECT p.payment_status FROM payments p
+                      WHERE p.member_id = m.member_id
+                      ORDER BY p.created_at DESC, p.payment_id DESC LIMIT 1) latest_payment_status
+               FROM users u
+               JOIN members m ON m.user_id = u.user_id
+              WHERE u.email = ? AND u.user_type = 'member'",
+            [$accountEmail]
+        );
+        if (!$accountMember) {
+            flash('We could not verify a BeFitFlex member account with that email. Check the address and try again.', 'err');
+            redirect('day-pass.php');
+        }
+    }
     $name = $member
         ? trim((string) $member['member_name'])
         : trim((string) ($_POST['visitor_name'] ?? ''));
     $visitDate = date('Y-m-d');
     $rate = (string) ($_POST['pass_rate'] ?? '');
     $method = (string) ($_POST['payment_method'] ?? '');
-    $hasAccount = (string) ($_POST['has_account'] ?? '') === '1';
     $amount = match ($rate) {
         'regular' => DAY_PASS_PRICE,
         'student' => STUDENT_DAY_PASS_PRICE,
         default => null,
     };
-    if ($hasAccount && (!$user || $user['type'] !== 'member' || !$member)) {
-        flash('Sign in with your member account first so the day pass can be linked to you.', 'err');
-        redirect('day-pass.php');
-    }
     if ($name === '' || mb_strlen($name) > 255 || $amount === null
         || !in_array($method, ['Cash', 'Maya'], true)) {
         flash('Enter your name, choose a pass rate and a supported payment method.', 'err');
         redirect('day-pass.php');
     }
-    if ($activeMonthlyMember) {
+    $verifiedActiveMonthlyMember = $accountMember
+        && $accountMember['membership_type'] === 'Monthly'
+        && $accountMember['status'] === 'Active'
+        && $accountMember['latest_payment_status'] === 'Paid';
+    if ($activeMonthlyMember || $verifiedActiveMonthlyMember) {
         flash('Your active paid monthly membership already includes gym access. You do not need a day pass.', 'err');
-        redirect('member/id-card.php');
+        redirect($member ? 'member/id-card.php' : 'day-pass.php');
     }
     if ($user && $user['type'] === 'member' && !$member) {
         flash('Your member record could not be found. Please contact the gym before purchasing.', 'err');
@@ -88,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $passId = next_id('day_passes', 'pass_id', 'DAY', 5);
     $passToken = bin2hex(random_bytes(32));
-    $memberId = $member['member_id'] ?? null;
+    $memberId = $member['member_id'] ?? $accountMember['member_id'] ?? null;
     db()->prepare(
         'INSERT INTO day_passes
             (pass_id, member_id, public_token, visitor_name, contact_number, visit_date, amount,
@@ -158,7 +181,7 @@ $mayaAvailable = maya_payment_flow_configured();
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="auth-page">
+<body class="auth-page day-pass-page">
 <div class="field"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
 
 <?php if ($flashes): ?>
@@ -182,15 +205,22 @@ $mayaAvailable = maya_payment_flow_configured();
     <p class="tag"><?= e(APP_NAME) ?> · <?= e(APP_TAGLINE) ?></p>
 
     <?php if ($pass): ?>
+      <section class="day-pass-proof">
       <h2>
         <?php if ($pass['pass_status'] === 'Paid' && $pass['visit_date'] < date('Y-m-d')): ?>This pass has expired
         <?php elseif ($pass['pass_status'] === 'Cancelled'): ?>This pass was cancelled
         <?php elseif ($pass['pass_status'] === 'Paid'): ?>Your pass is ready
         <?php else: ?>Pass payment pending<?php endif; ?>
       </h2>
-      <p><?= e($pass['visitor_name']) ?> · <?= dt($pass['visit_date']) ?> · <?= money($pass['amount']) ?></p>
+      <p class="day-pass-proof-details"><?= e($pass['visitor_name']) ?> · <?= dt($pass['visit_date']) ?> · <?= money($pass['amount']) ?></p>
+      <div class="day-pass-reference">
+        <span>Pass reference</span>
+        <strong><?= e($pass['pass_id']) ?></strong>
+        <span class="chip <?= $pass['pass_status'] === 'Paid' ? 'ok' : ($pass['pass_status'] === 'Cancelled' ? 'bad' : 'warn') ?>"><?= e($pass['pass_status']) ?></span>
+      </div>
+      <p class="note">Show this pass page or its reference to the front desk. The admin can look up this record by its pass ID.</p>
       <?php if ($pass['payment_method'] === 'Cash' && $pass['pass_status'] === 'Pending'): ?>
-        <p class="note">Pass reference: <b><?= e($pass['pass_id']) ?></b>. Show this at the front desk; staff will activate the QR only after receiving your cash payment.</p>
+        <p class="note">Show this at the front desk; staff will activate the QR only after receiving your cash payment.</p>
       <?php endif; ?>
       <?php if ($pass['pass_status'] === 'Paid' && $pass['visit_date'] >= date('Y-m-d')): ?>
         <img src="api/qr.php?type=day_pass&amp;id=<?= rawurlencode($pass['pass_id']) ?>&amp;token=<?= rawurlencode($passToken) ?>"
@@ -206,29 +236,39 @@ $mayaAvailable = maya_payment_flow_configured();
         <p class="note">Maya has not confirmed this payment yet. Reload in a moment. Your pass will only be activated after verified payment.</p>
       <?php endif; ?>
       <a class="btn red full" href="day-pass.php">Purchase another day pass</a>
+      </section>
     <?php elseif ($activeMonthlyMember): ?>
       <h2>Your membership includes access</h2>
       <p>Your active, paid monthly membership is already valid for gym visits. No day pass is needed.</p>
       <a class="btn red full" href="member/id-card.php">Open my member card</a>
     <?php else: ?>
       <p>Enter your name and pass rate. This pass is valid only today. Pay by cash at the front desk or securely through Maya.</p>
-      <form method="post" autocomplete="on">
+      <form method="post" autocomplete="on" id="dayPassPurchaseForm">
         <?= csrf_field() ?>
         <div class="field-row">
-          <label>
+          <label class="day-pass-account-option">
             <input type="checkbox" id="hasAccount" name="has_account" value="1"
               <?= $member ? 'checked disabled' : '' ?>>
             I already have a BeFitFlex account
           </label>
-          <p class="note" id="accountNote" aria-live="polite">
+          <p class="note" id="accountNote" aria-live="polite" role="status">
             <?php if ($member): ?>
               Your signed-in account will be linked to this pass.
             <?php else: ?>
-              Sign in first to link a pass to your account. New visitors can continue without an account.
-              <a href="index.php">Sign in</a>
+              New visitors can continue without an account. If you have an account, verify its email to link this pass.
             <?php endif; ?>
           </p>
         </div>
+        <?php if (!$member): ?>
+        <div class="field-row day-pass-account-verification" id="accountVerification" hidden>
+          <label for="accountEmail">BeFitFlex account email</label>
+          <div class="day-pass-verify-row">
+            <input type="email" id="accountEmail" name="account_email" maxlength="255" autocomplete="email">
+            <button class="btn" type="button" id="verifyAccountButton"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Verify email</button>
+          </div>
+          <p class="note" id="accountVerificationStatus" aria-live="polite" role="status"></p>
+        </div>
+        <?php endif; ?>
         <div class="field-row">
           <label for="visitorName">Your name</label>
           <input type="text" id="visitorName" name="visitor_name" maxlength="255" required autofocus autocomplete="name"
@@ -261,19 +301,88 @@ $mayaAvailable = maya_payment_flow_configured();
 const accountCheckbox = document.getElementById('hasAccount');
 const accountNote = document.getElementById('accountNote');
 const purchaseButton = document.querySelector('form button[type="submit"]');
-accountCheckbox.addEventListener('change', () => {
-  if (accountCheckbox.checked) {
-    accountNote.textContent = 'To link this pass safely, sign in first: ';
-    const signInLink = document.createElement('a');
-    signInLink.href = 'index.php';
-    signInLink.textContent = 'Sign in';
-    accountNote.append(signInLink);
-    purchaseButton.disabled = true;
-  } else {
+const accountVerification = document.getElementById('accountVerification');
+const accountEmail = document.getElementById('accountEmail');
+const verifyAccountButton = document.getElementById('verifyAccountButton');
+const accountVerificationStatus = document.getElementById('accountVerificationStatus');
+let verifiedAccountEmail = '';
+
+function updateAccountVerification() {
+  const needsVerification = accountCheckbox.checked;
+  accountVerification.hidden = !needsVerification;
+  accountEmail.required = needsVerification;
+  purchaseButton.disabled = needsVerification && verifiedAccountEmail !== accountEmail.value.trim().toLowerCase();
+  if (!needsVerification) {
+    verifiedAccountEmail = '';
+    accountVerificationStatus.textContent = '';
     accountNote.textContent = 'New visitors can continue without an account.';
-    purchaseButton.disabled = false;
+  } else {
+    accountNote.textContent = 'Verify your member account email to continue without signing in.';
+    if (!verifiedAccountEmail) {
+      accountVerificationStatus.textContent = 'Verify the email address associated with your BeFitFlex member account.';
+    }
+  }
+}
+
+accountCheckbox.addEventListener('change', updateAccountVerification);
+accountEmail.addEventListener('input', () => {
+  if (verifiedAccountEmail !== accountEmail.value.trim().toLowerCase()) {
+    verifiedAccountEmail = '';
+    accountVerificationStatus.textContent = 'Email changed. Verify this address before continuing.';
+    purchaseButton.disabled = accountCheckbox.checked;
   }
 });
+
+verifyAccountButton.addEventListener('click', async () => {
+  const email = accountEmail.value.trim();
+  if (!accountEmail.reportValidity()) return;
+
+  verifyAccountButton.disabled = true;
+  verifyAccountButton.classList.add('loading');
+  verifyAccountButton.innerHTML = '<i class="fa-solid fa-spinner" aria-hidden="true"></i> Verifying…';
+  verifiedAccountEmail = '';
+  purchaseButton.disabled = true;
+  accountVerificationStatus.textContent = 'Verifying your account…';
+  accountVerificationStatus.classList.remove('error', 'success');
+
+  try {
+    const requestedEmail = email.toLowerCase();
+    const formData = new FormData(document.getElementById('dayPassPurchaseForm'));
+    formData.set('email', email);
+    const response = await fetch('api/day-pass-verify-account.php', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+      body: formData
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || 'Account verification failed. Please try again.');
+    if (accountEmail.value.trim().toLowerCase() !== requestedEmail) {
+      accountVerificationStatus.textContent = 'Email changed. Verify this address before continuing.';
+      return;
+    }
+    if (!result.exists) {
+      accountVerificationStatus.textContent = 'No BeFitFlex member account was found for this email. Check it and try again.';
+      accountVerificationStatus.classList.add('error');
+      return;
+    }
+
+    verifiedAccountEmail = requestedEmail;
+    accountVerificationStatus.textContent = 'Account verified. You can continue to payment.';
+    accountVerificationStatus.classList.add('success');
+    purchaseButton.disabled = false;
+  } catch (error) {
+    accountVerificationStatus.textContent = error instanceof Error
+      ? error.message
+      : 'Account verification failed. Please try again.';
+    accountVerificationStatus.classList.add('error');
+  } finally {
+    verifyAccountButton.disabled = false;
+    verifyAccountButton.classList.remove('loading');
+    verifyAccountButton.innerHTML = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Verify email';
+  }
+});
+updateAccountVerification();
 </script>
 <?php endif; ?>
 </body>

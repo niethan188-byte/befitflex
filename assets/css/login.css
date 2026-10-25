@@ -168,6 +168,75 @@ body {
 }
 .demo-key:active { background: rgba(225,6,0,.2); }
 
+/* ---------- public day-pass checkout ---------- */
+
+body.day-pass-page .auth-card { width: min(500px, 100%); }
+
+.day-pass-account-option {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  cursor: pointer;
+}
+.day-pass-account-option input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--red-hot);
+}
+.day-pass-account-verification[hidden] { display: none; }
+.day-pass-verify-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.day-pass-verify-row input { min-width: 0; flex: 1; }
+.day-pass-verify-row .btn { flex: 0 0 auto; justify-content: center; }
+.day-pass-verify-row .btn.loading i { animation: spin .8s linear infinite; }
+#accountVerificationStatus:empty { display: none; }
+#accountVerificationStatus.error { color: #FCA5A5; }
+#accountVerificationStatus.success { color: #4ADE80; }
+
+.day-pass-proof {
+  margin: 22px 0;
+  padding: 20px;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  background: rgba(255,255,255,.035);
+}
+.day-pass-proof h2 { margin-bottom: 8px; }
+.day-pass-proof-details { margin: 0 0 14px; color: var(--muted); line-height: 1.5; }
+.day-pass-reference {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.055);
+}
+.day-pass-reference > span:first-child {
+  color: var(--dim);
+  font-size: 12px;
+}
+.day-pass-reference strong {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 15px;
+  letter-spacing: .04em;
+}
+.day-pass-proof > img {
+  display: block;
+  width: min(200px, 100%);
+  height: auto;
+  margin: 18px auto 10px;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+.day-pass-proof > .note { text-align: left; }
+
 /* ---------- offers ---------- */
 
 .offers { justify-content: center; margin-top: 20px; gap: 6px; }
@@ -203,6 +272,9 @@ body {
       max(12px, env(safe-area-inset-left));
   }
   .auth-card { padding: 28px 20px 22px; border-radius: 24px; }
+  .day-pass-verify-row { flex-direction: column; }
+  .day-pass-verify-row .btn { min-height: 46px; }
+  .day-pass-proof { padding: 16px; }
   .auth-brand { margin-bottom: 22px; }
   .auth-logo img, .auth-logo svg { width: 72px; height: 72px; }
   .auth-card h1 { font-size: clamp(20px, 6vw, 23px); }

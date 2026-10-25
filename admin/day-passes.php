@@ -102,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page = 'day-passes';
+$bodyClass = 'admin-day-passes';
 $title = 'Day Passes';
 $subtitle = 'One-day access for walk-in customers without a membership.';
 
@@ -116,19 +117,30 @@ $passes = rows(
 include __DIR__ . '/../includes/header.php';
 ?>
 
+<section class="day-pass-self-service panel glass" aria-labelledby="selfServiceTitle">
+  <div class="day-pass-self-service-copy">
+    <span class="day-pass-eyebrow"><i class="fa-solid fa-qrcode" aria-hidden="true"></i> Quick purchase</span>
+    <h2 id="selfServiceTitle">Self-service day-pass QR</h2>
+    <p>Let members and walk-in visitors start a day-pass purchase from their phone. They can continue without an account, or verify their member email to link the pass.</p>
+    <div class="day-pass-self-service-steps">
+      <span><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Scan with a phone</span>
+      <span><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Choose a rate and payment</span>
+      <span><i class="fa-solid fa-ticket" aria-hidden="true"></i> Keep the pass page as proof</span>
+    </div>
+  </div>
+  <div class="day-pass-self-service-code">
+    <img src="../api/qr.php?type=day_pass_purchase" alt="Scan to purchase a BeFitFlex day pass" width="200" height="200">
+    <p>Scan to purchase</p>
+    <button class="btn sm" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print QR</button>
+  </div>
+</section>
+
 <div class="panel glass">
   <h2><i class="fa-solid fa-ticket"></i> One-day access
     <span class="spacer"></span>
     <button class="btn red sm" onclick="openModal('mDayPass')"><i class="fa-solid fa-plus"></i> New day pass</button>
   </h2>
-  <p class="note">After payment, open or download the QR below and share it with the visitor. Linked members can also use the day-pass QR displayed on their member card for the visit date.</p>
-  <div class="mini-row">
-    <span><b>Self-service day-pass QR</b><div class="note">Print this reusable QR for members and walk-in visitors. It opens the public name and payment form.</div></span>
-    <span>
-      <img src="../api/qr.php?type=day_pass_purchase" alt="Scan to purchase a day pass" width="112" height="112">
-      <button class="btn sm" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print QR</button>
-    </span>
-  </div>
+  <p class="note">After payment, open or download the visitor's pass QR. Linked members can also use the day-pass QR displayed on their member card for the visit date.</p>
 </div>
 
 <div class="panel glass">
@@ -142,7 +154,9 @@ include __DIR__ . '/../includes/header.php';
     <?php foreach ($passes as $pass): ?>
       <tr>
         <td><b><?= e($pass['pass_id']) ?></b><div class="mono">Kiosk: 9<?= e(substr($pass['pass_id'], 3)) ?></div></td>
-        <td><?= e($pass['visitor_name']) ?><div class="mono"><?= e($pass['contact_number']) ?></div></td>
+        <td><?= e($pass['visitor_name']) ?><div class="mono"><?= e($pass['contact_number']) ?></div>
+          <?php if (!empty($pass['member_id'])): ?><div class="mono">Member: <?= e($pass['member_id']) ?></div><?php endif; ?>
+        </td>
         <td><?= dt($pass['visit_date']) ?></td>
         <td><?= money($pass['amount']) ?></td>
         <td><?= e($pass['payment_method']) ?><div><?= badge($pass['pass_status']) ?></div></td>

@@ -1474,3 +1474,132 @@ body.admin-analytics .grid > .panel {
     overflow-wrap: anywhere;
   }
 }
+
+/* ---------- admin day-pass self-service QR ---------- */
+
+.day-pass-self-service {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  align-items: center;
+  gap: clamp(20px, 4vw, 48px);
+  padding: clamp(22px, 4vw, 36px);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(225,6,0,.16), transparent 48%),
+    var(--glass);
+}
+.day-pass-self-service-copy { min-width: 0; }
+.day-pass-self-service-copy h2 {
+  margin: 8px 0 10px;
+  font-size: clamp(21px, 2.4vw, 28px);
+  letter-spacing: -.025em;
+}
+.day-pass-self-service-copy > p {
+  max-width: 620px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.day-pass-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--red-hot);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.day-pass-self-service-steps {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+.day-pass-self-service-steps span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.day-pass-self-service-steps i {
+  width: 18px;
+  color: var(--red-hot);
+  text-align: center;
+}
+.day-pass-self-service-code {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  background: rgba(0,0,0,.14);
+  text-align: center;
+}
+.day-pass-self-service-code img {
+  display: block;
+  width: min(200px, 100%);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+.day-pass-self-service-code p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 620px) {
+  .day-pass-self-service {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .day-pass-self-service-code {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-items: center;
+  }
+  .day-pass-self-service-code img {
+    grid-column: 1 / -1;
+    width: min(220px, 70vw);
+  }
+}
+
+@media print {
+  body.admin-day-passes .sidebar,
+  body.admin-day-passes .skip,
+  body.admin-day-passes .field,
+  body.admin-day-passes .flash-stack,
+  body.admin-day-passes .main > :not(.day-pass-self-service),
+  body.admin-day-passes .day-pass-self-service-code .btn {
+    display: none !important;
+  }
+  body.admin-day-passes .shell,
+  body.admin-day-passes .main {
+    display: block;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+  body.admin-day-passes .day-pass-self-service {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    color: #111;
+    background: #fff;
+    border: 1px solid #bbb;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  body.admin-day-passes .day-pass-self-service-copy h2,
+  body.admin-day-passes .day-pass-self-service-copy > p,
+  body.admin-day-passes .day-pass-self-service-steps span,
+  body.admin-day-passes .day-pass-self-service-code p {
+    color: #111;
+  }
+  body.admin-day-passes .day-pass-self-service-code {
+    border-color: #bbb;
+    background: #fff;
+  }
+}
