@@ -1567,6 +1567,11 @@ body.admin-analytics .grid > .panel {
 }
 
 @media print {
+  body.admin-day-passes {
+    background: #fff !important;
+    color: #111 !important;
+    overflow: visible;
+  }
   body.admin-day-passes .sidebar,
   body.admin-day-passes .skip,
   body.admin-day-passes .field,
@@ -1586,6 +1591,7 @@ body.admin-analytics .grid > .panel {
   body.admin-day-passes .day-pass-self-service {
     display: grid;
     grid-template-columns: 1fr 240px;
+    break-inside: avoid;
     color: #111;
     background: #fff;
     border: 1px solid #bbb;
@@ -1601,5 +1607,14 @@ body.admin-analytics .grid > .panel {
   body.admin-day-passes .day-pass-self-service-code {
     border-color: #bbb;
     background: #fff;
+  }
+  body.admin-day-passes .day-pass-self-service-code img {
+    display: block;
+    width: 200px;
+    height: 200px;
+    max-width: 100%;
+    object-fit: contain;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }
