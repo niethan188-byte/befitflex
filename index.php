@@ -104,16 +104,6 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 
     <p class="auth-alt">New here? <a href="register.php">Create a member account</a></p>
 
-    <div class="demo-keys">
-      <div class="t">Demo accounts — click to fill</div>
-      <button class="demo-key" type="button" onclick="fill('admin@befitflexgym.com','admin123')">
-        <i class="fa-solid fa-shield-halved"></i><b>Admin</b> admin@befitflexgym.com
-      </button>
-      <button class="demo-key" type="button" onclick="fill('anna@example.com','member123')">
-        <i class="fa-solid fa-user"></i><b>Member</b> anna@example.com
-      </button>
-    </div>
-
     <div class="offers" style="margin-top:22px">
       <?php foreach (array_slice(APP_OFFERS, 0, 4) as $o): ?>
         <span class="offer"><?= e($o) ?></span>
@@ -123,13 +113,7 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 </div>
 
 <?php if ($turnstileReady): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><?php endif; ?>
-<script>
-function fill(email, pass) {
-  document.getElementById('email').value = email;
-  document.getElementById('password').value = pass;
-  document.getElementById('password').focus();
-}
-</script>
+
 <script src="assets/js/app.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
