@@ -170,13 +170,29 @@ body {
 
 /* ---------- public day-pass checkout ---------- */
 
-body.day-pass-page .auth-card { width: min(500px, 100%); }
+body.day-pass-page .auth-card {
+  width: min(520px, 100%);
+  padding: clamp(24px, 5vw, 38px) clamp(18px, 6vw, 36px);
+}
+body.day-pass-page .auth-card > p:not(.tag) {
+  margin: 0 0 22px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+body.day-pass-page .auth-card form { min-width: 0; }
+body.day-pass-page .auth-card .field-row { min-width: 0; }
+body.day-pass-page .auth-card input,
+body.day-pass-page .auth-card select { min-width: 0; }
 
 .day-pass-account-option {
   display: flex !important;
   align-items: center;
   gap: 10px;
-  min-height: 28px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
   cursor: pointer;
 }
 .day-pass-account-option input {
@@ -186,15 +202,13 @@ body.day-pass-page .auth-card { width: min(500px, 100%); }
   margin: 0;
   accent-color: var(--red-hot);
 }
-.day-pass-account-verification[hidden] { display: none; }
-.day-pass-verify-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
+.day-pass-account-verification[hidden],
+.day-pass-name-field[hidden] { display: none; }
+#accountVerificationStatus {
+  margin: 8px 0 0;
+  text-align: left;
+  line-height: 1.45;
 }
-.day-pass-verify-row input { min-width: 0; flex: 1; }
-.day-pass-verify-row .btn { flex: 0 0 auto; justify-content: center; }
-.day-pass-verify-row .btn.loading i { animation: spin .8s linear infinite; }
 #accountVerificationStatus:empty { display: none; }
 #accountVerificationStatus.error { color: #FCA5A5; }
 #accountVerificationStatus.success { color: #4ADE80; }
@@ -272,8 +286,7 @@ body.day-pass-page .auth-card { width: min(500px, 100%); }
       max(12px, env(safe-area-inset-left));
   }
   .auth-card { padding: 28px 20px 22px; border-radius: 24px; }
-  .day-pass-verify-row { flex-direction: column; }
-  .day-pass-verify-row .btn { min-height: 46px; }
+  body.day-pass-page .auth-card { padding: 26px 18px 22px; }
   .day-pass-proof { padding: 16px; }
   .auth-brand { margin-bottom: 22px; }
   .auth-logo img, .auth-logo svg { width: 72px; height: 72px; }

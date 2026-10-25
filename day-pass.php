@@ -66,7 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $name = $member
         ? trim((string) $member['member_name'])
-        : trim((string) ($_POST['visitor_name'] ?? ''));
+        : ($accountMember
+            ? trim((string) $accountMember['member_name'])
+            : trim((string) ($_POST['visitor_name'] ?? '')));
     $visitDate = date('Y-m-d');
     $rate = (string) ($_POST['pass_rate'] ?? '');
     $method = (string) ($_POST['payment_method'] ?? '');
@@ -77,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     };
     if ($name === '' || mb_strlen($name) > 255 || $amount === null
         || !in_array($method, ['Cash', 'Maya'], true)) {
-        flash('Enter your name, choose a pass rate and a supported payment method.', 'err');
+        flash('Enter your name if you are a new visitor, choose a pass rate and a supported payment method.', 'err');
         redirect('day-pass.php');
     }
     $verifiedActiveMonthlyMember = $accountMember
@@ -242,7 +244,7 @@ $mayaAvailable = maya_payment_flow_configured();
       <p>Your active, paid monthly membership is already valid for gym visits. No day pass is needed.</p>
       <a class="btn red full" href="member/id-card.php">Open my member card</a>
     <?php else: ?>
-      <p>Enter your name and pass rate. This pass is valid only today. Pay by cash at the front desk or securely through Maya.</p>
+      <p>Choose a pass rate and payment method. New visitors enter their name; existing members can use their account email to link the pass. This pass is valid only today.</p>
       <form method="post" autocomplete="on" id="dayPassPurchaseForm">
         <?= csrf_field() ?>
         <div class="field-row">
@@ -255,23 +257,20 @@ $mayaAvailable = maya_payment_flow_configured();
             <?php if ($member): ?>
               Your signed-in account will be linked to this pass.
             <?php else: ?>
-              New visitors can continue without an account. If you have an account, verify its email to link this pass.
+              New visitors can continue without an account. If you have an account, enter its email to link this pass.
             <?php endif; ?>
           </p>
         </div>
         <?php if (!$member): ?>
         <div class="field-row day-pass-account-verification" id="accountVerification" hidden>
           <label for="accountEmail">BeFitFlex account email</label>
-          <div class="day-pass-verify-row">
-            <input type="email" id="accountEmail" name="account_email" maxlength="255" autocomplete="email">
-            <button class="btn" type="button" id="verifyAccountButton"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Verify email</button>
-          </div>
+          <input type="email" id="accountEmail" name="account_email" maxlength="255" autocomplete="email" autocapitalize="none" spellcheck="false">
           <p class="note" id="accountVerificationStatus" aria-live="polite" role="status"></p>
         </div>
         <?php endif; ?>
-        <div class="field-row">
+        <div class="field-row day-pass-name-field" id="visitorNameField">
           <label for="visitorName">Your name</label>
-          <input type="text" id="visitorName" name="visitor_name" maxlength="255" required autofocus autocomplete="name"
+          <input type="text" id="visitorName" name="visitor_name" maxlength="255" required autocomplete="name"
             value="<?= e((string) ($member['member_name'] ?? '')) ?>" <?= $member ? 'readonly' : '' ?>>
         </div>
         <div class="field-row">
@@ -303,52 +302,62 @@ const accountNote = document.getElementById('accountNote');
 const purchaseButton = document.querySelector('form button[type="submit"]');
 const accountVerification = document.getElementById('accountVerification');
 const accountEmail = document.getElementById('accountEmail');
-const verifyAccountButton = document.getElementById('verifyAccountButton');
 const accountVerificationStatus = document.getElementById('accountVerificationStatus');
+const visitorNameField = document.getElementById('visitorNameField');
+const visitorName = document.getElementById('visitorName');
 let verifiedAccountEmail = '';
+let accountVerificationTimer;
+let accountVerificationSequence = 0;
 
 function updateAccountVerification() {
   const needsVerification = accountCheckbox.checked;
   accountVerification.hidden = !needsVerification;
+  visitorNameField.hidden = needsVerification;
   accountEmail.required = needsVerification;
+  visitorName.required = !needsVerification;
   purchaseButton.disabled = needsVerification && verifiedAccountEmail !== accountEmail.value.trim().toLowerCase();
   if (!needsVerification) {
+    clearTimeout(accountVerificationTimer);
+    accountVerificationSequence++;
     verifiedAccountEmail = '';
     accountVerificationStatus.textContent = '';
+    accountVerificationStatus.classList.remove('error', 'success');
     accountNote.textContent = 'New visitors can continue without an account.';
   } else {
-    accountNote.textContent = 'Verify your member account email to continue without signing in.';
-    if (!verifiedAccountEmail) {
-      accountVerificationStatus.textContent = 'Verify the email address associated with your BeFitFlex member account.';
-    }
+    accountNote.textContent = 'Enter the email associated with your BeFitFlex member account. We will check it automatically.';
+    checkAccountEmail();
   }
 }
 
 accountCheckbox.addEventListener('change', updateAccountVerification);
 accountEmail.addEventListener('input', () => {
-  if (verifiedAccountEmail !== accountEmail.value.trim().toLowerCase()) {
-    verifiedAccountEmail = '';
-    accountVerificationStatus.textContent = 'Email changed. Verify this address before continuing.';
-    purchaseButton.disabled = accountCheckbox.checked;
-  }
+  verifiedAccountEmail = '';
+  purchaseButton.disabled = accountCheckbox.checked;
+  clearTimeout(accountVerificationTimer);
+  accountVerificationSequence++;
+  accountVerificationStatus.classList.remove('error', 'success');
+  if (accountCheckbox.checked) accountVerificationTimer = setTimeout(checkAccountEmail, 350);
 });
 
-verifyAccountButton.addEventListener('click', async () => {
+async function checkAccountEmail() {
   const email = accountEmail.value.trim();
-  if (!accountEmail.reportValidity()) return;
-
-  verifyAccountButton.disabled = true;
-  verifyAccountButton.classList.add('loading');
-  verifyAccountButton.innerHTML = '<i class="fa-solid fa-spinner" aria-hidden="true"></i> Verifying…';
-  verifiedAccountEmail = '';
-  purchaseButton.disabled = true;
-  accountVerificationStatus.textContent = 'Verifying your account…';
-  accountVerificationStatus.classList.remove('error', 'success');
+  const sequence = accountVerificationSequence;
+  if (!accountCheckbox.checked) return;
+  if (!email) {
+    accountVerificationStatus.textContent = 'Enter your account email to check if it exists.';
+    return;
+  }
+  if (!accountEmail.validity.valid) {
+    accountVerificationStatus.textContent = 'Enter a valid email address.';
+    accountVerificationStatus.classList.add('error');
+    return;
+  }
 
   try {
     const requestedEmail = email.toLowerCase();
     const formData = new FormData(document.getElementById('dayPassPurchaseForm'));
     formData.set('email', email);
+    accountVerificationStatus.textContent = 'Checking for your account…';
     const response = await fetch('api/day-pass-verify-account.php', {
       method: 'POST',
       credentials: 'same-origin',
@@ -357,10 +366,8 @@ verifyAccountButton.addEventListener('click', async () => {
     });
     const result = await response.json();
     if (!response.ok || !result.ok) throw new Error(result.error || 'Account verification failed. Please try again.');
-    if (accountEmail.value.trim().toLowerCase() !== requestedEmail) {
-      accountVerificationStatus.textContent = 'Email changed. Verify this address before continuing.';
-      return;
-    }
+    if (sequence !== accountVerificationSequence
+      || accountEmail.value.trim().toLowerCase() !== requestedEmail) return;
     if (!result.exists) {
       accountVerificationStatus.textContent = 'No BeFitFlex member account was found for this email. Check it and try again.';
       accountVerificationStatus.classList.add('error');
@@ -368,20 +375,26 @@ verifyAccountButton.addEventListener('click', async () => {
     }
 
     verifiedAccountEmail = requestedEmail;
-    accountVerificationStatus.textContent = 'Account verified. You can continue to payment.';
+    accountVerificationStatus.textContent = 'Account found. You can continue to payment.';
     accountVerificationStatus.classList.add('success');
     purchaseButton.disabled = false;
   } catch (error) {
+    if (sequence !== accountVerificationSequence) return;
     accountVerificationStatus.textContent = error instanceof Error
       ? error.message
       : 'Account verification failed. Please try again.';
     accountVerificationStatus.classList.add('error');
-  } finally {
-    verifyAccountButton.disabled = false;
-    verifyAccountButton.classList.remove('loading');
-    verifyAccountButton.innerHTML = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Verify email';
+  }
+}
+
+document.getElementById('dayPassPurchaseForm').addEventListener('submit', event => {
+  if (accountCheckbox.checked
+    && verifiedAccountEmail !== accountEmail.value.trim().toLowerCase()) {
+    event.preventDefault();
+    checkAccountEmail();
   }
 });
+
 updateAccountVerification();
 </script>
 <?php endif; ?>
