@@ -63,11 +63,11 @@ $menus = [
     </div>
   </div>
 
-  <nav class="nav">
+  <nav class="nav" aria-label="Main navigation">
     <?php foreach ($menus[$type] as $group => $links): ?>
       <div class="nav-label"><?= e($group) ?></div>
       <?php foreach ($links as [$key, $label, $icon, $href]): ?>
-        <a class="<?= $page === $key ? 'on' : '' ?>" href="<?= $b . $href ?>">
+        <a class="<?= $page === $key ? 'on' : '' ?>" href="<?= $b . $href ?>" <?= $page === $key ? 'aria-current="page"' : '' ?>>
           <i class="fa-solid <?= $icon ?>"></i><?= e($label) ?>
         </a>
       <?php endforeach; ?>
