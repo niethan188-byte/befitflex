@@ -1955,6 +1955,13 @@ body.app-page .notification-popover {
   border-color: var(--stroke);
 }
 
+body.app-page .topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 body.app-page .cmd-item:hover,
 body.app-page .cmd-item.sel {
   background: rgba(229,57,53,.1);
@@ -2060,5 +2067,207 @@ body.app-page .cmd-item.sel {
   body.app-page .btn,
   body.app-page .nav a {
     transition: none;
+  }
+}
+
+@media (max-width: 980px) {
+  body.app-page .topbar {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  body.app-page .topbar > .menu-btn {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  body.app-page .topbar-heading {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  body.app-page .topbar-heading h1 {
+    overflow-wrap: anywhere;
+  }
+
+  body.app-page .topbar > .spacer {
+    display: none;
+  }
+
+  body.app-page .topbar-actions {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  body.app-page .topbar-actions .cmd-trigger {
+    order: 0;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    min-height: 42px;
+    justify-content: flex-start;
+    padding-inline: 12px;
+  }
+
+  body.app-page .topbar-actions .cmd-trigger .t {
+    display: inline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.app-page .topbar-actions .cmd-trigger .k {
+    display: none;
+  }
+
+  body.app-page .topbar-actions > .icon-btn,
+  body.app-page .topbar-actions .notification-trigger,
+  body.app-page .topbar-actions .pill-user {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  body.app-page .topbar-actions .pill-user {
+    border: 1px solid var(--stroke);
+  }
+
+  body.app-page .topbar-actions .pill-user .avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  body.app-page .topbar-actions .notification-menu {
+    flex: 0 0 42px;
+  }
+
+  body.app-page .stats {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  }
+
+  body.app-page .stat .value {
+    font-size: clamp(20px, 5vw, 26px) !important;
+    letter-spacing: -.045em;
+    white-space: nowrap;
+  }
+
+  body.app-page .panel > h2 {
+    min-width: 0;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+
+  body.app-page .panel > h2 .spacer {
+    display: none;
+  }
+
+  body.app-page .grid.c2,
+  body.app-page .grid.c3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  body.app-page .topbar {
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+
+  body.app-page .topbar-heading h1 {
+    font-size: 19px;
+    line-height: 1.2;
+  }
+
+  body.app-page .topbar-heading .sub {
+    max-width: 100%;
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  body.app-page .topbar-actions {
+    gap: 7px;
+  }
+
+  body.app-page .topbar-actions .cmd-trigger {
+    padding-inline: 10px;
+  }
+
+  body.app-page .tabs {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  body.app-page .tabs > nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 7px;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: 2px 1px 8px;
+    scrollbar-width: none;
+  }
+
+  body.app-page .tabs > nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.app-page .tabs > nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  body.app-page .tabs > :not(nav) {
+    min-width: 0;
+  }
+
+  body.app-page .tabs > .analytics-tabs-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  body.app-page .analytics-tabs-actions form,
+  body.app-page .analytics-tabs-actions > * {
+    min-width: 0;
+    width: 100%;
+  }
+
+  body.app-page .analytics-tabs-actions .btn {
+    min-height: 42px;
+    justify-content: center;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+
+  body.app-page .stats {
+    gap: 10px;
+  }
+
+  body.app-page .stat {
+    min-width: 0;
+    padding: 14px 12px;
+  }
+
+  body.app-page .stat .value {
+    font-size: clamp(18px, 5vw, 22px) !important;
+  }
+
+  body.app-page .stat .note {
+    overflow-wrap: anywhere;
   }
 }
