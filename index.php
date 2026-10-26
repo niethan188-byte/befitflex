@@ -44,13 +44,11 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 <title><?= APP_NAME ?> <?= APP_TAGLINE ?></title>
 <?php if ($hasLogo): ?><link rel="icon" href="assets/img/logo.png"><?php endif; ?>
 <link rel="stylesheet" href="assets/css/glass.css">
-<link rel="stylesheet" href="assets/css/login.css?v=3">
+<link rel="stylesheet" href="assets/css/login.css?v=4">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="auth-page">
-
-<div class="field"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
 
 <?php if ($flashes): ?>
 <div class="flash-stack">
@@ -64,18 +62,33 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 <?php endif; ?>
 
 <div class="auth-wrap">
-  <div class="auth-card glass">
-    <div class="auth-logo">
+  <aside class="auth-aside" aria-label="Be Fit Flex Gym">
+    <div class="auth-aside-brand">
       <?php if ($hasLogo): ?>
-        <img src="assets/img/logo.png" alt="Be Fit Flex Gym">
+        <img src="assets/img/logo.png" alt="">
       <?php else: ?>
         <svg viewBox="0 0 100 100" fill="none"><path d="M50 4 92 28v48L50 100 8 76V28z" stroke="#E53935" stroke-width="6"/><path d="M34 30h26M34 50h22M34 70h26" stroke="#E53935" stroke-width="7" stroke-linecap="round"/></svg>
       <?php endif; ?>
+      <span>BE FIT FLEX <b>GYM</b></span>
     </div>
 
-    <h1>BE FIT FLEX GYM</h1>
-    <p class="tag">Laguna</p>
+    <div class="auth-aside-copy">
+      <p class="auth-eyebrow">YOUR LOCAL FITNESS COMMUNITY</p>
+      <h2>Train with<br><span>purpose.</span></h2>
+      <p>Good training starts with showing up. We’ll take it from there.</p>
+    </div>
+    <div class="auth-aside-foot">
+      <span class="auth-aside-mark" aria-hidden="true"></span>
+      <span>Santa Rosa <i>·</i> Cabuyao, Laguna</span>
+    </div>
+  </aside>
 
+  <main class="auth-card glass">
+    <div class="auth-heading">
+      <p class="auth-eyebrow">MEMBER ACCESS</p>
+      <h1>Welcome back</h1>
+      <p class="auth-lead">Sign in to continue to your member account.</p>
+    </div>
     <form method="post" autocomplete="on">
       <?= csrf_field() ?>
       <div class="field-row">
@@ -109,7 +122,7 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
         <span class="offer"><?= e($o) ?></span>
       <?php endforeach; ?>
     </div>
-  </div>
+  </main>
 </div>
 
 <?php if ($turnstileReady): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><?php endif; ?>
