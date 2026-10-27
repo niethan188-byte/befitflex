@@ -41,14 +41,20 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
 <title><?= APP_NAME ?> <?= APP_TAGLINE ?></title>
 <?php if ($hasLogo): ?><link rel="icon" href="assets/img/logo.png"><?php endif; ?>
+<script src="assets/js/theme.js?v=<?= filemtime(__DIR__ . '/assets/js/theme.js') ?>"></script>
 <link rel="stylesheet" href="assets/css/glass.css">
-<link rel="stylesheet" href="assets/css/login.css?v=4">
+<link rel="stylesheet" href="assets/css/ui.css?v=<?= filemtime(__DIR__ . '/assets/css/ui.css') ?>">
+<link rel="stylesheet" href="assets/css/login.css?v=<?= filemtime(__DIR__ . '/assets/css/login.css') ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="auth-page">
+<button class="icon-btn auth-theme-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light or dark theme">
+  <i id="themeIcon" class="fa-solid fa-sun" aria-hidden="true"></i>
+</button>
 
 <?php if ($flashes): ?>
 <div class="flash-stack">

@@ -71,7 +71,7 @@ include __DIR__ . '/../includes/header.php';
             >
             <span class="qr-load-error" role="status" hidden>QR code could not be loaded. Refresh the page or show your member number at the front desk.</span>
           <?php else: ?>
-            <span style="font-size:11px;color:#333;text-align:center">QR available with an active paid membership or an upcoming paid day pass</span>
+            <span class="qr-unavailable">QR available with an active paid membership or an upcoming paid day pass</span>
           <?php endif; ?>
         </div>
       </div>

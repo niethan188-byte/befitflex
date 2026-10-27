@@ -25,6 +25,9 @@ to change.
 daylight. The palette inverts to white while keeping the frosted panels and the
 red accent, and the choice is applied before first paint from a tiny inline
 script — so the page never flashes the wrong colour scheme.
+The same preference now carries across sign-in, registration, privacy, and
+front-desk scanning screens, with a theme control available on the public auth
+pages and standalone stations.
 
 **Compact density.** Front-desk staff scanning a long member list want more rows
 per screen; a manager reading a dashboard does not. One toggle, remembered.

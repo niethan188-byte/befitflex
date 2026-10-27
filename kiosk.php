@@ -19,19 +19,23 @@ $todayCount = (int) scalar('SELECT COUNT(*) FROM attendance WHERE attendance_dat
 $hasLogo = is_file(__DIR__ . '/assets/img/logo.png');
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121212">
 <title>Check-in · <?= APP_NAME ?></title>
+<script src="assets/js/theme.js?v=<?= filemtime(__DIR__ . '/assets/js/theme.js') ?>"></script>
 <link rel="stylesheet" href="assets/css/glass.css">
-<link rel="stylesheet" href="assets/css/ui.css">
+<link rel="stylesheet" href="assets/css/ui.css?v=<?= filemtime(__DIR__ . '/assets/css/ui.css') ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body data-base="">
 <div class="field"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
+<button class="icon-btn kiosk-theme-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light or dark theme">
+  <i id="themeIcon" class="fa-solid fa-sun" aria-hidden="true"></i>
+</button>
 
 <div class="kiosk-wrap">
   <div class="kiosk-card glass">
