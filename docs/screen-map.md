@@ -19,7 +19,6 @@
 | `members.php` | Create, edit, delete, filter, message, and bulk-update members. | users, members |
 | `classes.php` | Manage weekly group classes and capacity. | classes, class_attendance |
 | `sessions.php` | Schedule, complete, cancel, and delete member sessions. | sessions, members, notifications |
-| `reservations.php` | Manage member gym-time reservations. | reservations |
 | `attendance.php` | Check members in and out and view attendance records. | attendance, class_attendance |
 | `payments.php` | Record dues, mark paid, and delete payments. | payments, notifications |
 | `day-passes.php` | Manage day passes and related check-ins. | day_passes, attendance |
@@ -34,9 +33,8 @@
 
 | File | Purpose | Tables |
 |---|---|---|
-| `dashboard.php` | Membership, visits, balance, bookings, and notifications. | members, attendance, payments, sessions, reservations, notifications |
+| `dashboard.php` | Membership, visits, balance, scheduled sessions, and notifications. | members, attendance, payments, sessions, notifications |
 | `classes.php` | Browse the group schedule, enroll, and view class history. | classes, class_attendance |
-| `reservations.php` | Book or cancel a gym-time reservation. | reservations |
 | `attendance.php` | View attendance and check-in history. | attendance |
 | `payments.php` | View dues and payment history. | payments |
 | `profile.php` | Edit profile details, password, and notification preferences. | users, members, notification_preferences |

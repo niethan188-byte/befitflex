@@ -18,7 +18,6 @@ $menus = [
     'Operations' => [
       ['classes',     'Classes',          'fa-people-group',      'admin/classes.php'],
       ['sessions',    'Sessions',         'fa-calendar-day',      'admin/sessions.php'],
-      ['reservations','Reservations',     'fa-calendar-check',    'admin/reservations.php'],
       ['attendance',  'Attendance',       'fa-clipboard-user',    'admin/attendance.php'],
       ['kiosk',       'Check-in Station', 'fa-door-open',         'kiosk.php'],
     ],
@@ -36,7 +35,6 @@ $menus = [
     'Training' => [
     ['dashboard',   'Dashboard',        'fa-gauge-high',        'member/dashboard.php'],
     ['classes',     'Classes',          'fa-people-group',      'member/classes.php'],
-    ['reservations','Reservations',      'fa-calendar-check',    'member/reservations.php'],
     ],
     'Records' => [
       ['attendance',  'My Attendance',    'fa-clipboard-user',    'member/attendance.php'],

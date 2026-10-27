@@ -135,7 +135,6 @@ function notify(int $userId, string $type, string $title, string $message,
     $notificationId = (int) $pdo->lastInsertId();
     $preference = match ($type) {
         'payment' => 'email_payments',
-        'reservation' => 'email_reservations',
         'account' => 'email_account',
         default => 'email_system',
     };

@@ -9,8 +9,8 @@ drifting light field behind everything.
 
 | Role | Sees |
 |---|---|
-| **Admin** | Members, classes, payments, sessions, reservations, attendance, reports, activity log |
-| **Member** | Classes, payments, attendance, reservations, notifications, profile |
+| **Admin** | Members, classes, payments, sessions, attendance, reports, activity log |
+| **Member** | Classes, payments, attendance, notifications, profile |
 
 ## Install on XAMPP (5 minutes)
 
@@ -34,8 +34,8 @@ drifting light field behind everything.
 
 6. If upgrading an existing installation instead of importing the fresh schema,
   import `database/upgrade.sql` once. It includes the remember-me token table,
-  day-pass/member link required for member day-pass QR codes, and other schema
-  upgrades.
+  day-pass/member link required for member day-pass QR codes, cleans up retired
+  feature data, and applies other schema upgrades.
 
 The login page's optional **Remember me on this device** setting keeps the
 account signed in for up to 30 days. Use it only on a trusted device; signing
@@ -54,7 +54,7 @@ For the Railway Docker deployment and production environment setup, see
 Email delivery uses PHPMailer over SMTP. Configure Mailtrap Sandbox credentials
 from the Mailtrap inbox's SMTP settings; messages are captured in the sandbox
 instead of delivered to recipients. The application sends email for payments,
-reservations, account messages, bulk member messages, and admin announcements.
+account messages, bulk member messages, and admin announcements.
 In-app notifications continue to work if email is not configured.
 
 Set these variables in Windows PowerShell; do not put credentials in a PHP file:
@@ -128,8 +128,6 @@ docs/                walkthrough, screen map, theme notes
   demo accounts are marked verified in the schema.
 - Members can download a server-generated PDF invoice from their payment history.
 - Administrators can download a consistent MySQL snapshot from the dashboard.
-- Reservation creation uses a transaction and row locking to reduce concurrent
-  double-booking.
 - `composer smoke` checks the live database schema, PDO configuration, webhook
   guard, and PDF dependency; `composer health` reports runtime and integration
   configuration.

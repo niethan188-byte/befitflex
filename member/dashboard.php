@@ -6,7 +6,7 @@ $mid = $_SESSION['member_id'] ?? '';
 
 $page = 'dashboard';
 $title = 'Welcome back, ' . explode(' ', (string) $u['name'])[0];
-$subtitle = 'Your training, dues and bookings.';
+$subtitle = 'Your training and dues.';
 
 $me = row('SELECT m.* FROM members m WHERE m.member_id = ?', [$mid]);
 
@@ -21,11 +21,6 @@ $upcoming = rows(
     "SELECT s.* FROM sessions s
       WHERE s.member_id = ? AND s.session_status = 'Scheduled' AND s.session_date >= CURDATE()
       ORDER BY s.session_date, s.session_time LIMIT 4", [$mid]
-);
-$bookings = rows(
-    "SELECT r.* FROM reservations r
-      WHERE r.member_id = ? AND r.status = 'Confirmed' AND r.reservation_date >= CURDATE()
-      ORDER BY r.reservation_date LIMIT 4", [$mid]
 );
 $recentVisits = rows('SELECT * FROM attendance WHERE member_id = ? ORDER BY check_in_time DESC LIMIT 5', [$mid]);
 $notes = rows('SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 4', [$u['id']]);
@@ -68,9 +63,8 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="grid c2">
   <div class="panel glass">
-    <h2><i class="fa-solid fa-calendar-day"></i> Coming up
-      <span class="spacer"></span><a class="btn sm" href="reservations.php">View bookings</a></h2>
-    <?php if (!$upcoming && !$bookings): ?>
+    <h2><i class="fa-solid fa-calendar-day"></i> Coming up</h2>
+    <?php if (!$upcoming): ?>
       <div class="empty"><i class="fa-solid fa-calendar"></i>Nothing scheduled.</div>
     <?php else: ?>
       <div class="timeline">
@@ -79,13 +73,6 @@ include __DIR__ . '/../includes/header.php';
             <div style="font-size:14px"><b><?= e($s['session_name']) ?></b></div>
             <div class="note">Member session</div>
             <div class="when"><?= dt($s['session_date']) ?> · <?= timeh($s['session_time']) ?></div>
-          </div>
-        <?php endforeach; ?>
-        <?php foreach ($bookings as $b): ?>
-          <div class="tl-item">
-            <div style="font-size:14px"><b>Reservation</b></div>
-            <div class="note">Confirmed</div>
-            <div class="when"><?= dt($b['reservation_date']) ?> · <?= timeh($b['reservation_time']) ?></div>
           </div>
         <?php endforeach; ?>
       </div>

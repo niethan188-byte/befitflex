@@ -44,13 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($act === 'prefs') {
         db()->prepare(
             'UPDATE notification_preferences
-                SET email_payments=?, email_reservations=?, email_account=?, email_system=?,
-                    in_app_payments=?, in_app_reservations=?, in_app_account=?, in_app_system=?
+                SET email_payments=?, email_account=?, email_system=?,
+                    in_app_payments=?, in_app_account=?, in_app_system=?
               WHERE user_id = ?'
         )->execute([
-            isset($_POST['email_payments']) ? 1 : 0, isset($_POST['email_reservations']) ? 1 : 0,
+            isset($_POST['email_payments']) ? 1 : 0,
             isset($_POST['email_account']) ? 1 : 0,  isset($_POST['email_system']) ? 1 : 0,
-            isset($_POST['in_app_payments']) ? 1 : 0, isset($_POST['in_app_reservations']) ? 1 : 0,
+            isset($_POST['in_app_payments']) ? 1 : 0,
             isset($_POST['in_app_account']) ? 1 : 0,  isset($_POST['in_app_system']) ? 1 : 0,
             $u['id'],
         ]);
@@ -123,8 +123,8 @@ include __DIR__ . '/../includes/header.php';
     <div class="grid c2 profile-preferences-grid">
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">In-app</div>
-        <?php foreach (['in_app_payments' => 'Payments', 'in_app_reservations' => 'Reservations',
-                        'in_app_account' => 'Account', 'in_app_system' => 'System messages'] as $k => $lbl): ?>
+        <?php foreach (['in_app_payments' => 'Payments', 'in_app_account' => 'Account',
+                        'in_app_system' => 'System messages'] as $k => $lbl): ?>
           <label class="profile-preference">
             <input type="checkbox" name="<?= $k ?>" value="1" <?= $ck($k) ?>> <span><?= $lbl ?></span>
           </label>
@@ -132,8 +132,8 @@ include __DIR__ . '/../includes/header.php';
       </div>
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Email</div>
-        <?php foreach (['email_payments' => 'Payments', 'email_reservations' => 'Reservations',
-                        'email_account' => 'Account', 'email_system' => 'System messages'] as $k => $lbl): ?>
+        <?php foreach (['email_payments' => 'Payments', 'email_account' => 'Account',
+                        'email_system' => 'System messages'] as $k => $lbl): ?>
           <label class="profile-preference">
             <input type="checkbox" name="<?= $k ?>" value="1" <?= $ck($k) ?>> <span><?= $lbl ?></span>
           </label>

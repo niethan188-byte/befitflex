@@ -155,17 +155,6 @@ CREATE TABLE attendance (
     INDEX idx_member_id (member_id), INDEX idx_day_pass_id (day_pass_id), INDEX idx_attendance_date (attendance_date)
 ) ENGINE=InnoDB;
 
-CREATE TABLE reservations (
-    reservation_id INT PRIMARY KEY AUTO_INCREMENT,
-    member_id VARCHAR(50) NOT NULL,
-    reservation_date DATE NOT NULL,
-    reservation_time TIME NOT NULL,
-    status ENUM('Confirmed','Cancelled','Completed') NOT NULL DEFAULT 'Confirmed',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
-    INDEX idx_member_id (member_id), INDEX idx_reservation_date (reservation_date)
-) ENGINE=InnoDB;
-
 CREATE TABLE activity_log (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -229,9 +218,9 @@ CREATE TABLE notifications (
 CREATE TABLE notification_preferences (
     preference_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL UNIQUE,
-    email_payments TINYINT DEFAULT 1, email_reservations TINYINT DEFAULT 1,
+    email_payments TINYINT DEFAULT 1,
     email_account TINYINT DEFAULT 1, email_system TINYINT DEFAULT 1,
-    in_app_payments TINYINT DEFAULT 1, in_app_reservations TINYINT DEFAULT 1,
+    in_app_payments TINYINT DEFAULT 1,
     in_app_account TINYINT DEFAULT 1, in_app_system TINYINT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -284,11 +273,6 @@ INSERT INTO class_attendance (attendance_id,class_id,member_id,enrollment_date,a
 ('CAT000002','CLS0003','MEM0002','2026-07-10','2026-08-07','Present'),
 ('CAT000003','CLS0002','MEM0003','2026-07-15','2026-08-12','Late');
 
-INSERT INTO reservations (member_id,reservation_date,reservation_time,status) VALUES
-('MEM0001','2026-08-17','07:00:00','Confirmed'),
-('MEM0002','2026-08-18','18:00:00','Confirmed'),
-('MEM0003','2026-08-11','09:00:00','Completed');
-
 INSERT INTO training_sessions (session_name,gym_id,session_date,session_time,duration,max_capacity,description,status) VALUES
 ('Saturday Flex Circuit','GYM001','2026-08-15','09:00:00',75,20,'Team circuit with sled pushes and loaded carries.','Scheduled'),
 ('Core & Conditioning','GYM002','2026-08-16','16:00:00',45,15,'Core stability plus guided conditioning.','Scheduled');
@@ -301,7 +285,7 @@ INSERT INTO notifications (user_id,notification_type,notification_title,notifica
 (1,'system','Welcome to the admin panel','Members, payments and reports are all managed from here.','shield-halved','danger','admin/dashboard.php','normal'),
 (5,'payment','Membership active','Your monthly membership payment has been received.','money-bill-wave','success','member/payments.php','normal'),
 (6,'payment','Payment pending','August dues of 995.00 are still outstanding.','triangle-exclamation','warning','member/payments.php','high'),
-(5,'reservation','Upcoming session','Anna Cruz booked a session on August 17 at 7:00 AM.','calendar-check','info','member/reservations.php','normal'),
+(5,'system','Session scheduled','Your squat technique session is scheduled for August 17 at 7:00 AM.','calendar-day','info','member/dashboard.php','normal'),
 (5,'system','Data Privacy Notice','Be Fit Flex Gym processes your personal data under RA 10173. Read the notice for your rights as a data subject.','user-shield','danger','privacy.php','normal');
 
 INSERT INTO notification_preferences (user_id) VALUES (1),(5),(6),(7),(8);

@@ -30,7 +30,7 @@ $tabs = match ($u['type']) {
     default => [
         ['member/dashboard.php',   'Home',     'gauge-high',      'dashboard'],
         ['member/classes.php',     'Classes',  'people-group',    'classes'],
-        ['member/reservations.php','Bookings', 'calendar-check',  'reservations'],
+        ['member/payments.php',    'Payments', 'money-bill-wave', 'payments'],
         ['member/attendance.php',  'Visits',   'clipboard-user',  'attendance'],
     ],
 };

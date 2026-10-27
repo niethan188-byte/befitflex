@@ -32,7 +32,6 @@ notification lands in Ben's account.
 
 **Classes** — capacity bars fill as members enroll.
 **Attendance** — check a member in, then out; the duration is computed.
-**Reservations** — mark one Completed.
 **Reports** — revenue by month, retention and top members. Hit **Print report**
 to show the stylesheet stripping the glass for paper.
 
@@ -41,8 +40,7 @@ to show the stylesheet stripping the glass for paper.
 Sign in as **anna@example.com**. The dashboard shows her balance and current
 notifications.
 
-- **Reservations** — try the same slot twice: the second attempt
-  is refused, because the check is a query, not a disabled button.
+- **Coming up** — see sessions scheduled by the admin.
 - **My Attendance** — self check-in, then check out.
 - **Classes** — join Morning Bootcamp and watch the capacity bar move.
 

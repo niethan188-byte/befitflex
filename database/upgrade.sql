@@ -1,4 +1,4 @@
--- Non-destructive upgrade for installations created before the verification feature.
+-- Schema and data upgrade for existing installations.
 USE befitflex_gym;
 
 CREATE TABLE IF NOT EXISTS remember_tokens (
@@ -18,6 +18,30 @@ SET @column_exists = (
 );
 SET @sql = IF(@column_exists = 0,
     'ALTER TABLE notifications ADD COLUMN image_path VARCHAR(500) NULL AFTER icon_color',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Remove the retired gym reservation feature and its notification settings.
+DELETE FROM notifications
+ WHERE notification_type = 'reservation' AND action_url LIKE '%reservations.php%';
+UPDATE notifications SET notification_type = 'system' WHERE notification_type = 'reservation';
+DROP TABLE IF EXISTS reservations;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'notification_preferences' AND column_name = 'email_reservations'
+);
+SET @sql = IF(@column_exists > 0,
+    'ALTER TABLE notification_preferences DROP COLUMN email_reservations',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'notification_preferences' AND column_name = 'in_app_reservations'
+);
+SET @sql = IF(@column_exists > 0,
+    'ALTER TABLE notification_preferences DROP COLUMN in_app_reservations',
     'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 

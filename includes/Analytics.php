@@ -89,8 +89,6 @@ final class Analytics
                    AND attendance_date < DATE_SUB(CURDATE(), INTERVAL 30 DAY))            AS visits_prev_30d,
                 (SELECT COUNT(DISTINCT member_id) FROM attendance
                    WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY))         AS actives_30d,
-                (SELECT COUNT(*) FROM reservations WHERE status='Confirmed'
-                   AND reservation_date >= CURDATE())                                     AS bookings_upcoming,
                 (SELECT COUNT(*) FROM sessions WHERE session_status='Completed')          AS sessions_done,
                 (SELECT COUNT(*) FROM sessions WHERE session_status='Cancelled')          AS sessions_cancelled,
                 (SELECT COALESCE(AVG(TIMESTAMPDIFF(MINUTE, check_in_time, check_out_time)),0)

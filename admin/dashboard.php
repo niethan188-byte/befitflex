@@ -17,7 +17,6 @@ $classes       = (int) $s['classes_active'];
 $revenue       = (float) $s['revenue_total'];
 $outstanding   = (float) $s['outstanding'];
 $todayCheckins = (int) $s['checkins_today'];
-$upcoming      = (int) $s['bookings_upcoming'];
 
 $revSeries   = Analytics::revenueSeries(8);
 $visitSeries = Analytics::visitSeries(14);
@@ -61,7 +60,6 @@ include __DIR__ . '/../includes/header.php';
         $bits = [];
         if ($todayCheckins) { $bits[] = $todayCheckins . ' check-in' . ($todayCheckins === 1 ? '' : 's') . ' so far'; }
         if ((int) $s['inside_now']) { $bits[] = (int) $s['inside_now'] . ' on the floor'; }
-        if ($upcoming) { $bits[] = $upcoming . ' booking' . ($upcoming === 1 ? '' : 's') . ' ahead'; }
         echo $bits ? e(ucfirst(implode(', ', $bits))) . '.' : 'A quiet start — nobody has checked in yet.';
       ?>
     </div>
@@ -100,7 +98,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="ico"><i class="fa-solid fa-door-open"></i></div>
     <div class="label">Check-ins today</div>
     <div class="value"><?= $todayCheckins ?></div>
-    <div class="note"><?= $upcoming ?> upcoming reservations</div>
+    <div class="note"><?= (int) $s['inside_now'] ?> currently on the floor</div>
     <?= Chart::spark($visitSpark) ?>
   </div>
 </div>

@@ -77,11 +77,11 @@ snapshot, five minutes for cohorts. Any audited write calls `Analytics::flush()`
 so the numbers never lag behind what the operator just did.
 
 **Indexes for the queries that actually run.** `database/optimize.sql` adds
-twelve targeted indexes chosen from the analytics workload — `attendance
+eleven targeted indexes chosen from the analytics workload — `attendance
 (member_id, attendance_date)` for per-member windows, `payments (payment_status,
-payment_date)` for the revenue series, and `reservations (member_id, status)` for
-member reservation lookups. It is
-idempotent: a helper procedure checks for each index first, because MySQL has no
+payment_date)` for the revenue series, and `sessions (member_id, session_date)`
+for upcoming member sessions. It is idempotent: a helper procedure checks for
+each index first, because MySQL has no
 `CREATE INDEX IF NOT EXISTS`.
 
 **Three reporting views.** `v_member_health`, `v_revenue_monthly` and

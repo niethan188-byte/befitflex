@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['member_id']) {
             $m = row('SELECT user_id FROM members WHERE member_id = ?', [$_POST['member_id']]);
             if ($m) {
-                notify((int) $m['user_id'], 'reservation', 'Session scheduled',
+                notify((int) $m['user_id'], 'system', 'Session scheduled',
                     $_POST['session_name'] . ' on ' . dt($_POST['session_date']) . ' at ' . timeh($_POST['session_time']),
                     'calendar-check', 'info', 'member/dashboard.php');
             }

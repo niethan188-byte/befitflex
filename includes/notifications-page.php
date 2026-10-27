@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $page = 'notifications';
 $title = 'Notifications';
-$subtitle = 'Payments, bookings and account messages.';
+$subtitle = 'Payments, account messages and system updates.';
 
 $notes = rows(
     'SELECT * FROM notifications WHERE user_id = ? ORDER BY is_read, created_at DESC LIMIT 60',
