@@ -100,7 +100,8 @@ CREATE TABLE sessions (
 
 CREATE TABLE payments (
     payment_id VARCHAR(50) PRIMARY KEY,
-    member_id VARCHAR(50) NOT NULL,
+    member_id VARCHAR(50) NULL,
+    customer_name VARCHAR(255) NULL,
     session_id VARCHAR(50),
     amount DECIMAL(10,2) NOT NULL,
     payment_method ENUM('Cash','Card','GCash','Bank Transfer','Maya') NOT NULL,
@@ -220,6 +221,8 @@ CREATE TABLE notification_preferences (
     user_id INT NOT NULL UNIQUE,
     email_payments TINYINT DEFAULT 1,
     email_account TINYINT DEFAULT 1, email_system TINYINT DEFAULT 1,
+    sms_payments TINYINT NOT NULL DEFAULT 0,
+    sms_account TINYINT NOT NULL DEFAULT 0, sms_system TINYINT NOT NULL DEFAULT 0,
     in_app_payments TINYINT DEFAULT 1,
     in_app_account TINYINT DEFAULT 1, in_app_system TINYINT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -45,15 +45,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->prepare(
             'UPDATE notification_preferences
                 SET email_payments=?, email_account=?, email_system=?,
+                    sms_payments=?, sms_account=?, sms_system=?,
                     in_app_payments=?, in_app_account=?, in_app_system=?
               WHERE user_id = ?'
         )->execute([
             isset($_POST['email_payments']) ? 1 : 0,
             isset($_POST['email_account']) ? 1 : 0,  isset($_POST['email_system']) ? 1 : 0,
+            isset($_POST['sms_payments']) ? 1 : 0,
+            isset($_POST['sms_account']) ? 1 : 0, isset($_POST['sms_system']) ? 1 : 0,
             isset($_POST['in_app_payments']) ? 1 : 0,
-            isset($_POST['in_app_account']) ? 1 : 0,  isset($_POST['in_app_system']) ? 1 : 0,
+            isset($_POST['in_app_account']) ? 1 : 0, isset($_POST['in_app_system']) ? 1 : 0,
             $u['id'],
         ]);
+        log_activity(
+            'SMS notification consent updated',
+            'Data Privacy',
+            'Payments: ' . (isset($_POST['sms_payments']) ? 'opted in' : 'opted out')
+                . ', account: ' . (isset($_POST['sms_account']) ? 'opted in' : 'opted out')
+                . ', system: ' . (isset($_POST['sms_system']) ? 'opted in' : 'opted out')
+        );
         flash('Notification preferences saved.');
     }
 
@@ -138,6 +148,16 @@ include __DIR__ . '/../includes/header.php';
             <input type="checkbox" name="<?= $k ?>" value="1" <?= $ck($k) ?>> <span><?= $lbl ?></span>
           </label>
         <?php endforeach; ?>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">SMS (optional)</div>
+        <?php foreach (['sms_payments' => 'Payments', 'sms_account' => 'Account',
+                        'sms_system' => 'System messages'] as $k => $lbl): ?>
+          <label class="profile-preference">
+            <input type="checkbox" name="<?= $k ?>" value="1" <?= $ck($k) ?>> <span><?= $lbl ?></span>
+          </label>
+        <?php endforeach; ?>
+        <p class="note">By enabling SMS, you agree to receive the selected service updates at your saved mobile number. Standard carrier charges may apply. You can opt out here at any time. Promotional messages are not sent.</p>
       </div>
     </div>
     <button class="btn red profile-submit" style="margin-top:14px"><i class="fa-solid fa-check"></i> Save preferences</button>

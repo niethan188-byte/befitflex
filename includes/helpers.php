@@ -138,10 +138,18 @@ function notify(int $userId, string $type, string $title, string $message,
         'account' => 'email_account',
         default => 'email_system',
     };
+    $smsPreference = match ($type) {
+        'payment' => 'sms_payments',
+        'account' => 'sms_account',
+        default => 'sms_system',
+    };
     $recipient = row(
-        "SELECT u.email, COALESCE(np.$preference, 1) AS email_enabled
+        "SELECT u.email, COALESCE(np.$preference, 1) AS email_enabled,
+                COALESCE(np.$smsPreference, 0) AS sms_enabled,
+                m.contact_number_encrypted, m.contact_number
            FROM users u
            LEFT JOIN notification_preferences np ON np.user_id = u.user_id
+           LEFT JOIN members m ON m.user_id = u.user_id
           WHERE u.user_id = ?",
         [$userId]
     );
@@ -152,6 +160,15 @@ function notify(int $userId, string $type, string $title, string $message,
             $pdo->prepare(
                 'UPDATE notifications SET email_sent = 1, email_sent_at = NOW() WHERE notification_id = ?'
             )->execute([$notificationId]);
+        }
+    }
+
+    if ($recipient && (int) $recipient['sms_enabled'] === 1) {
+        $number = member_contact($recipient);
+        if ($number !== 'Protected contact') {
+            send_sms($number, $title . ': ' . $message);
+        } else {
+            error_log('PhilSMS notification skipped: member contact number is unavailable.');
         }
     }
 }

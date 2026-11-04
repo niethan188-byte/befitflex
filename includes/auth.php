@@ -9,6 +9,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/turnstile.php';
 require_once __DIR__ . '/email.php';
+require_once __DIR__ . '/sms.php';
 require_once __DIR__ . '/maya.php';
 require_once __DIR__ . '/crypto.php';
 require_once __DIR__ . '/Analytics.php';

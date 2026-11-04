@@ -137,11 +137,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($emailRecipients as $recipient) {
       $emailByUser[(int) $recipient['user_id']] = (string) $recipient['email'];
     }
+    $recipientUserIds = array_values(array_unique(array_map(
+      static fn (array $recipient): int => (int) $recipient['user_id'],
+      $recipients
+    )));
+    $smsByUser = [];
+    if ($recipientUserIds) {
+      $placeholders = implode(',', array_fill(0, count($recipientUserIds), '?'));
+      $smsRecipients = rows(
+        "SELECT u.user_id, m.contact_number_encrypted, m.contact_number
+           FROM users u
+           JOIN notification_preferences np ON np.user_id = u.user_id
+           JOIN members m ON m.user_id = u.user_id
+          WHERE np.sms_system = 1 AND u.user_id IN ($placeholders)",
+        $recipientUserIds
+      );
+      foreach ($smsRecipients as $recipient) {
+        $smsByUser[(int) $recipient['user_id']] = $recipient;
+      }
+    }
     $markEmail = $pdo->prepare(
       'UPDATE notifications SET email_sent = 1, email_sent_at = NOW() WHERE notification_id = ?'
     );
     $emailSent = 0;
     $emailFailed = 0;
+    $smsSent = 0;
+    $smsFailed = 0;
     foreach ($notificationIds as $notification) {
       $email = $emailByUser[$notification['user_id']] ?? '';
       if ($email && send_email($email, $title, '<h2>' . e($title) . '</h2><p>' . nl2br(e($message)) . '</p>')) {
@@ -150,11 +171,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       } elseif ($email) {
         $emailFailed++;
       }
+      if (isset($smsByUser[$notification['user_id']])) {
+        $number = member_contact($smsByUser[$notification['user_id']]);
+        if ($number !== 'Protected contact' && send_sms($number, $title . ': ' . $message)) {
+          $smsSent++;
+        } else {
+          if ($number === 'Protected contact') {
+            error_log('PhilSMS announcement skipped: member contact number is unavailable.');
+          }
+          $smsFailed++;
+        }
+      }
     }
 
     log_activity('Broadcast', 'Announcements', $title . ' → ' . count($recipients) . ' recipients');
     $people = count($recipients) === 1 ? 'person' : 'people';
-    flash('In-app notification sent to ' . count($recipients) . " $people. Email: $emailSent sent, $emailFailed failed.");
+    flash('In-app notification sent to ' . count($recipients) . " $people. Email: $emailSent sent, $emailFailed failed. SMS: $smsSent sent, $smsFailed failed.");
     redirect('announcements.php');
 }
 

@@ -83,6 +83,8 @@ below are optional integrations:
 [Environment]::SetEnvironmentVariable('MAYA_WEBHOOK_SECRET', 'your_webhook_secret', 'User')
 [Environment]::SetEnvironmentVariable('BEFITFLEX_API_SECRET', 'generate-a-long-random-secret', 'User')
 [Environment]::SetEnvironmentVariable('BEFITFLEX_ENCRYPTION_KEY', 'base64-encoded-32-byte-key', 'User')
+[Environment]::SetEnvironmentVariable('PHILSMS_API_KEY', 'your_philsms_api_key', 'User')
+[Environment]::SetEnvironmentVariable('PHILSMS_SENDER_ID', 'BeFitFlex', 'User')
 ```
 
 Generate the encryption key instead of typing one manually:
@@ -94,6 +96,15 @@ Generate the encryption key instead of typing one manually:
 Keep both secrets outside the project and back them up securely. Existing member
 contact numbers are backfilled into `members.contact_number_encrypted` when the
 upgrade is applied; the legacy column remains temporarily for compatibility.
+
+SMS delivery is optional and uses the PhilSMS v3 API. Create a PhilSMS account,
+copy its API key into `PHILSMS_API_KEY`, and set `PHILSMS_SENDER_ID` to an
+approved sender ID (at most 11 characters). PHP cURL must be enabled. Apply
+`database/upgrade.sql` to an existing database to add the SMS preference
+columns. Members must opt in to each SMS notification category from
+**My Profile → Notification preferences**; SMS is disabled by default, and
+promotional messages are not sent. PhilSMS offers five trial credits for new
+accounts and then charges per message.
 
 After setting environment variables on Windows, fully exit the XAMPP Control
 Panel (including its notification-area process), then reopen it and start

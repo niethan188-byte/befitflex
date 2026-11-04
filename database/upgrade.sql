@@ -81,11 +81,61 @@ SET @sql = IF(@column_exists = 0,
     'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'notification_preferences' AND column_name = 'sms_payments'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE notification_preferences ADD COLUMN sms_payments TINYINT NOT NULL DEFAULT 0',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'notification_preferences' AND column_name = 'sms_account'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE notification_preferences ADD COLUMN sms_account TINYINT NOT NULL DEFAULT 0',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'notification_preferences' AND column_name = 'sms_system'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE notification_preferences ADD COLUMN sms_system TINYINT NOT NULL DEFAULT 0',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 -- Existing accounts predate email verification and are treated as verified.
 UPDATE users SET email_verified_at = COALESCE(email_verified_at, created_at);
 
 ALTER TABLE payments
     MODIFY payment_method ENUM('Cash','Card','GCash','Bank Transfer','Maya') NOT NULL;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'payments' AND column_name = 'member_id'
+);
+SET @sql = IF(@column_exists > 0,
+    'ALTER TABLE payments MODIFY member_id VARCHAR(50) NULL',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'payments' AND column_name = 'customer_name'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE payments ADD COLUMN customer_name VARCHAR(255) NULL AFTER member_id',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+UPDATE payments p
+LEFT JOIN members m ON m.member_id = p.member_id
+SET p.customer_name = COALESCE(p.customer_name, m.member_name)
+WHERE p.customer_name IS NULL;
 
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns

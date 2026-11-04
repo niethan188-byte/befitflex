@@ -28,12 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($act === 'check_out') {
-        db()->prepare('UPDATE attendance SET check_out_time = NOW() WHERE attendance_id = ?')
-            ->execute([$_POST['attendance_id']]);
-        flash('Checked out.');
-    }
-
     redirect('attendance.php');
 }
 
@@ -92,7 +86,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="empty"><i class="fa-solid fa-door-closed"></i>Nobody has checked in today.</div>
   <?php else: ?>
   <div class="table-wrap"><table>
-    <thead><tr><th>Member</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr></thead>
+    <thead><tr><th>Member</th><th>In</th><th>Out</th><th>Duration</th></tr></thead>
     <tbody>
     <?php foreach ($today as $a):
       $mins = $a['check_out_time']
@@ -103,16 +97,6 @@ include __DIR__ . '/../includes/header.php';
         <td><?= date('g:i:s A', strtotime($a['check_in_time'])) ?></td>
         <td><?= $a['check_out_time'] ? date('g:i:s A', strtotime($a['check_out_time'])) : '<span class="chip warn">inside</span>' ?></td>
         <td><?= $mins !== null ? $mins . ' min' : '—' ?></td>
-        <td>
-          <?php if (!$a['check_out_time']): ?>
-            <form method="post" style="display:inline">
-              <?= csrf_field() ?>
-              <input type="hidden" name="action" value="check_out">
-              <input type="hidden" name="attendance_id" value="<?= e($a['attendance_id']) ?>">
-              <button class="btn sm"><i class="fa-solid fa-right-from-bracket"></i> Check out</button>
-            </form>
-          <?php endif; ?>
-        </td>
       </tr>
     <?php endforeach; ?>
     </tbody>

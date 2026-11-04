@@ -11,9 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $paymentMethod = (string) ($_POST['payment_method'] ?? '');
         $paymentStatus = (string) ($_POST['payment_status'] ?? '');
         $memberId = trim((string) ($_POST['member_id'] ?? ''));
-        $member = row('SELECT member_id FROM members WHERE member_id = ?', [$memberId]);
-        if (!$member) {
-            flash('Choose a member from the search results.', 'err');
+        $customerName = trim((string) ($_POST['customer_name'] ?? ''));
+        $member = $memberId !== '' ? row('SELECT member_id, member_name FROM members WHERE member_id = ?', [$memberId]) : null;
+        if ($memberId !== '' && !$member) {
+            flash('Choose a valid member from the search results.', 'err');
+            redirect('payments.php');
+        }
+        if ($memberId === '' && $customerName === '') {
+            flash('Choose a member or enter a non-member customer name.', 'err');
             redirect('payments.php');
         }
         if (!maya_manual_payment_creation_allowed($paymentMethod, $paymentStatus)) {
@@ -21,19 +26,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('payments.php');
         }
 
+        $customerName = $customerName !== '' ? $customerName : (string) $member['member_name'];
         $pid = next_id('payments', 'payment_id', 'PAY', 5);
         db()->prepare(
-            'INSERT INTO payments (payment_id,member_id,amount,payment_method,payment_status,payment_date,notes)
-             VALUES (?,?,?,?,?,?,?)'
-        )->execute([$pid, $memberId, (float) $_POST['amount'], $paymentMethod,
+            'INSERT INTO payments (payment_id,member_id,customer_name,amount,payment_method,payment_status,payment_date,notes)
+             VALUES (?,?,?,?,?,?,?,?)'
+        )->execute([$pid, $member ? $memberId : null, $customerName, (float) $_POST['amount'], $paymentMethod,
                     $paymentStatus, $_POST['payment_date'] ?: null, $_POST['notes']]);
         log_activity('Record payment', 'Payments', $pid);
         flash('Payment ' . $pid . ' recorded.');
     }
 
     if ($act === 'mark_paid') {
-        $p = row('SELECT p.*, m.user_id, m.member_name FROM payments p
-                    JOIN members m ON m.member_id = p.member_id WHERE p.payment_id = ?', [$_POST['payment_id']]);
+        $p = row('SELECT p.*, m.user_id, COALESCE(m.member_name, p.customer_name) AS payer_name
+                    FROM payments p
+                    LEFT JOIN members m ON m.member_id = p.member_id
+                    WHERE p.payment_id = ?', [$_POST['payment_id']]);
         if (!$p) {
             flash('Payment record not found.', 'err');
         } elseif (!maya_manual_mark_allowed($p)) {
@@ -50,11 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('The payment changed before it could be recorded. Refresh and check its current status.', 'err');
                 redirect('payments.php');
             }
-            notify((int) $p['user_id'], 'payment', 'Payment received',
-                'We received ' . number_format((float) $p['amount'], 2) . ' for your membership. Thank you.',
-                'circle-check', 'success', 'member/payments.php');
+            if (!empty($p['user_id'])) {
+                notify((int) $p['user_id'], 'payment', 'Payment received',
+                    'We received ' . number_format((float) $p['amount'], 2) . ' for your membership. Thank you.',
+                    'circle-check', 'success', 'member/payments.php');
+            }
             log_activity('Mark paid', 'Payments', (string) $_POST['payment_id']);
-            flash('Marked as paid and the member was notified.');
+            flash('Marked as paid.');
         }
     }
 
@@ -73,7 +83,9 @@ $subtitle = 'Dues, methods and outstanding balances.';
 $bodyClass = 'admin-payments';
 
 $filter = $_GET['status'] ?? 'all';
-$sql = 'SELECT p.*, m.member_name FROM payments p JOIN members m ON m.member_id = p.member_id';
+$sql = 'SELECT p.*, COALESCE(m.member_name, p.customer_name) AS payer_name
+        FROM payments p
+        LEFT JOIN members m ON m.member_id = p.member_id';
 $args = [];
 if (in_array($filter, ['Paid', 'Pending', 'Overdue'], true)) {
     $sql .= ' WHERE p.payment_status = ?';
@@ -126,7 +138,9 @@ include __DIR__ . '/../includes/header.php';
       <tr>
         <td><span class="mono"><?= e($p['payment_id']) ?></span>
             <?php if ($p['notes']): ?><div class="note"><?= e($p['notes']) ?></div><?php endif; ?></td>
-        <td><?= e($p['member_name']) ?><div class="mono"><?= e($p['member_id']) ?></div></td>
+        <td><?= e($p['payer_name'] ?: $p['customer_name'] ?: 'Walk-in customer') ?>
+            <?php if (!empty($p['member_id'])): ?><div class="mono"><?= e($p['member_id']) ?></div><?php endif; ?>
+            <?php if (empty($p['member_id']) && !empty($p['customer_name'])): ?><div class="mono">Non-member</div><?php endif; ?></td>
         <td><?= e($p['payment_method']) ?></td>
         <td class="num"><b><?= money($p['amount']) ?></b></td>
         <td><?= dt($p['payment_date']) ?></td>
@@ -196,13 +210,13 @@ include __DIR__ . '/../includes/header.php';
       <input type="hidden" name="action" value="create">
 
       <div class="field-row member-picker" data-member-picker>
-        <label for="paymentMemberSearch">Member</label>
+        <label for="paymentMemberSearch">Member (optional)</label>
         <input type="search" id="paymentMemberSearch" placeholder="Search by name or member ID…"
-               autocomplete="off" required aria-autocomplete="list"
+               autocomplete="off" aria-autocomplete="list"
                aria-controls="paymentMemberResults" aria-expanded="false">
         <input type="hidden" name="member_id" id="paymentMemberId">
         <div class="member-picker-results" id="paymentMemberResults" role="listbox" hidden></div>
-        <small class="member-picker-hint">Type a name or member ID, then choose a result.</small>
+        <small class="member-picker-hint">Pick an existing member, or leave this blank for a non-member customer.</small>
         <div class="member-picker-options" hidden>
           <?php foreach ($members as $m): ?>
             <span data-member-id="<?= e($m['member_id']) ?>"
@@ -211,6 +225,11 @@ include __DIR__ . '/../includes/header.php';
                   data-membership="<?= e($m['membership_type']) ?>"></span>
           <?php endforeach; ?>
         </div>
+      </div>
+
+      <div class="field-row">
+        <label for="paymentCustomerName">Customer name for non-member payment</label>
+        <input type="text" name="customer_name" id="paymentCustomerName" placeholder="Walk-in customer or guest">
       </div>
 
       <div class="form-grid">
@@ -259,6 +278,7 @@ function openPaymentModal() {
   const memberId = picker.querySelector('#paymentMemberId');
   const results = picker.querySelector('#paymentMemberResults');
   const amount = document.getElementById('payAmount');
+  const customerName = document.getElementById('paymentCustomerName');
   const members = Array.from(picker.querySelectorAll('.member-picker-options [data-member-id]'))
     .map(option => ({
       id: option.dataset.memberId,
@@ -280,6 +300,7 @@ function openPaymentModal() {
   const chooseMember = member => {
     input.value = member.label;
     memberId.value = member.id;
+    customerName.value = member.name;
     input.setCustomValidity('');
     if (member.price !== '') amount.value = member.price;
     closeResults();
@@ -358,9 +379,9 @@ function openPaymentModal() {
   });
 
   input.form.addEventListener('submit', event => {
-    if (!memberId.value) {
+    if (!memberId.value && !customerName.value.trim()) {
       event.preventDefault();
-      input.setCustomValidity('Choose a member from the search results.');
+      input.setCustomValidity('Choose a member or enter a non-member customer name.');
       input.reportValidity();
     }
   });
@@ -368,6 +389,7 @@ function openPaymentModal() {
   input.form.addEventListener('reset', () => {
     window.setTimeout(() => {
       memberId.value = '';
+      customerName.value = '';
       input.setCustomValidity('');
       closeResults();
     });

@@ -57,6 +57,17 @@ instead of delivered to recipients. The application sends email for payments,
 account messages, bulk member messages, and admin announcements.
 In-app notifications continue to work if email is not configured.
 
+## Optional SMS notifications
+
+SMS uses the PhilSMS v3 API for Philippine mobile numbers. Add
+`PHILSMS_API_KEY` and an approved `PHILSMS_SENDER_ID` (at most 11 characters)
+to the PHP/Apache environment. Members can opt in separately to payment,
+account, and system SMS notifications in **My Profile**; all SMS preferences
+default to off. This integration sends service notifications only, not
+promotional texts. Existing installations must apply `database/upgrade.sql`
+before enabling the preferences. See [SETUP.md](SETUP.md#4-install-php-dependencies)
+for configuration details.
+
 Set these variables in Windows PowerShell; do not put credentials in a PHP file:
 
   ```powershell
