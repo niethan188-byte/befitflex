@@ -41,6 +41,17 @@ The login page's optional **Remember me on this device** setting keeps the
 account signed in for up to 30 days. Use it only on a trusted device; signing
 out revokes its remembered login.
 
+## Offline access
+
+After signing in while online, pages you visit in the admin or member area are
+saved on that device for read-only access if the connection drops. Only pages
+previously opened online are available offline, and their data may be stale.
+Offline changes are disabled and are not queued or synchronized. When the
+connection returns, refresh the page to load current data and resume normal
+use. This requires HTTPS in production (or localhost during development).
+Signing out clears the saved private pages; avoid using offline access on
+shared or untrusted devices.
+
 For announcement videos up to 1 GB, restart Apache from the XAMPP Control Panel
 after installation so PHP reloads the upload limits in `.user.ini`.
 

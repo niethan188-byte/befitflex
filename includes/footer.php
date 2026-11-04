@@ -94,10 +94,65 @@ window.CMD_SEARCH = true;
 <script src="<?= base_url() ?>assets/js/app.js?v=<?= $jsV ?? 1 ?>"></script>
 <script src="<?= base_url() ?>assets/js/ui.js?v=<?= $uiJsV ?? 1 ?>"></script>
 <script>
+const offlineNotice = document.getElementById('offlineNotice');
+const offlineNoticeText = document.getElementById('offlineNoticeText');
+const offlineRefresh = document.getElementById('offlineRefresh');
+let reconnecting = false;
+let cachedPage = false;
+
+function updateOfflineState() {
+  const offline = !navigator.onLine;
+  const readOnly = offline || reconnecting || cachedPage;
+  document.body.classList.toggle('offline-readonly', readOnly);
+  offlineNotice.hidden = !readOnly;
+  offlineRefresh.hidden = offline;
+
+  if (offline) {
+    offlineNoticeText.textContent = 'Offline: showing saved data from your last online visit. Changes are disabled.';
+  } else if (reconnecting || cachedPage) {
+    offlineNoticeText.textContent = 'Showing saved data. Refresh this page to load the latest data and re-enable changes.';
+  }
+
+  document.querySelectorAll('form[method="post" i] button, form[method="post" i] input, form[method="post" i] select, form[method="post" i] textarea')
+    .forEach((control) => {
+      if (control.dataset.bffOfflineDisabled === undefined) {
+        control.dataset.bffOfflineDisabled = control.disabled ? 'true' : 'false';
+      }
+      control.disabled = readOnly || control.dataset.bffOfflineDisabled === 'true';
+    });
+}
+
+offlineRefresh.addEventListener('click', () => window.location.reload());
+window.addEventListener('offline', () => {
+  reconnecting = false;
+  updateOfflineState();
+});
+window.addEventListener('online', () => {
+  reconnecting = true;
+  updateOfflineState();
+});
+document.addEventListener('submit', (event) => {
+  if (document.body.classList.contains('offline-readonly')
+      && event.target.matches('form[method="post" i]')) {
+    event.preventDefault();
+    offlineNotice.hidden = false;
+    offlineNoticeText.textContent = 'Changes cannot be saved offline. Reconnect and refresh this page before trying again.';
+  }
+}, true);
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'BFF_OFFLINE_PAGE') {
+      cachedPage = true;
+      updateOfflineState();
+    }
+  });
+}
+updateOfflineState();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('<?= base_url() ?>sw.js', { scope: '<?= base_url() ?>' })
-      .catch(() => {});
+      .catch((error) => console.error('Be Fit Flex offline support could not be enabled.', error));
   });
 }
 </script>

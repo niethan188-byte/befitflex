@@ -82,6 +82,10 @@ try {
 <div class="shell">
 <?php include __DIR__ . '/sidebar.php'; ?>
   <main class="main" id="main">
+    <div class="offline-notice" id="offlineNotice" role="status" aria-live="polite" hidden>
+      <span id="offlineNoticeText"></span>
+      <button class="btn sm" id="offlineRefresh" type="button" hidden>Refresh page</button>
+    </div>
     <div class="topbar">
       <button class="btn icon menu-btn" onclick="toggleSidebar()" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
       <div class="topbar-heading">

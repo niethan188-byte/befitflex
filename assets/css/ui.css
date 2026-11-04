@@ -9,6 +9,27 @@
 :root { --row-y: 13px; --panel-p: 22px; }
 [data-density="compact"] { --row-y: 7px; --panel-p: 16px; }
 
+.offline-notice {
+  position: sticky;
+  top: 0;
+  z-index: 115;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  border: 1px solid rgba(229,57,53,.45);
+  border-radius: 12px;
+  background: var(--glass-2);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  font-size: 13px;
+}
+.offline-notice[hidden] { display: none; }
+.offline-notice button { flex: 0 0 auto; }
+
 /* Light theme. The glass idea survives — the light field just sits on
    white, and the frost lightens instead of darkening. */
 [data-theme="light"] {

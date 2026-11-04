@@ -137,7 +137,8 @@ $hasBanner = is_file(__DIR__ . '/assets/img/banner.png');
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {});
+    navigator.serviceWorker.register('sw.js', { scope: './' })
+      .catch((error) => console.error('Be Fit Flex offline support could not be enabled.', error));
   });
 }
 </script>
