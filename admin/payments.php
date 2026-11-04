@@ -3,6 +3,8 @@ define('IN_SUBDIR', true);
 require __DIR__ . '/../includes/auth.php';
 $u = require_role('admin');
 
+$paymentsHasCustomerName = (bool) db()->query("SHOW COLUMNS FROM payments LIKE 'customer_name'")->fetch();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $act = $_POST['action'] ?? '';
@@ -13,8 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $memberId = trim((string) ($_POST['member_id'] ?? ''));
         $customerName = trim((string) ($_POST['customer_name'] ?? ''));
         $member = $memberId !== '' ? row('SELECT member_id, member_name FROM members WHERE member_id = ?', [$memberId]) : null;
+
         if ($memberId !== '' && !$member) {
             flash('Choose a valid member from the search results.', 'err');
+            redirect('payments.php');
+        }
+        if ($memberId === '' && !$paymentsHasCustomerName) {
+            flash('This installation is missing the non-member payment schema update. Run the database upgrade before recording walk-in payments.', 'err');
             redirect('payments.php');
         }
         if ($memberId === '' && $customerName === '') {
@@ -26,22 +33,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('payments.php');
         }
 
-        $customerName = $customerName !== '' ? $customerName : (string) $member['member_name'];
+        $customerName = $customerName !== '' ? $customerName : (string) ($member['member_name'] ?? '');
         $pid = next_id('payments', 'payment_id', 'PAY', 5);
-        db()->prepare(
-            'INSERT INTO payments (payment_id,member_id,customer_name,amount,payment_method,payment_status,payment_date,notes)
-             VALUES (?,?,?,?,?,?,?,?)'
-        )->execute([$pid, $member ? $memberId : null, $customerName, (float) $_POST['amount'], $paymentMethod,
-                    $paymentStatus, $_POST['payment_date'] ?: null, $_POST['notes']]);
+        if ($paymentsHasCustomerName) {
+            db()->prepare(
+                'INSERT INTO payments (payment_id,member_id,customer_name,amount,payment_method,payment_status,payment_date,notes)
+                 VALUES (?,?,?,?,?,?,?,?)'
+            )->execute([$pid, $member ? $memberId : null, $customerName, (float) $_POST['amount'], $paymentMethod,
+                        $paymentStatus, $_POST['payment_date'] ?: null, $_POST['notes']]);
+        } else {
+            db()->prepare(
+                'INSERT INTO payments (payment_id,member_id,amount,payment_method,payment_status,payment_date,notes)
+                 VALUES (?,?,?,?,?,?,?)'
+            )->execute([$pid, $memberId, (float) $_POST['amount'], $paymentMethod,
+                        $paymentStatus, $_POST['payment_date'] ?: null, $_POST['notes']]);
+        }
         log_activity('Record payment', 'Payments', $pid);
         flash('Payment ' . $pid . ' recorded.');
     }
 
     if ($act === 'mark_paid') {
-        $p = row('SELECT p.*, m.user_id, COALESCE(m.member_name, p.customer_name) AS payer_name
-                    FROM payments p
-                    LEFT JOIN members m ON m.member_id = p.member_id
-                    WHERE p.payment_id = ?', [$_POST['payment_id']]);
+        if ($paymentsHasCustomerName) {
+            $p = row('SELECT p.*, m.user_id, COALESCE(m.member_name, p.customer_name) AS payer_name
+                        FROM payments p
+                        LEFT JOIN members m ON m.member_id = p.member_id
+                        WHERE p.payment_id = ?', [$_POST['payment_id']]);
+        } else {
+            $p = row('SELECT p.*, m.user_id, m.member_name AS payer_name
+                        FROM payments p
+                        JOIN members m ON m.member_id = p.member_id
+                        WHERE p.payment_id = ?', [$_POST['payment_id']]);
+        }
         if (!$p) {
             flash('Payment record not found.', 'err');
         } elseif (!maya_manual_mark_allowed($p)) {
@@ -83,9 +105,15 @@ $subtitle = 'Dues, methods and outstanding balances.';
 $bodyClass = 'admin-payments';
 
 $filter = $_GET['status'] ?? 'all';
-$sql = 'SELECT p.*, COALESCE(m.member_name, p.customer_name) AS payer_name
-        FROM payments p
-        LEFT JOIN members m ON m.member_id = p.member_id';
+if ($paymentsHasCustomerName) {
+    $sql = 'SELECT p.*, COALESCE(m.member_name, p.customer_name) AS payer_name
+            FROM payments p
+            LEFT JOIN members m ON m.member_id = p.member_id';
+} else {
+    $sql = 'SELECT p.*, m.member_name AS payer_name
+            FROM payments p
+            JOIN members m ON m.member_id = p.member_id';
+}
 $args = [];
 if (in_array($filter, ['Paid', 'Pending', 'Overdue'], true)) {
     $sql .= ' WHERE p.payment_status = ?';
