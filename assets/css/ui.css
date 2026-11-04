@@ -856,6 +856,16 @@ body.admin-payments .table-wrap {
   max-width: 100%;
 }
 
+body.admin-payments .payment-actions > form {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+body.admin-payments .payment-actions > details {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 @media (max-width: 980px) {
   body.admin-payments .shell {
     grid-template-columns: minmax(0, 1fr);
@@ -895,12 +905,71 @@ body.admin-payments .table-wrap {
   }
 
   body.admin-payments .table-wrap {
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
+    overflow: visible;
   }
 
-  body.admin-payments .payment-table.keep-table-mobile {
-    min-width: 900px;
+  body.admin-payments .payment-table.stackable {
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.admin-payments .payment-table.stackable tbody td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  body.admin-payments .payment-table.stackable tbody td.payment-actions {
+    display: block;
+    text-align: left;
+  }
+
+  body.admin-payments .payment-actions > form,
+  body.admin-payments .payment-actions > a,
+  body.admin-payments .payment-actions > details {
+    display: flex;
+    width: 100%;
+    margin: 6px 0;
+  }
+
+  body.admin-payments .payment-actions > form > .btn,
+  body.admin-payments .payment-actions > a.btn,
+  body.admin-payments .payment-actions > details > summary {
+    box-sizing: border-box;
+    justify-content: center;
+    width: 100%;
+    min-height: 40px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  body.admin-payments .payment-actions > details {
+    display: block;
+  }
+
+  body.admin-payments .payment-actions > details > p {
+    margin: 10px 0;
+    overflow-wrap: anywhere;
+  }
+
+  body.admin-payments .payment-actions .payment-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+
+  body.admin-payments .payment-actions .payment-action input,
+  body.admin-payments .payment-actions .payment-action button {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+  }
+
+  body.admin-payments .payment-actions > .note {
+    display: block;
+    margin: 8px 0;
+    overflow-wrap: anywhere;
   }
 
   body.admin-payments .table-foot {

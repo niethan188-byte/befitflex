@@ -158,7 +158,7 @@ include __DIR__ . '/../includes/header.php';
   <?php if (!$payments): ?>
     <div class="empty"><i class="fa-solid fa-receipt"></i>Nothing here.</div>
   <?php else: ?>
-  <div class="table-wrap"><table id="tblPay" class="payment-table keep-table-mobile"
+  <div class="table-wrap"><table id="tblPay" class="payment-table"
       data-page-size-options="10,25,50,100">
     <thead><tr><th>Payment</th><th>Member</th><th>Method</th><th class="num">Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
     <tbody>
@@ -176,12 +176,12 @@ include __DIR__ . '/../includes/header.php';
         <td class="payment-actions" data-label="Actions">
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (!empty($p['maya_checkout_id'])): ?>
-              <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i></a>
+              <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i> Check status</a>
               <?php if (maya_payment_flow_configured()): ?>
-                <form method="post" action="../api/maya-retry.php" style="display:inline">
+                <form method="post" action="../api/maya-retry.php">
                   <?= csrf_field() ?>
                   <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
-                  <button class="btn sm red" type="submit" title="Retry Maya payment"><i class="fa-solid fa-wallet"></i></button>
+                  <button class="btn sm red" type="submit" title="Retry Maya payment"><i class="fa-solid fa-wallet"></i> Retry payment</button>
                 </form>
               <?php endif; ?>
             <?php endif; ?>
@@ -189,8 +189,8 @@ include __DIR__ . '/../includes/header.php';
               <span class="note" title="No checkout ID is saved, so Maya status cannot be checked. Ask for the receipt and verify it in Maya before taking further action.">No saved Maya checkout ID; verify receipt with Maya</span>
             <?php endif; ?>
             <?php if (empty($p['maya_checkout_id'])): ?>
-              <details style="display:inline-block">
-                <summary class="btn sm">Verify existing Maya checkout</summary>
+              <details class="maya-verify">
+                <summary class="btn sm">Link existing Maya checkout</summary>
                 <p class="note">Enter the checkout ID from the member's receipt or Maya merchant dashboard. The server will verify its payment reference, amount, and currency before linking it.</p>
                 <?php if (maya_payment_flow_configured()): ?>
                   <form method="post" action="../api/maya-recover.php" class="payment-action">
@@ -207,7 +207,7 @@ include __DIR__ . '/../includes/header.php';
             <?php if (!empty($p['maya_checkout_id']) || $p['payment_method'] === 'Maya'): ?>
               <span class="note" title="Maya-linked payments can only be confirmed by Maya.">Maya confirmation required</span>
             <?php else: ?>
-              <form method="post" style="display:inline">
+              <form method="post">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="mark_paid">
                 <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
@@ -215,7 +215,7 @@ include __DIR__ . '/../includes/header.php';
               </form>
             <?php endif; ?>
           <?php endif; ?>
-          <form method="post" style="display:inline" onsubmit="return confirm('Delete this payment record?')">
+          <form method="post" onsubmit="return confirm('Delete this payment record?')">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="payment_id" value="<?= e($p['payment_id']) ?>">
