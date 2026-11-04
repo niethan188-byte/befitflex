@@ -13,12 +13,11 @@
 
 | File | Purpose | Tables |
 |---|---|---|
-| `dashboard.php` | Headline counts, recent payments, next sessions, membership mix, and activity feed. | most |
+| `dashboard.php` | Headline counts, recent payments, membership mix, and activity feed. | most |
 | `analytics.php` | Revenue, retention, traffic, utilization, and churn risk. | most |
 | `reports.php` | Printable revenue, payment mix, retention, and member reports. | payments, members, attendance, sessions |
 | `members.php` | Create, edit, delete, filter, message, and bulk-update members. | users, members |
 | `classes.php` | Manage weekly group classes and capacity. | classes, class_attendance |
-| `sessions.php` | Schedule, complete, cancel, and delete member sessions. | sessions, members, notifications |
 | `attendance.php` | Check members in and out and view attendance records. | attendance, class_attendance |
 | `payments.php` | Record dues, mark paid, and delete payments. | payments, notifications |
 | `day-passes.php` | Manage day passes and related check-ins. | day_passes, attendance |

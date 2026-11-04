@@ -32,14 +32,6 @@ $recentPayments = rows(
      ORDER BY p.created_at DESC LIMIT 6'
 );
 
-$nextSessions = rows(
-    "SELECT s.*, m.member_name
-       FROM sessions s
-       LEFT JOIN members  m ON m.member_id  = s.member_id
-      WHERE s.session_status = 'Scheduled'
-      ORDER BY s.session_date, s.session_time LIMIT 6"
-);
-
 $recentLog = rows(
     'SELECT a.*, u.email FROM activity_log a JOIN users u ON u.user_id = a.user_id
      ORDER BY a.created_at DESC LIMIT 7'
@@ -195,29 +187,6 @@ include __DIR__ . '/../includes/header.php';
             <td><?= e($p['payment_method']) ?></td>
             <td class="num"><?= money($p['amount']) ?></td>
             <td><?= badge($p['payment_status']) ?></td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table></div>
-    <?php endif; ?>
-  </div>
-
-  <div class="panel glass">
-    <h2><i class="fa-solid fa-calendar-day"></i> Next sessions
-      <span class="spacer"></span>
-      <a class="btn sm" href="sessions.php">Schedule</a>
-    </h2>
-    <?php if (!$nextSessions): ?>
-      <div class="empty"><i class="fa-solid fa-calendar-xmark"></i>Nothing scheduled.</div>
-    <?php else: ?>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Session</th><th>Member</th><th>When</th></tr></thead>
-        <tbody>
-        <?php foreach ($nextSessions as $s): ?>
-          <tr>
-            <td><?= e($s['session_name']) ?><div class="mono"><?= e($s['member_name'] ?? 'Open') ?></div></td>
-            <td><?= e($s['member_name'] ?? '—') ?></td>
-            <td><?= dt($s['session_date']) ?><div class="mono"><?= timeh($s['session_time']) ?></div></td>
           </tr>
         <?php endforeach; ?>
         </tbody>

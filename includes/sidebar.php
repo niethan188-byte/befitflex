@@ -17,7 +17,6 @@ $menus = [
     ],
     'Operations' => [
       ['classes',     'Classes',          'fa-people-group',      'admin/classes.php'],
-      ['sessions',    'Sessions',         'fa-calendar-day',      'admin/sessions.php'],
       ['attendance',  'Attendance',       'fa-clipboard-user',    'admin/attendance.php'],
       ['kiosk',       'Check-in Station', 'fa-door-open',         'kiosk.php'],
     ],
