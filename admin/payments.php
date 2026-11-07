@@ -11,11 +11,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($act === 'create') {
         $paymentMethod = (string) ($_POST['payment_method'] ?? '');
-        $paymentStatus = (string) ($_POST['payment_status'] ?? '');
+        $paymentStatus = $paymentMethod === 'Maya' ? 'Paid' : (string) ($_POST['payment_status'] ?? '');
         $memberId = trim((string) ($_POST['member_id'] ?? ''));
         $customerName = trim((string) ($_POST['customer_name'] ?? ''));
         $member = $memberId !== '' ? row('SELECT member_id, member_name FROM members WHERE member_id = ?', [$memberId]) : null;
 
+        if (!in_array($paymentMethod, ['Cash', 'Maya'], true)) {
+            flash('Choose a valid payment method.', 'err');
+            redirect('payments.php');
+        }
         if ($memberId !== '' && !$member) {
             flash('Choose a valid member from the search results.', 'err');
             redirect('payments.php');
@@ -26,10 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($memberId === '' && $customerName === '') {
             flash('Choose a member or enter a non-member customer name.', 'err');
-            redirect('payments.php');
-        }
-        if (!maya_manual_payment_creation_allowed($paymentMethod, $paymentStatus)) {
-            flash('Maya payments cannot be recorded as paid manually. Save the payment as Pending and wait for Maya server-side confirmation.', 'err');
             redirect('payments.php');
         }
 
@@ -264,8 +264,8 @@ include __DIR__ . '/../includes/header.php';
         <div class="field-row"><label>Amount</label>
           <input type="number" name="amount" id="payAmount" step="0.01" min="0" required></div>
         <div class="field-row"><label>Method</label>
-          <select name="payment_method">
-            <option>Cash</option><option>Card</option><option>GCash</option><option>Bank Transfer</option><option>Maya</option>
+          <select name="payment_method" id="payMethod">
+            <option>Cash</option><option>Maya</option>
           </select></div>
       </div>
 
@@ -299,6 +299,17 @@ function openPaymentModal() {
 }
 
 (() => {
+  const paymentMethod = document.getElementById('payMethod');
+  const paymentStatus = document.getElementById('payStatus');
+  const updatePaymentStatus = () => {
+    const mayaSelected = paymentMethod.value === 'Maya';
+    if (mayaSelected) paymentStatus.value = 'Paid';
+    paymentStatus.disabled = mayaSelected;
+  };
+  paymentMethod.addEventListener('change', updatePaymentStatus);
+  paymentMethod.form.addEventListener('reset', () => window.setTimeout(updatePaymentStatus));
+  updatePaymentStatus();
+
   const picker = document.querySelector('[data-member-picker]');
   if (!picker) return;
 
