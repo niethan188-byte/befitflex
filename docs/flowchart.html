@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101114">
+  <title>Be Fit Flex — Application Flowchart</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: #101114;
+      color: #f7f7f8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% -10%, #3b1718 0, #101114 52rem); }
+    .page { width: min(1740px, calc(100% - 48px)); margin: 0 auto; padding: 34px 0 42px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 0 auto 20px; max-width: 1600px; }
+    .eyebrow { color: #ff6864; font-size: 13px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; margin: 0 0 8px; }
+    h1 { font-size: clamp(28px, 3vw, 42px); letter-spacing: -.04em; line-height: 1.1; margin: 0; }
+    .subtitle { color: #b7b7bf; margin: 9px 0 0; font-size: 16px; }
+    .print-button { border: 1px solid #6c3435; border-radius: 10px; background: #281819; color: #fff; padding: 12px 16px; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .print-button:hover { background: #3a2021; }
+    .diagram { overflow: hidden; border: 1px solid #34343b; border-radius: 18px; background: #15161a; box-shadow: 0 24px 70px #0007; }
+    svg { display: block; width: 100%; height: auto; }
+    .footer { max-width: 1600px; margin: 14px auto 0; color: #a9a9b2; font-size: 13px; line-height: 1.6; }
+    .footer strong { color: #ececf0; }
+    @media (max-width: 700px) {
+      .page { width: calc(100% - 20px); padding-top: 20px; }
+      header { align-items: flex-start; flex-direction: column; }
+      .diagram { overflow-x: auto; }
+      svg { min-width: 1000px; }
+    }
+    @page { size: landscape; margin: 8mm; }
+    @media print {
+      :root { color-scheme: light; background: #fff; color: #111; }
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      header { margin: 0 auto 8px; }
+      .eyebrow { color: #b42328; }
+      .subtitle, .footer { color: #444; }
+      .print-button { display: none; }
+      .diagram { overflow: visible; border-color: #bbb; border-radius: 0; box-shadow: none; }
+      svg { width: 100%; max-height: 175mm; }
+      .footer { margin-top: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <p class="eyebrow">Be Fit Flex Gym · System overview</p>
+        <h1>Application Flowchart</h1>
+        <p class="subtitle">Registration, secure sign-in, and role-based destinations</p>
+      </div>
+      <button class="print-button" type="button" onclick="window.print()" aria-label="Print or save the flowchart as a PDF">Print / Save PDF</button>
+    </header>
+
+    <section class="diagram" aria-label="Flowchart showing member registration, sign-in, and admin or member journeys">
+      <svg viewBox="0 0 1600 930" role="img" aria-labelledby="chart-title chart-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="chart-title">Be Fit Flex application flowchart</title>
+        <desc id="chart-desc">Visitors can register as members or sign in. Security and credentials are checked before a session is started and the user is routed to the admin or member area. Both roles can sign out.</desc>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#92929d" />
+          </marker>
+          <linearGradient id="adminFill" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#351b1d"/><stop offset="1" stop-color="#211719"/></linearGradient>
+          <linearGradient id="memberFill" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#192a3c"/><stop offset="1" stop-color="#171d26"/></linearGradient>
+          <style>
+            .connector { fill: none; stroke: #92929d; stroke-width: 3; marker-end: url(#arrow); }
+            .connector-soft { fill: none; stroke: #73737e; stroke-width: 2.5; marker-end: url(#arrow); }
+            .node { fill: #202126; stroke: #4a4b54; stroke-width: 2; }
+            .start { fill: #351b1d; stroke: #e84845; stroke-width: 2.5; }
+            .decision { fill: #30291c; stroke: #a78647; stroke-width: 2.5; }
+            .register { fill: #1d2b1d; stroke: #568457; stroke-width: 2; }
+            .error { fill: #301b1c; stroke: #a75252; stroke-width: 2; }
+            .admin { fill: url(#adminFill); stroke: #e84845; stroke-width: 2.5; }
+            .member { fill: url(#memberFill); stroke: #6da8ed; stroke-width: 2.5; }
+            .end { fill: #19291f; stroke: #5da476; stroke-width: 2.5; }
+            .title { fill: #f7f7f8; font: 700 20px Inter, "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+            .detail { fill: #c1c1c9; font: 15px Inter, "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+            .label { fill: #dedee3; font: 700 14px Inter, "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+            .lane { fill: #aaaab4; font: 800 14px Inter, "Segoe UI", Arial, sans-serif; letter-spacing: 2px; text-anchor: middle; }
+            .tag { fill: #111216; stroke: #45464f; stroke-width: 1.5; }
+            .tag-text { fill: #efeff2; font: 700 13px Inter, "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+          </style>
+        </defs>
+
+        <!-- Main sign-in path -->
+        <path class="connector" d="M 220 306 H 280" />
+        <path class="connector" d="M 450 306 H 510" />
+        <path class="connector" d="M 740 306 H 800" />
+        <path class="connector" d="M 990 306 H 1050" />
+        <path class="connector" d="M 1240 306 H 1310" />
+        <text class="label" x="480" y="289">YES · SIGN IN</text>
+        <text class="label" x="1020" y="289">VALID</text>
+
+        <!-- Register branch and return to sign in -->
+        <path class="connector-soft" d="M 365 246 V 160 H 430" />
+        <path class="connector-soft" d="M 610 160 H 680" />
+        <path class="connector-soft" d="M 790 194 V 220 H 625 V 266" />
+        <text class="label" x="395" y="226">NO · REGISTER</text>
+        <text class="label" x="700" y="211">AFTER VERIFICATION</text>
+
+        <!-- Invalid sign-in loops back -->
+        <path class="connector-soft" d="M 895 366 V 452 H 625 V 346" />
+        <text class="label" x="908" y="410">NO · RETRY</text>
+
+        <!-- Role branches -->
+        <path class="connector" d="M 1400 366 V 460 H 1065 V 515" />
+        <path class="connector" d="M 1400 366 V 460 H 1390 V 515" />
+        <rect class="tag" x="1090" y="435" width="72" height="30" rx="15" />
+        <text class="tag-text" x="1126" y="455">ADMIN</text>
+        <rect class="tag" x="1300" y="435" width="82" height="30" rx="15" />
+        <text class="tag-text" x="1341" y="455">MEMBER</text>
+
+        <!-- Role areas converge to sign out -->
+        <path class="connector-soft" d="M 1065 665 V 748 H 1225 V 790" />
+        <path class="connector-soft" d="M 1390 665 V 748 H 1225 V 790" />
+
+        <!-- Nodes -->
+        <rect class="start" x="50" y="266" width="170" height="80" rx="40" />
+        <text class="title" x="135" y="300">START</text>
+        <text class="detail" x="135" y="325">Open Be Fit Flex</text>
+
+        <polygon class="decision" points="365,236 450,306 365,376 280,306" />
+        <text class="title" x="365" y="300">Account?</text>
+        <text class="detail" x="365" y="324">Have an account</text>
+
+        <rect class="register" x="430" y="126" width="180" height="68" rx="14" />
+        <text class="title" x="520" y="155">Register</text>
+        <text class="detail" x="520" y="178">Create member account</text>
+
+        <rect class="register" x="680" y="126" width="220" height="68" rx="14" />
+        <text class="title" x="790" y="155">Verify email</text>
+        <text class="detail" x="790" y="178">Required for new accounts</text>
+
+        <rect class="node" x="510" y="266" width="230" height="80" rx="14" />
+        <text class="title" x="625" y="300">Sign in</text>
+        <text class="detail" x="625" y="325">Enter email and password</text>
+
+        <polygon class="decision" points="895,246 990,306 895,366 800,306" />
+        <text class="title" x="895" y="300">Checks pass?</text>
+        <text class="detail" x="895" y="324">Security + credentials</text>
+
+        <rect class="error" x="800" y="452" width="190" height="70" rx="14" />
+        <text class="title" x="895" y="482">Sign-in issue</text>
+        <text class="detail" x="895" y="505">Show error · try again</text>
+
+        <rect class="node" x="1050" y="266" width="190" height="80" rx="14" />
+        <text class="title" x="1145" y="300">Start session</text>
+        <text class="detail" x="1145" y="325">Remember device optional</text>
+
+        <polygon class="decision" points="1400,246 1490,306 1400,366 1310,306" />
+        <text class="title" x="1400" y="300">Role?</text>
+        <text class="detail" x="1400" y="324">Route to home</text>
+
+        <text class="lane" x="1065" y="500">ADMIN AREA</text>
+        <text class="lane" x="1390" y="500">MEMBER AREA</text>
+
+        <rect class="admin" x="945" y="515" width="240" height="150" rx="16" />
+        <text class="title" x="1065" y="552">Admin dashboard</text>
+        <text class="detail" x="1065" y="583">Members · classes</text>
+        <text class="detail" x="1065" y="606">Payments · attendance</text>
+        <text class="detail" x="1065" y="629">Analytics · reports · tools</text>
+
+        <rect class="member" x="1270" y="515" width="240" height="150" rx="16" />
+        <text class="title" x="1390" y="552">Member dashboard</text>
+        <text class="detail" x="1390" y="583">Classes · attendance</text>
+        <text class="detail" x="1390" y="606">Payments · notifications</text>
+        <text class="detail" x="1390" y="629">Profile · member card</text>
+
+        <rect class="end" x="1115" y="790" width="220" height="76" rx="38" />
+        <text class="title" x="1225" y="822">SIGN OUT</text>
+        <text class="detail" x="1225" y="845">End session</text>
+
+        <text class="detail" x="800" y="900">Role-based access · shared application · protected forms and pages</text>
+      </svg>
+    </section>
+
+    <p class="footer"><strong>For a clear screenshot:</strong> open this page on a desktop and capture the full diagram. Use <strong>Print / Save PDF</strong> for a landscape copy; on mobile, scroll horizontally to see the complete chart.</p>
+  </main>
+</body>
+</html>
