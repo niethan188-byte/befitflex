@@ -37,6 +37,11 @@ drifting light field behind everything.
   day-pass/member link required for member day-pass QR codes, cleans up retired
   feature data, and applies other schema upgrades.
 
+Running `php tools/seed-dummy-members.php` also creates synthetic fitness
+progress histories with different measurement trends for the generated dummy
+members. Their progress notes are labeled as sample data, not real measurements.
+Use this seeder only on a demo/test database, never in production.
+
 The login page's optional **Remember me on this device** setting keeps the
 account signed in for up to 30 days. Use it only on a trusted device; signing
 out revokes its remembered login.
