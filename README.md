@@ -290,14 +290,17 @@ dialogs, live regions on toasts, keyboard-operable table sorting, and
 
 Members can record their weight, body-fat percentage, waist and hip measurements,
 set a target weight and date, and review their check-in history from **My Progress**.
-They can also log a lift by exercise, sets, reps, and external load, then see the
-exercise's strength trend; bodyweight workouts can be tracked by total reps.
+They can choose a Push/Pull/Legs, Arnold, Upper/Lower, Full Body, or Bro split.
+The selected split controls available workout days and exercises; each exercise
+log is tagged to that split and day so members can compare their working load or
+reps over time. They can also track bodyweight exercises by total reps.
 Members can remove their own lifting log if they entered it by mistake.
 Administrators can add progress checks, update a member's target, and review
-strength logs from **Member Progress**. Members can manage only their own lifting
-logs and see only their own records. Fitness measurements, goals, and workout logs
-are optional. Existing installations must apply `database/upgrade.sql` before
-using this feature.
+each member's current split and strength logs from **Member Progress**. Members
+can change splits at any time; existing workout logs keep their original split
+and day. Members can manage only their own lifting logs and see only their own
+records. Fitness measurements, goals, and workout logs are optional. Existing
+installations must apply `database/upgrade.sql` before using this feature.
 
 ### Additional screens
 

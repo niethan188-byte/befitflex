@@ -2,6 +2,7 @@
 define('IN_SUBDIR', true);
 require __DIR__ . '/../includes/auth.php';
 $u = require_role('member');
+require_once __DIR__ . '/../includes/WorkoutSplits.php';
 $mid = $_SESSION['member_id'] ?? '';
 
 $page = 'dashboard';
@@ -27,6 +28,9 @@ $latestLift = row(
     'SELECT * FROM member_lifting_logs WHERE member_id = ? ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 1',
     [$mid]
 );
+$latestLiftProgram = $latestLift && $latestLift['split_code']
+    ? WorkoutSplits::get((string) $latestLift['split_code'])
+    : null;
 $notes = rows('SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 4', [$u['id']]);
 
 include __DIR__ . '/../includes/header.php';
@@ -97,6 +101,9 @@ include __DIR__ . '/../includes/header.php';
         <?= (float) $latestLift['weight_kg'] > 0
             ? e(number_format((float) $latestLift['weight_kg'], 2)) . ' kg'
             : 'bodyweight' ?> · <?= dt($latestLift['logged_date']) ?>
+        <?php if ($latestLiftProgram): ?>
+          · <?= e($latestLiftProgram['name']) ?> · <?= e($latestLift['workout_day']) ?>
+        <?php endif; ?>
       </p>
     <?php else: ?>
       <p class="note" style="margin-top:12px">Start tracking weights and reps from My Progress.</p>

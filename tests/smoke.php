@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/WorkoutSplits.php';
 require __DIR__ . '/../vendor/autoload.php';
 
 $checks = [];
@@ -35,6 +36,28 @@ $checks['member progress schema'] = count(array_filter(
     $progressTables,
     static fn($table): bool => $table !== false
 )) === 3;
+$workoutProgramTable = db()->query("SHOW TABLES LIKE 'member_workout_programs'")->fetchColumn();
+$liftingColumns = $progressTables[2]
+    ? array_column(db()->query('SHOW COLUMNS FROM member_lifting_logs')->fetchAll(), 'Field')
+    : [];
+$checks['member workout split schema'] = $workoutProgramTable !== false
+    && count(array_intersect(['split_code', 'workout_day'], $liftingColumns)) === 2;
+$checks['workout split templates'] = count(WorkoutSplits::all()) >= 4
+    && array_reduce(
+        WorkoutSplits::all(),
+        static fn(bool $valid, array $program): bool => $valid
+            && !empty($program['days'])
+            && count(array_filter($program['days'], static fn(array $exercises): bool => $exercises !== [])) === count($program['days']),
+        true
+    );
+$checks['workout exercise stays in its selected split day'] = WorkoutSplits::containsExercise(
+    'PPL',
+    'Push',
+    'Bench Press'
+) && WorkoutSplits::containsExercise('PPL', 'Push', 'Incline Dumbbell Press')
+    && WorkoutSplits::containsExercise('PPL', 'Push', 'Triceps Pushdown')
+    && !WorkoutSplits::containsExercise('PPL', 'Pull', 'Bench Press')
+    && !WorkoutSplits::containsExercise('PPL', 'Push', 'Unknown Exercise');
 $checks['admin/member roles only'] = (int) scalar(
     "SELECT COUNT(*) FROM users WHERE user_type NOT IN ('admin','member')"
 ) === 0 && (int) scalar("SELECT COUNT(*) FROM users WHERE user_type IN ('admin','member')") > 0;

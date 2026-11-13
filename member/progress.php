@@ -4,11 +4,11 @@ define('IN_SUBDIR', true);
 require __DIR__ . '/../includes/auth.php';
 $u = require_role('member');
 $memberId = (string) ($_SESSION['member_id'] ?? '');
-$commonExercises = [
-    'Squat', 'Bench Press', 'Deadlift', 'Overhead Press', 'Barbell Row',
-    'Romanian Deadlift', 'Lat Pulldown', 'Cable Row', 'Leg Press', 'Dumbbell Press',
-    'Pull-up', 'Push-up', 'Bicep Curl', 'Tricep Extension', 'Calf Raise', 'Lunge',
-];
+require_once __DIR__ . '/../includes/WorkoutSplits.php';
+$workoutPrograms = WorkoutSplits::all();
+$currentWorkoutProgram = row('SELECT split_code FROM member_workout_programs WHERE member_id = ?', [$memberId]);
+$currentSplitCode = (string) ($currentWorkoutProgram['split_code'] ?? '');
+$currentSplit = WorkoutSplits::get($currentSplitCode);
 $redirectTo = 'progress.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -58,11 +58,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_activity('Record progress check', 'Member Progress', $memberId . ' · ' . $checkDate);
             flash('Progress check saved.');
         }
+    } elseif ($action === 'program') {
+        $splitCode = trim((string) ($_POST['split_code'] ?? ''));
+        if (WorkoutSplits::get($splitCode) === null) {
+            flash('Choose a valid workout split.', 'err');
+        } else {
+            db()->prepare(
+                'INSERT INTO member_workout_programs (member_id, split_code)
+                 VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE split_code = VALUES(split_code), updated_at = CURRENT_TIMESTAMP'
+            )->execute([$memberId, $splitCode]);
+            log_activity('Choose workout split', 'Member Progress', $memberId . ' · ' . $splitCode);
+            flash('Workout split saved. New logs will be tracked under this program.');
+        }
+        $redirectTo .= '#workout-program';
     } elseif ($action === 'lifting') {
+        $workoutDay = trim((string) ($_POST['workout_day'] ?? ''));
         $exerciseName = trim((string) ($_POST['exercise_name'] ?? ''));
-        foreach ($commonExercises as $commonExercise) {
-            if (strcasecmp($exerciseName, $commonExercise) === 0) {
-                $exerciseName = $commonExercise;
+        $dayExercises = $currentSplit ? WorkoutSplits::exercises($currentSplitCode, $workoutDay) : [];
+        foreach ($dayExercises as $dayExercise) {
+            if (strcasecmp($exerciseName, $dayExercise) === 0) {
+                $exerciseName = $dayExercise;
                 break;
             }
         }
@@ -79,23 +95,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $weightValid = preg_match('/^\d{1,4}(?:\.\d{1,2})?$/D', $weightRaw)
             && (float) $weightRaw >= 0 && (float) $weightRaw <= 1000;
 
-        if ($exerciseName === '' || strlen($exerciseName) > 100 || !$dateIsValid
+        if (!$currentSplit || !$dayExercises
+            || !WorkoutSplits::containsExercise($currentSplitCode, $workoutDay, $exerciseName)
+            || strlen($exerciseName) > 100 || !$dateIsValid
             || !$setsValid || !$repsValid || !$weightValid || strlen($notes) > 500) {
-            flash('Enter a valid exercise, past or current date, 1–30 sets, 1–100 reps, load from 0–1000 kg, and notes under 500 characters.', 'err');
+            flash('Choose an exercise from your current split and workout day, then enter a valid date, sets, reps, load, and notes.', 'err');
         } else {
             db()->prepare(
                 'INSERT INTO member_lifting_logs
-                    (member_id, logged_by_user_id, exercise_name, logged_date, sets_count, reps_per_set, weight_kg, notes)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                    (member_id, logged_by_user_id, split_code, workout_day, exercise_name, logged_date, sets_count, reps_per_set, weight_kg, notes)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
-                $memberId, $u['id'], $exerciseName, $loggedDate, (int) $setsRaw,
-                (int) $repsRaw, $weightRaw, $notes !== '' ? $notes : null,
+                $memberId, $u['id'], $currentSplitCode, $workoutDay, $exerciseName, $loggedDate,
+                (int) $setsRaw, (int) $repsRaw, $weightRaw, $notes !== '' ? $notes : null,
             ]);
-            log_activity('Log lifting progress', 'Member Progress', $memberId . ' · ' . $exerciseName . ' · ' . $loggedDate);
+            log_activity('Log lifting progress', 'Member Progress', $memberId . ' · ' . $currentSplitCode . ' / ' . $workoutDay . ' / ' . $exerciseName);
             flash('Strength workout saved.');
-            $redirectTo .= '?exercise=' . rawurlencode($exerciseName);
         }
-        $redirectTo .= '#lifting';
+        $redirectTo .= '?day=' . rawurlencode($workoutDay) . '&exercise=' . rawurlencode($exerciseName) . '#lifting';
     } elseif ($action === 'delete_lifting') {
         $logId = filter_var($_POST['lifting_log_id'] ?? null, FILTER_VALIDATE_INT);
         if (!$logId || $logId < 1) {
@@ -109,6 +126,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 log_activity('Delete lifting log', 'Member Progress', $memberId . ' · log ' . $logId);
                 flash('Strength log deleted.');
             }
+        }
+        $workoutDay = trim((string) ($_POST['workout_day'] ?? ''));
+        $exerciseName = trim((string) ($_POST['exercise_name'] ?? ''));
+        if ($workoutDay !== '' && $exerciseName !== '') {
+            $redirectTo .= '?day=' . rawurlencode($workoutDay) . '&exercise=' . rawurlencode($exerciseName);
         }
         $redirectTo .= '#lifting';
     } elseif ($action === 'goal') {
@@ -142,33 +164,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $page = 'progress';
 $title = 'My Progress';
-$subtitle = 'Track fitness measurements, gym visits, and strength workouts.';
+$subtitle = 'Track fitness measurements, gym visits, and workouts from your current split.';
 $progress = rows(
     'SELECT * FROM member_progress WHERE member_id = ? ORDER BY check_date DESC, progress_id DESC LIMIT 100',
     [$memberId]
 );
 $goal = row('SELECT * FROM member_progress_goals WHERE member_id = ?', [$memberId]);
-$liftingExercises = rows(
-    'SELECT DISTINCT exercise_name FROM member_lifting_logs WHERE member_id = ? ORDER BY exercise_name',
-    [$memberId]
-);
-$exerciseNames = array_column($liftingExercises, 'exercise_name');
+$programDays = $currentSplit['days'] ?? [];
+$programExerciseNames = [];
+foreach ($programDays as $dayExercises) {
+    $programExerciseNames = array_merge($programExerciseNames, $dayExercises);
+}
+$exerciseNames = array_values(array_unique($programExerciseNames));
+$requestedDay = trim((string) ($_GET['day'] ?? ''));
+$selectedDay = isset($programDays[$requestedDay]) ? $requestedDay : (string) (array_key_first($programDays) ?? '');
+$selectedDayExercises = $programDays[$selectedDay] ?? [];
 $selectedExercise = trim((string) ($_GET['exercise'] ?? ''));
-if (!in_array($selectedExercise, $exerciseNames, true)) {
+if (!in_array($selectedExercise, $selectedDayExercises, true)) {
     $selectedExercise = (string) (scalar(
         'SELECT exercise_name FROM member_lifting_logs
-          WHERE member_id = ? ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 1',
-        [$memberId]
-    ) ?: '');
+          WHERE member_id = ? AND split_code = ? AND workout_day = ?
+          ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 1',
+        [$memberId, $currentSplitCode, $selectedDay]
+    ) ?: ($selectedDayExercises[0] ?? ''));
 }
 $liftingLogs = $selectedExercise !== ''
     ? rows(
         'SELECT * FROM member_lifting_logs
           WHERE member_id = ? AND exercise_name = ?
+            AND ((split_code = ? AND workout_day = ?) OR split_code IS NULL)
           ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 100',
-        [$memberId, $selectedExercise]
+        [$memberId, $selectedExercise, $currentSplitCode, $selectedDay]
     )
     : [];
+$otherLiftingLogs = rows(
+    'SELECT * FROM member_lifting_logs
+      WHERE member_id = ? AND (split_code IS NULL OR split_code <> ?)
+      ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 100',
+    [$memberId, $currentSplitCode]
+);
 $liftingChronological = array_reverse($liftingLogs);
 $hasExternalLoad = false;
 foreach ($liftingLogs as $liftingLog) {
@@ -253,7 +287,9 @@ include __DIR__ . '/../includes/header.php';
     <h2>Build strength, one workout at a time.</h2>
     <p>Log your lifts, follow your progress, and keep your measurements in one place.</p>
     <div class="progress-hero-actions">
-      <a class="btn red" href="#lifting"><i class="fa-solid fa-plus"></i> Log a workout</a>
+      <a class="btn red" href="<?= $currentSplit ? '#lifting' : '#workout-program' ?>">
+        <i class="fa-solid fa-plus"></i> <?= $currentSplit ? 'Log a workout' : 'Choose a split' ?>
+      </a>
       <a class="btn" href="#measurements"><i class="fa-solid fa-ruler"></i> Body measurements</a>
     </div>
   </div>
@@ -302,28 +338,68 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
+<div class="panel glass progress-program" id="workout-program">
+  <div class="progress-program-heading">
+    <div>
+      <span class="progress-hero-kicker"><i class="fa-solid fa-list-check"></i> TRAINING PLAN</span>
+      <h2><?= $currentSplit ? e($currentSplit['name']) : 'Choose your workout split' ?></h2>
+      <p class="note"><?= $currentSplit
+          ? e($currentSplit['description']) . ' Your exercise choices and workout logs follow this split.'
+          : 'Select a program to see its workout days and log progress exercise by exercise.' ?></p>
+    </div>
+    <?php if ($currentWorkoutProgram && !$currentSplit): ?>
+      <p class="note">The saved split is no longer available. Choose another program to continue tracking.</p>
+    <?php endif; ?>
+  </div>
+  <form method="post" class="search-row progress-program-form">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="program">
+    <label for="workoutSplit">Current split</label>
+    <select id="workoutSplit" name="split_code" required>
+      <?php foreach ($workoutPrograms as $splitCode => $programOption): ?>
+        <option value="<?= e($splitCode) ?>" <?= $currentSplitCode === $splitCode ? 'selected' : '' ?>>
+          <?= e($programOption['name']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+    <button class="btn red"><i class="fa-solid fa-check"></i> <?= $currentSplit ? 'Save split' : 'Start tracking' ?></button>
+  </form>
+  <p class="note">Changing your split keeps earlier workout logs tagged to the split and day used at the time.</p>
+</div>
+
 <section id="lifting" class="progress-lifting">
+<?php if (!$currentSplit): ?>
+  <div class="panel glass"><div class="empty"><i class="fa-solid fa-dumbbell"></i>Choose a workout split above to see its days and exercises.</div></div>
+<?php else: ?>
   <div class="progress-section-heading">
     <div>
       <span class="progress-hero-kicker"><i class="fa-solid fa-dumbbell"></i> STRENGTH</span>
-      <h2>Track your lifts</h2>
+      <h2>Track <?= e($selectedDay) ?></h2>
     </div>
-    <p class="note">Compare your working load or reps for each exercise.</p>
+    <p class="note">Exercises listed here come from your <?= e($currentSplit['name']) ?> split.</p>
   </div>
+  <form method="get" class="search-row progress-workout-picker">
+    <label for="workoutDay">Workout day</label>
+    <select id="workoutDay" name="day">
+      <?php foreach ($programDays as $dayName => $dayExercises): ?>
+        <option value="<?= e($dayName) ?>" <?= $selectedDay === $dayName ? 'selected' : '' ?>><?= e($dayName) ?></option>
+      <?php endforeach; ?>
+    </select>
+    <button class="btn sm"><i class="fa-solid fa-arrow-right"></i> Show workout</button>
+  </form>
   <div class="grid c2">
     <div class="panel glass">
       <h2><i class="fa-solid fa-dumbbell"></i> Log a lift</h2>
       <form method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="lifting">
-        <div class="field-row"><label for="exerciseName">Exercise</label>
-          <input id="exerciseName" name="exercise_name" type="text" list="commonExercises" maxlength="100"
-                 value="<?= e($selectedExercise) ?>" placeholder="e.g. Squat" required>
-          <datalist id="commonExercises">
-            <?php foreach (array_unique(array_merge($commonExercises, $exerciseNames)) as $exercise): ?>
-              <option value="<?= e($exercise) ?>"></option>
+        <input type="hidden" name="workout_day" value="<?= e($selectedDay) ?>">
+        <div class="field-row"><label for="exerciseName">Exercise · <?= e($selectedDay) ?></label>
+          <select id="exerciseName" name="exercise_name" required>
+            <?php foreach ($selectedDayExercises as $exercise): ?>
+              <option value="<?= e($exercise) ?>" <?= $selectedExercise === $exercise ? 'selected' : '' ?>><?= e($exercise) ?></option>
             <?php endforeach; ?>
-          </datalist>
+          </select>
         </div>
         <div class="field-row"><label for="liftingDate">Workout date</label>
           <input id="liftingDate" name="logged_date" type="date" max="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" required></div>
@@ -337,7 +413,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <div class="field-row"><label for="liftingNotes">Notes (optional)</label>
           <textarea id="liftingNotes" name="lifting_notes" maxlength="500" rows="2" placeholder="Grip, variation, or how the sets felt"></textarea></div>
-        <p class="note">One log records sets performed at the same reps and load. For bodyweight exercises, enter 0 kg when no extra weight is used. Only you and authorized administrators can view these logs.</p>
+        <p class="note">Save each exercise separately; use the same workout date and split day for one session. For bodyweight exercises, enter 0 kg when no extra weight is used. Only you and authorized administrators can view these logs.</p>
         <button class="btn red"><i class="fa-solid fa-check"></i> Save workout</button>
       </form>
     </div>
@@ -346,9 +422,10 @@ include __DIR__ . '/../includes/header.php';
       <h2><i class="fa-solid fa-chart-line"></i> Strength trend</h2>
       <?php if ($exerciseNames): ?>
         <form method="get" class="search-row">
+          <input type="hidden" name="day" value="<?= e($selectedDay) ?>">
           <label for="liftingExercise">Exercise</label>
           <select id="liftingExercise" name="exercise">
-            <?php foreach ($exerciseNames as $exercise): ?>
+            <?php foreach ($selectedDayExercises as $exercise): ?>
               <option value="<?= e($exercise) ?>" <?= $selectedExercise === $exercise ? 'selected' : '' ?>><?= e($exercise) ?></option>
             <?php endforeach; ?>
           </select>
@@ -385,6 +462,8 @@ include __DIR__ . '/../includes/header.php';
           <?php else: ?>
             <div class="empty"><i class="fa-solid fa-chart-line"></i>Log this exercise again to see your trend.</div>
           <?php endif; ?>
+        <?php else: ?>
+          <div class="empty"><i class="fa-solid fa-chart-line"></i>No <?= e($selectedExercise) ?> logs in this workout yet. Log it to start your trend.</div>
         <?php endif; ?>
       <?php else: ?>
         <div class="empty"><i class="fa-solid fa-dumbbell"></i>Log your first exercise to start tracking sets, reps, and load.</div>
@@ -394,13 +473,17 @@ include __DIR__ . '/../includes/header.php';
 
   <?php if ($liftingLogs): ?>
   <div class="panel glass">
-    <h2><i class="fa-solid fa-clock-rotate-left"></i> <?= e($selectedExercise) ?> history</h2>
+    <h2><i class="fa-solid fa-clock-rotate-left"></i> <?= e($selectedDay) ?> · <?= e($selectedExercise) ?> history</h2>
     <div class="table-wrap"><table>
-      <thead><tr><th>Date</th><th>Sets × reps</th><th>External load</th><th>Total reps</th><th>Notes</th><th data-nosort></th></tr></thead>
+      <thead><tr><th>Date</th><th>Program / day</th><th>Sets × reps</th><th>External load</th><th>Total reps</th><th>Notes</th><th data-nosort></th></tr></thead>
       <tbody>
       <?php foreach ($liftingLogs as $liftingLog): ?>
+        <?php $logProgram = $liftingLog['split_code'] ? WorkoutSplits::get((string) $liftingLog['split_code']) : null; ?>
         <tr>
           <td><?= dt($liftingLog['logged_date']) ?></td>
+          <td><?= $logProgram
+              ? e($logProgram['name']) . ' · ' . e($liftingLog['workout_day'])
+              : ($liftingLog['split_code'] ? e($liftingLog['split_code']) . ' · ' . e($liftingLog['workout_day']) : 'Earlier log') ?></td>
           <td><?= (int) $liftingLog['sets_count'] ?> × <?= (int) $liftingLog['reps_per_set'] ?></td>
           <td><?= (float) $liftingLog['weight_kg'] > 0
               ? e(number_format((float) $liftingLog['weight_kg'], 2)) . ' kg'
@@ -412,6 +495,8 @@ include __DIR__ . '/../includes/header.php';
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete_lifting">
               <input type="hidden" name="lifting_log_id" value="<?= (int) $liftingLog['lifting_log_id'] ?>">
+              <input type="hidden" name="workout_day" value="<?= e($selectedDay) ?>">
+              <input type="hidden" name="exercise_name" value="<?= e($selectedExercise) ?>">
               <button class="btn sm icon danger" title="Delete strength log" aria-label="Delete strength log from <?= e(dt($liftingLog['logged_date'])) ?>">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -423,7 +508,47 @@ include __DIR__ . '/../includes/header.php';
     </table></div>
   </div>
   <?php endif; ?>
+<?php endif; ?>
 </section>
+
+<?php if ($otherLiftingLogs): ?>
+<div class="panel glass">
+  <h2><i class="fa-solid fa-clock-rotate-left"></i> Workouts outside the current split</h2>
+  <p class="note">Previous split and earlier unassigned logs remain available here.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Program / day</th><th>Exercise</th><th>Sets × reps</th><th>External load</th><th>Notes</th><th data-nosort></th></tr></thead>
+    <tbody>
+    <?php foreach ($otherLiftingLogs as $liftingLog): ?>
+      <?php $logProgram = $liftingLog['split_code'] ? WorkoutSplits::get((string) $liftingLog['split_code']) : null; ?>
+      <tr>
+        <td><?= dt($liftingLog['logged_date']) ?></td>
+        <td><?= $logProgram
+            ? e($logProgram['name']) . ' · ' . e($liftingLog['workout_day'])
+            : ($liftingLog['split_code'] ? e($liftingLog['split_code']) . ' · ' . e($liftingLog['workout_day']) : 'Earlier log') ?></td>
+        <td><?= e($liftingLog['exercise_name']) ?></td>
+        <td><?= (int) $liftingLog['sets_count'] ?> × <?= (int) $liftingLog['reps_per_set'] ?></td>
+        <td><?= (float) $liftingLog['weight_kg'] > 0
+            ? e(number_format((float) $liftingLog['weight_kg'], 2)) . ' kg'
+            : 'Bodyweight' ?></td>
+        <td><?= e($liftingLog['notes'] ?: '—') ?></td>
+        <td>
+          <form method="post" onsubmit="return confirm('Delete this strength log?')">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="delete_lifting">
+            <input type="hidden" name="lifting_log_id" value="<?= (int) $liftingLog['lifting_log_id'] ?>">
+            <input type="hidden" name="workout_day" value="<?= e($liftingLog['workout_day'] ?? '') ?>">
+            <input type="hidden" name="exercise_name" value="<?= e($liftingLog['exercise_name']) ?>">
+            <button class="btn sm icon danger" title="Delete strength log" aria-label="Delete strength log from <?= e(dt($liftingLog['logged_date'])) ?>">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+</div>
+<?php endif; ?>
 
 <div class="panel glass">
   <h2><i class="fa-solid fa-chart-line"></i> Weight trend

@@ -3,6 +3,7 @@ declare(strict_types=1);
 define('IN_SUBDIR', true);
 require __DIR__ . '/../includes/auth.php';
 $u = require_role('admin');
+require_once __DIR__ . '/../includes/WorkoutSplits.php';
 
 $members = rows('SELECT member_id, member_name FROM members ORDER BY member_name');
 $selectedId = trim((string) ($_GET['member_id'] ?? $_POST['member_id'] ?? ''));
@@ -102,6 +103,12 @@ $progress = $selectedMember
 $goal = $selectedMember
     ? row('SELECT * FROM member_progress_goals WHERE member_id = ?', [$selectedId])
     : null;
+$workoutProgram = $selectedMember
+    ? row('SELECT split_code FROM member_workout_programs WHERE member_id = ?', [$selectedId])
+    : null;
+$workoutProgramDetails = $workoutProgram
+    ? WorkoutSplits::get((string) $workoutProgram['split_code'])
+    : null;
 $liftingLogs = $selectedMember
     ? rows(
         'SELECT * FROM member_lifting_logs
@@ -135,6 +142,17 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <?php if ($selectedMember): ?>
+<div class="panel glass">
+  <h2><i class="fa-solid fa-list-check"></i> Current workout split · <?= e($selectedMember['member_name']) ?></h2>
+  <?php if ($workoutProgramDetails): ?>
+    <strong><?= e($workoutProgramDetails['name']) ?></strong>
+    <p class="note"><?= e($workoutProgramDetails['description']) ?></p>
+  <?php elseif ($workoutProgram): ?>
+    <p class="note">Saved split code <?= e($workoutProgram['split_code']) ?> is unavailable. The member should choose another program.</p>
+  <?php else: ?>
+    <p class="note">This member has not selected a workout split yet.</p>
+  <?php endif; ?>
+</div>
 <div class="grid c2">
   <div class="panel glass">
     <h2><i class="fa-solid fa-bullseye"></i> Target · <?= e($selectedMember['member_name']) ?></h2>
@@ -205,11 +223,15 @@ include __DIR__ . '/../includes/header.php';
     <div class="empty"><i class="fa-solid fa-dumbbell"></i>No strength workouts have been logged.</div>
   <?php else: ?>
     <div class="table-wrap"><table>
-      <thead><tr><th>Date</th><th>Exercise</th><th>Sets × reps</th><th>External load</th><th>Total reps</th><th>Notes</th></tr></thead>
+      <thead><tr><th>Date</th><th>Split / day</th><th>Exercise</th><th>Sets × reps</th><th>External load</th><th>Total reps</th><th>Notes</th></tr></thead>
       <tbody>
       <?php foreach ($liftingLogs as $liftingLog): ?>
+        <?php $logProgram = $liftingLog['split_code'] ? WorkoutSplits::get((string) $liftingLog['split_code']) : null; ?>
         <tr>
           <td><?= dt($liftingLog['logged_date']) ?></td>
+          <td><?= $logProgram
+              ? e($logProgram['name']) . ' · ' . e($liftingLog['workout_day'])
+              : ($liftingLog['split_code'] ? e($liftingLog['split_code']) . ' · ' . e($liftingLog['workout_day']) : 'Unassigned') ?></td>
           <td><?= e($liftingLog['exercise_name']) ?></td>
           <td><?= (int) $liftingLog['sets_count'] ?> × <?= (int) $liftingLog['reps_per_set'] ?></td>
           <td><?= (float) $liftingLog['weight_kg'] > 0

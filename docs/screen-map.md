@@ -17,7 +17,7 @@
 | `analytics.php` | Revenue, retention, traffic, utilization, and churn risk. | most |
 | `reports.php` | Printable revenue, payment mix, retention, and member reports. | payments, members, attendance, sessions |
 | `members.php` | Create, edit, delete, filter, message, and bulk-update members. | users, members |
-| `progress.php` | Review a member's fitness measurements, goals, and strength-training logs. | members, member_progress, member_progress_goals, member_lifting_logs |
+| `progress.php` | Review a member's measurements, goals, selected workout split, and split-tagged strength logs. | members, member_progress, member_progress_goals, member_workout_programs, member_lifting_logs |
 | `classes.php` | Manage weekly group classes and capacity. | classes, class_attendance |
 | `attendance.php` | Check members in and out and view attendance records. | attendance, class_attendance |
 | `payments.php` | Record dues, mark paid, and delete payments. | payments, notifications |
@@ -33,8 +33,8 @@
 
 | File | Purpose | Tables |
 |---|---|---|
-| `dashboard.php` | Membership, visits, balance, latest fitness check, scheduled sessions, and notifications. | members, attendance, payments, sessions, notifications, member_progress |
-| `progress.php` | Track body measurements, goals, exercise sets/reps/load, and strength trends. | member_progress, member_progress_goals, member_lifting_logs, attendance |
+| `dashboard.php` | Membership, visits, balance, latest fitness check and split-tagged lift, scheduled sessions, and notifications. | members, attendance, payments, sessions, notifications, member_progress, member_lifting_logs |
+| `progress.php` | Choose a workout split, then track its exercise sets/reps/load by workout day, alongside body measurements and goals. | member_progress, member_progress_goals, member_workout_programs, member_lifting_logs, attendance |
 | `classes.php` | Browse the group schedule, enroll, and view class history. | classes, class_attendance |
 | `attendance.php` | View attendance and check-in history. | attendance |
 | `payments.php` | View dues and payment history. | payments |
@@ -51,5 +51,6 @@
 | `includes/helpers.php` | Escaping, CSRF, ID generation, notifications, audit logging, and query helpers. |
 | `includes/header.php` / `sidebar.php` / `footer.php` | Shared page chrome and admin/member navigation. |
 | `includes/notifications-page.php` | Shared notification screen. |
+| `includes/WorkoutSplits.php` | Built-in workout split templates and exercise validation. |
 | `api/check-in.php` | JSON kiosk check-in/check-out endpoint. |
 | `api/analytics-export.php` | Admin CSV reports. |

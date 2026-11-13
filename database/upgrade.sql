@@ -279,6 +279,41 @@ CREATE TABLE IF NOT EXISTS member_lifting_logs (
     INDEX idx_member_lifting_exercise_date (member_id, exercise_name, logged_date)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS member_workout_programs (
+    member_id VARCHAR(50) PRIMARY KEY,
+    split_code VARCHAR(30) NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'member_lifting_logs' AND column_name = 'split_code'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE member_lifting_logs ADD COLUMN split_code VARCHAR(30) NULL AFTER logged_by_user_id',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'member_lifting_logs' AND column_name = 'workout_day'
+);
+SET @sql = IF(@column_exists = 0,
+    'ALTER TABLE member_lifting_logs ADD COLUMN workout_day VARCHAR(50) NULL AFTER split_code',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*) FROM information_schema.statistics
+     WHERE table_schema = DATABASE() AND table_name = 'member_lifting_logs'
+       AND index_name = 'idx_member_lifting_split_day'
+);
+SET @sql = IF(@index_exists = 0,
+    'ALTER TABLE member_lifting_logs ADD INDEX idx_member_lifting_split_day (member_id, split_code, workout_day(20), exercise_name(40), logged_date)',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 UPDATE member_progress
    SET notes = 'Morning check-in before training.'
  WHERE notes LIKE 'SAMPLE DEMO ONLY — %; synthetic example, not a real measurement.';

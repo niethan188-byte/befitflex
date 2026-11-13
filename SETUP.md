@@ -174,12 +174,14 @@ no framework or frontend build step.
    existing BeFitFlex database, back it up first and apply
    `database/upgrade.sql` to the database configured by `MYSQLDATABASE` (or
    `DB_NAME`). This upgrade adds schema required by current features, including
-   the day-pass/member link and fitness/strength progress tables. Ensure the
+   the day-pass/member link, fitness/strength progress tables, and member
+   workout split tracking. Ensure the
    script's `USE` statement targets that same database. Do not rerun the
    destructive seed to fix a schema mismatch.
 
    To initialize a fresh database and then add the 100 dummy members, payments,
-   and synthetic sample fitness and lifting progress from
+   and    synthetic sample fitness progress, workout splits, and split-tagged lifting
+   history from
    `tools/seed-dummy-members.php`, open the web service's Railway shell and run
    this once:
 

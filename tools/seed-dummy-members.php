@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../config/config.php';
 require __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/WorkoutSplits.php';
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This script must be run from the command line.\n");
@@ -13,8 +14,13 @@ $pdo = db();
 $count = 100;
 $progressTable = $pdo->query("SHOW TABLES LIKE 'member_progress'")->fetchColumn();
 $liftingTable = $pdo->query("SHOW TABLES LIKE 'member_lifting_logs'")->fetchColumn();
-if (!$progressTable || !$liftingTable) {
-    fwrite(STDERR, "The member progress tables are missing; apply the database schema upgrade first.\n");
+$programTable = $pdo->query("SHOW TABLES LIKE 'member_workout_programs'")->fetchColumn();
+$liftingColumns = $liftingTable
+    ? array_column($pdo->query('SHOW COLUMNS FROM member_lifting_logs')->fetchAll(), 'Field')
+    : [];
+if (!$progressTable || !$liftingTable || !$programTable
+    || count(array_intersect(['split_code', 'workout_day'], $liftingColumns)) !== 2) {
+    fwrite(STDERR, "The member progress or workout split schema is missing; apply the database schema upgrade first.\n");
     exit(1);
 }
 
@@ -31,17 +37,8 @@ $progressProfiles = [
     [0.2, -0.4, -0.8, -0.3],
     [0.8, -1.0, -1.2, 0.4],
 ];
-$liftingExercises = [
-    'Squat', 'Bench Press', 'Deadlift', 'Overhead Press', 'Barbell Row',
-    'Lat Pulldown', 'Leg Press', 'Dumbbell Press', 'Pull-up', 'Push-up',
-];
-$liftingProgressions = [
-    [0, 2.5, 2.5, 5, 5],
-    [0, 0, 2.5, 2.5, 5],
-    [0, 2.5, 2.5, 2.5, 5],
-    [0, 0, 0, 2.5, 2.5],
-    [0, 0, 2.5, 5, 5],
-];
+$workoutPrograms = WorkoutSplits::all();
+$programCodes = array_keys($workoutPrograms);
 $checkInNotes = [
     'Morning check-in before training.',
     'Measurements recorded before the workout.',
@@ -81,8 +78,11 @@ $insertProgress = $pdo->prepare(
 );
 $insertLiftingLog = $pdo->prepare(
     'INSERT INTO member_lifting_logs
-        (member_id, logged_by_user_id, exercise_name, logged_date, sets_count, reps_per_set, weight_kg, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        (member_id, logged_by_user_id, split_code, workout_day, exercise_name, logged_date, sets_count, reps_per_set, weight_kg, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+);
+$insertWorkoutProgram = $pdo->prepare(
+    'INSERT INTO member_workout_programs (member_id, split_code) VALUES (?, ?)'
 );
 $today = new DateTimeImmutable('today');
 $progressCount = 0;
@@ -114,6 +114,9 @@ try {
             $joinDate->format('Y-m-d'),
             $status,
         ]);
+        $splitCode = $programCodes[($index - 1) % count($programCodes)];
+        $split = $workoutPrograms[$splitCode];
+        $insertWorkoutProgram->execute([$memberId, $splitCode]);
         $insertPayment->execute([
             sprintf('DUMPAY%04d', $index),
             $memberId,
@@ -157,41 +160,43 @@ try {
             $progressCount++;
         }
 
-        $liftingCount = min(5, intdiv($activityDays, 21) + 1);
-        $liftingStart = $progressEnd->modify('-' . (($liftingCount - 1) * 21) . ' days');
-        $exerciseName = $liftingExercises[($index - 1) % count($liftingExercises)];
-        $isBodyweight = in_array($exerciseName, ['Pull-up', 'Push-up'], true);
-        $startLoad = $isBodyweight ? 0 : 20 + (($index * 7) % 81);
-        $profileIndex = ($index - 1) % count($liftingProgressions);
+        $liftingCount = min(5, intdiv($activityDays, 3) + 1);
+        $liftingStart = $progressEnd->modify('-' . (($liftingCount - 1) * 3) . ' days');
+        $workoutDays = array_keys($split['days']);
 
         for ($point = 0; $point < $liftingCount; $point++) {
-            $loggedDate = $liftingStart->modify('+' . ($point * 21) . ' days')->format('Y-m-d');
-            $sets = 3;
-            $reps = $isBodyweight
-                ? 4 + (($index * 3) % 5) + $point
-                : 6 + (($index + $point) % 3);
-            $load = $isBodyweight
-                ? 0
-                : $startLoad + $liftingProgressions[$profileIndex][$point];
-            $insertLiftingLog->execute([
-                $memberId,
-                $userId,
-                $exerciseName,
-                $loggedDate,
-                $sets,
-                $reps,
-                number_format((float) $load, 2, '.', ''),
-                $isBodyweight
-                    ? 'Controlled reps with a full range of motion.'
-                    : $weightedWorkoutNotes[($profileIndex + $point) % count($weightedWorkoutNotes)],
-            ]);
-            $liftingLogCount++;
+            $loggedDate = $liftingStart->modify('+' . ($point * 3) . ' days')->format('Y-m-d');
+            $workoutDay = $workoutDays[$point % count($workoutDays)];
+            $dayExercises = WorkoutSplits::exercises($splitCode, $workoutDay);
+            foreach (array_slice($dayExercises, 0, 4) as $exerciseOffset => $exerciseName) {
+                $isBodyweight = in_array($exerciseName, ['Pull-up', 'Push-up'], true);
+                $startLoad = 20 + (($index * 7 + $exerciseOffset * 11) % 81);
+                $reps = $isBodyweight
+                    ? 5 + (($index + $exerciseOffset) % 4) + (int) floor($point / 2)
+                    : 6 + (($index + $exerciseOffset) % 3) + (int) floor($point / 2);
+                $load = $isBodyweight ? 0 : $startLoad + (int) floor($point / 2) * 2.5;
+                $insertLiftingLog->execute([
+                    $memberId,
+                    $userId,
+                    $splitCode,
+                    $workoutDay,
+                    $exerciseName,
+                    $loggedDate,
+                    3,
+                    $reps,
+                    number_format((float) $load, 2, '.', ''),
+                    $isBodyweight
+                        ? 'Controlled reps with a full range of motion.'
+                        : $weightedWorkoutNotes[($index + $exerciseOffset + $point) % count($weightedWorkoutNotes)],
+                ]);
+                $liftingLogCount++;
+            }
         }
     }
 
     $pdo->commit();
     echo sprintf(
-        "Created %d dummy member accounts, %d payment records, %d fitness checks, and %d lifting logs.\n",
+        "Created %d dummy member accounts, %d payment records, %d fitness checks, and %d split-tagged lifting logs.\n",
         $count,
         $count,
         $progressCount,
