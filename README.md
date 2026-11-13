@@ -10,7 +10,7 @@ drifting light field behind everything.
 | Role | Sees |
 |---|---|
 | **Admin** | Members, classes, payments, sessions, attendance, reports, activity log |
-| **Member** | Classes, payments, attendance, notifications, profile |
+| **Member** | Classes, payments, attendance, notifications, profile, and fitness progress |
 
 ## Install on XAMPP (5 minutes)
 
@@ -38,9 +38,10 @@ drifting light field behind everything.
   feature data, and applies other schema upgrades.
 
 Running `php tools/seed-dummy-members.php` also creates synthetic fitness
-progress histories with different measurement trends for the generated dummy
-members. Their progress notes are labeled as sample data, not real measurements.
-Use this seeder only on a demo/test database, never in production.
+measurements and individual lifting histories for the generated dummy members.
+The notes are realistic examples, while the generated records themselves are
+synthetic demo data. Use this seeder only on a demo/test database, never in
+production.
 
 The login page's optional **Remember me on this device** setting keeps the
 account signed in for up to 30 days. Use it only on a trusted device; signing
@@ -289,10 +290,14 @@ dialogs, live regions on toasts, keyboard-operable table sorting, and
 
 Members can record their weight, body-fat percentage, waist and hip measurements,
 set a target weight and date, and review their check-in history from **My Progress**.
-Administrators can add progress checks and update a member's target from **Member
-Progress**. Members can see only their own records; authorized administrators can
-view and manage member progress. Fitness measurements and goals are optional.
-Existing installations must apply `database/upgrade.sql` before using this feature.
+They can also log a lift by exercise, sets, reps, and external load, then see the
+exercise's strength trend; bodyweight workouts can be tracked by total reps.
+Members can remove their own lifting log if they entered it by mistake.
+Administrators can add progress checks, update a member's target, and review
+strength logs from **Member Progress**. Members can manage only their own lifting
+logs and see only their own records. Fitness measurements, goals, and workout logs
+are optional. Existing installations must apply `database/upgrade.sql` before
+using this feature.
 
 ### Additional screens
 

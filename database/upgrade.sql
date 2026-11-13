@@ -263,6 +263,35 @@ CREATE TABLE IF NOT EXISTS member_progress_goals (
     FOREIGN KEY (updated_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS member_lifting_logs (
+    lifting_log_id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id VARCHAR(50) NOT NULL,
+    logged_by_user_id INT NOT NULL,
+    exercise_name VARCHAR(100) NOT NULL,
+    logged_date DATE NOT NULL,
+    sets_count TINYINT UNSIGNED NOT NULL,
+    reps_per_set SMALLINT UNSIGNED NOT NULL,
+    weight_kg DECIMAL(6,2) NOT NULL DEFAULT 0,
+    notes VARCHAR(500) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
+    FOREIGN KEY (logged_by_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_member_lifting_exercise_date (member_id, exercise_name, logged_date)
+) ENGINE=InnoDB;
+
+UPDATE member_progress
+   SET notes = 'Morning check-in before training.'
+ WHERE notes LIKE 'SAMPLE DEMO ONLY — %; synthetic example, not a real measurement.';
+
+UPDATE member_lifting_logs
+   SET notes = CASE
+       WHEN exercise_name IN ('Pull-up', 'Push-up')
+           THEN 'Controlled reps with a full range of motion.'
+       ELSE 'Completed all sets with consistent form.'
+   END
+ WHERE notes LIKE 'SAMPLE DEMO ONLY — synthetic % training log % of %.'
+    OR notes LIKE 'SAMPLE DEMO ONLY — synthetic % not a real workout.';
+
 SET @constraint_exists = (
     SELECT COUNT(*) FROM information_schema.table_constraints
      WHERE table_schema = DATABASE() AND table_name = 'attendance' AND constraint_name = 'attendance_day_pass_fk'

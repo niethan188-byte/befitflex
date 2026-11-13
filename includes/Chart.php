@@ -127,6 +127,89 @@ final class Chart
         return $svg . '</svg>';
     }
 
+    /**
+     * Measurement trend chart with an optional target reference line.
+     *
+     * @param array<int, array{label:string, total:float|int}> $points
+     */
+    public static function trend(array $points, array $o = []): string
+    {
+        $w = $o['w'] ?? 720;
+        $h = $o['h'] ?? 230;
+        $suffix = (string) ($o['suffix'] ?? '');
+        $target = isset($o['target']) ? (float) $o['target'] : null;
+        $n = count($points);
+
+        if ($n < 2) {
+            return self::blank($w, $h, 'Add another check-in to see your trend');
+        }
+
+        $values = array_map(static fn(array $point): float => (float) $point['total'], $points);
+        $minValue = min($values);
+        $maxValue = max($values);
+        $span = $maxValue - $minValue;
+        if ($span < 0.01) {
+            $span = max(1.0, abs($maxValue) * 0.04);
+        }
+        $min = max(0.0, $minValue - $span * 0.2);
+        $max = $maxValue + $span * 0.2;
+        if ($max - $min < 0.01) {
+            $max = $min + 1.0;
+        }
+
+        $pad = ['l' => 58, 'r' => 18, 't' => 18, 'b' => 34];
+        $innerWidth = $w - $pad['l'] - $pad['r'];
+        $innerHeight = $h - $pad['t'] - $pad['b'];
+        $x = static fn(int $i): float => $pad['l'] + $innerWidth * $i / ($n - 1);
+        $y = static fn(float $value): float => $pad['t'] + $innerHeight
+            - $innerHeight * (($value - $min) / ($max - $min));
+
+        $svg = '<svg class="chart progress-trend-chart" viewBox="0 0 ' . $w . ' ' . $h
+            . '" preserveAspectRatio="none" role="img" aria-label="Measurement trend over time">';
+        $svg .= '<title>Training trend over time</title>';
+
+        for ($grid = 0; $grid <= 3; $grid++) {
+            $value = $max - ($max - $min) * $grid / 3;
+            $gy = $pad['t'] + $innerHeight * $grid / 3;
+            $svg .= '<line x1="' . $pad['l'] . '" y1="' . round($gy, 1) . '" x2="' . ($w - $pad['r'])
+                . '" y2="' . round($gy, 1) . '" stroke="' . self::GRID . '"/>';
+            $svg .= '<text x="' . ($pad['l'] - 8) . '" y="' . round($gy + 4, 1)
+                . '" text-anchor="end" font-size="11" fill="' . self::DIM . '">'
+                . number_format($value, 1) . self::esc($suffix) . '</text>';
+        }
+
+        if ($target !== null && $target >= $min && $target <= $max) {
+            $targetY = round($y($target), 1);
+            $svg .= '<line x1="' . $pad['l'] . '" y1="' . $targetY . '" x2="' . ($w - $pad['r'])
+                . '" y2="' . $targetY . '" stroke="' . self::HOT . '" stroke-width="1.5" stroke-dasharray="5 4"/>';
+            $svg .= '<text x="' . ($w - $pad['r']) . '" y="' . max(12, $targetY - 5)
+                . '" text-anchor="end" font-size="10" fill="' . self::HOT . '">Target '
+                . number_format($target, 1) . self::esc($suffix) . '</text>';
+        }
+
+        $path = '';
+        foreach ($values as $i => $value) {
+            $path .= ($i === 0 ? 'M' : ' L') . round($x($i), 1) . ',' . round($y($value), 1);
+        }
+        $svg .= '<path d="' . $path . '" fill="none" stroke="' . self::RED . '" stroke-width="2.5"'
+            . ' stroke-linecap="round" stroke-linejoin="round"/>';
+
+        $labelEvery = (int) max(1, ceil($n / 7));
+        foreach ($values as $i => $value) {
+            $svg .= '<circle cx="' . round($x($i), 1) . '" cy="' . round($y($value), 1)
+                . '" r="3.5" fill="' . self::RED . '" stroke="#1F1F1F" stroke-width="1.5"><title>'
+                . self::esc((string) $points[$i]['label'] . ': ' . number_format($value, 2) . $suffix)
+                . '</title></circle>';
+            if ($i % $labelEvery === 0 || $i === $n - 1) {
+                $svg .= '<text x="' . round($x($i), 1) . '" y="' . ($h - 10) . '" text-anchor="middle"'
+                    . ' font-size="10" fill="' . self::DIM . '">'
+                    . self::esc((string) $points[$i]['label']) . '</text>';
+            }
+        }
+
+        return $svg . '</svg>';
+    }
+
     /** Vertical bars. @param array<int, array{label:string, total:float|int}> $points */
     public static function bars(array $points, array $o = []): string
     {

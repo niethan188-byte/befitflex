@@ -33,7 +33,7 @@ $u = current_user();
     <h2>What we collect</h2>
     <p class="note">Your name, email address, contact number, membership type and dates,
     attendance records, class enrollments, payment records, and any fitness progress
-    measurements or goals you choose to record.</p>
+    measurements, goals, or workout logs you choose to record.</p>
 
     <h2>Why we collect it</h2>
     <p class="note">To administer your membership, schedule sessions and classes,
@@ -56,7 +56,7 @@ $u = current_user();
     <p class="note">Passwords are stored as one-way bcrypt hashes. Access to member
     records is limited by role: administrators manage member records, and members
     see only their own records. Fitness progress is available only to the member
-    and authorized administrators.</p>
+    and authorized administrators. Members can delete their own lifting logs.</p>
 
     <div class="privacy-actions">
       <a class="btn red" href="<?= $u ? home_for($u['type']) : 'index.php' ?>">

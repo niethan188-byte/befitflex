@@ -23,6 +23,10 @@ $upcoming = rows(
       ORDER BY s.session_date, s.session_time LIMIT 4", [$mid]
 );
 $recentVisits = rows('SELECT * FROM attendance WHERE member_id = ? ORDER BY check_in_time DESC LIMIT 5', [$mid]);
+$latestLift = row(
+    'SELECT * FROM member_lifting_logs WHERE member_id = ? ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 1',
+    [$mid]
+);
 $notes = rows('SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 4', [$u['id']]);
 
 include __DIR__ . '/../includes/header.php';
@@ -84,6 +88,18 @@ include __DIR__ . '/../includes/header.php';
       </div>
     <?php else: ?>
       <p class="note">No fitness checks yet. Record your first check-in to start tracking.</p>
+    <?php endif; ?>
+    <?php if ($latestLift): ?>
+      <p class="note" style="margin-top:12px">
+        <i class="fa-solid fa-dumbbell"></i> Latest lift:
+        <b><?= e($latestLift['exercise_name']) ?></b> ·
+        <?= (int) $latestLift['sets_count'] ?> × <?= (int) $latestLift['reps_per_set'] ?> at
+        <?= (float) $latestLift['weight_kg'] > 0
+            ? e(number_format((float) $latestLift['weight_kg'], 2)) . ' kg'
+            : 'bodyweight' ?> · <?= dt($latestLift['logged_date']) ?>
+      </p>
+    <?php else: ?>
+      <p class="note" style="margin-top:12px">Start tracking weights and reps from My Progress.</p>
     <?php endif; ?>
   </div>
 

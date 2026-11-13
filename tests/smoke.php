@@ -29,12 +29,23 @@ $checks['member contact column supports encrypted values'] = $contactColumn !== 
 $progressTables = [
     db()->query("SHOW TABLES LIKE 'member_progress'")->fetchColumn(),
     db()->query("SHOW TABLES LIKE 'member_progress_goals'")->fetchColumn(),
+    db()->query("SHOW TABLES LIKE 'member_lifting_logs'")->fetchColumn(),
 ];
-$checks['member progress schema'] = $progressTables[0] !== false && $progressTables[1] !== false;
+$checks['member progress schema'] = count(array_filter(
+    $progressTables,
+    static fn($table): bool => $table !== false
+)) === 3;
 $checks['admin/member roles only'] = (int) scalar(
     "SELECT COUNT(*) FROM users WHERE user_type NOT IN ('admin','member')"
 ) === 0 && (int) scalar("SELECT COUNT(*) FROM users WHERE user_type IN ('admin','member')") > 0;
 $checks['prepared statements'] = !(bool) db()->getAttribute(PDO::ATTR_EMULATE_PREPARES);
+$progressChart = Chart::trend([
+    ['label' => 'Jan 1', 'total' => 80],
+    ['label' => '<script>', 'total' => 77],
+], ['target' => 78, 'suffix' => ' kg']);
+$checks['progress chart target and escaped labels'] = str_contains($progressChart, 'Target 78.0 kg')
+    && str_contains($progressChart, '&lt;script&gt;')
+    && !str_contains($progressChart, '<script>');
 $checks['maya webhook rejects missing secret'] = maya_webhook_valid('{}', '') === false;
 $checks['maya status requires matching successful checkout'] = maya_checkout_confirms_payment([
     'checkoutId' => 'checkout-123',

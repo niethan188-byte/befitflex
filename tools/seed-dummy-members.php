@@ -12,8 +12,9 @@ if (PHP_SAPI !== 'cli') {
 $pdo = db();
 $count = 100;
 $progressTable = $pdo->query("SHOW TABLES LIKE 'member_progress'")->fetchColumn();
-if (!$progressTable) {
-    fwrite(STDERR, "The member progress table is missing; apply the database schema upgrade first.\n");
+$liftingTable = $pdo->query("SHOW TABLES LIKE 'member_lifting_logs'")->fetchColumn();
+if (!$progressTable || !$liftingTable) {
+    fwrite(STDERR, "The member progress tables are missing; apply the database schema upgrade first.\n");
     exit(1);
 }
 
@@ -29,6 +30,31 @@ $progressProfiles = [
     [-3.6, -1.6, -4.2, -2.0],
     [0.2, -0.4, -0.8, -0.3],
     [0.8, -1.0, -1.2, 0.4],
+];
+$liftingExercises = [
+    'Squat', 'Bench Press', 'Deadlift', 'Overhead Press', 'Barbell Row',
+    'Lat Pulldown', 'Leg Press', 'Dumbbell Press', 'Pull-up', 'Push-up',
+];
+$liftingProgressions = [
+    [0, 2.5, 2.5, 5, 5],
+    [0, 0, 2.5, 2.5, 5],
+    [0, 2.5, 2.5, 2.5, 5],
+    [0, 0, 0, 2.5, 2.5],
+    [0, 0, 2.5, 5, 5],
+];
+$checkInNotes = [
+    'Morning check-in before training.',
+    'Measurements recorded before the workout.',
+    'Routine check-in; keeping the schedule consistent.',
+    'Rest-day measurements.',
+    'Measured at the same time of day.',
+];
+$weightedWorkoutNotes = [
+    'Completed all sets with consistent form.',
+    'Kept the load steady and focused on controlled reps.',
+    'Added a small increment after completing the previous session.',
+    'Finished all sets with a controlled tempo.',
+    'Focused on a full range of motion.',
 ];
 
 $existing = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE email LIKE 'dummy.member.%@example.com'")->fetchColumn();
@@ -53,8 +79,14 @@ $insertProgress = $pdo->prepare(
         (member_id, recorded_by_user_id, check_date, weight_kg, body_fat_percent, waist_cm, hips_cm, notes)
      VALUES (?, NULL, ?, ?, ?, ?, ?, ?)'
 );
+$insertLiftingLog = $pdo->prepare(
+    'INSERT INTO member_lifting_logs
+        (member_id, logged_by_user_id, exercise_name, logged_date, sets_count, reps_per_set, weight_kg, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+);
 $today = new DateTimeImmutable('today');
 $progressCount = 0;
+$liftingLogCount = 0;
 
 $pdo->beginTransaction();
 try {
@@ -120,23 +152,50 @@ try {
                 number_format($startBodyFat + $profile[1] * $factor, 2, '.', ''),
                 number_format($startWaist + $profile[2] * $factor, 2, '.', ''),
                 number_format($startHips + $profile[3] * $factor, 2, '.', ''),
-                sprintf(
-                    'SAMPLE DEMO ONLY — %s check-in %d of %d; synthetic example, not a real measurement.',
-                    $memberId,
-                    $point + 1,
-                    $checkCount
-                ),
+                $checkInNotes[($index + $point) % count($checkInNotes)],
             ]);
             $progressCount++;
+        }
+
+        $liftingCount = min(5, intdiv($activityDays, 21) + 1);
+        $liftingStart = $progressEnd->modify('-' . (($liftingCount - 1) * 21) . ' days');
+        $exerciseName = $liftingExercises[($index - 1) % count($liftingExercises)];
+        $isBodyweight = in_array($exerciseName, ['Pull-up', 'Push-up'], true);
+        $startLoad = $isBodyweight ? 0 : 20 + (($index * 7) % 81);
+        $profileIndex = ($index - 1) % count($liftingProgressions);
+
+        for ($point = 0; $point < $liftingCount; $point++) {
+            $loggedDate = $liftingStart->modify('+' . ($point * 21) . ' days')->format('Y-m-d');
+            $sets = 3;
+            $reps = $isBodyweight
+                ? 4 + (($index * 3) % 5) + $point
+                : 6 + (($index + $point) % 3);
+            $load = $isBodyweight
+                ? 0
+                : $startLoad + $liftingProgressions[$profileIndex][$point];
+            $insertLiftingLog->execute([
+                $memberId,
+                $userId,
+                $exerciseName,
+                $loggedDate,
+                $sets,
+                $reps,
+                number_format((float) $load, 2, '.', ''),
+                $isBodyweight
+                    ? 'Controlled reps with a full range of motion.'
+                    : $weightedWorkoutNotes[($profileIndex + $point) % count($weightedWorkoutNotes)],
+            ]);
+            $liftingLogCount++;
         }
     }
 
     $pdo->commit();
     echo sprintf(
-        "Created %d dummy member accounts, %d payment records, and %d clearly labeled sample progress checks.\n",
+        "Created %d dummy member accounts, %d payment records, %d fitness checks, and %d lifting logs.\n",
         $count,
         $count,
-        $progressCount
+        $progressCount,
+        $liftingLogCount
     );
 } catch (Throwable $error) {
     if ($pdo->inTransaction()) {

@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $page = 'progress';
 $title = 'Member Progress';
-$subtitle = 'Record fitness check-ins and follow each member’s goal.';
+$subtitle = 'Review fitness measurements, goals, and each member’s strength workouts.';
 $progress = $selectedMember
     ? rows(
         'SELECT * FROM member_progress WHERE member_id = ? ORDER BY check_date DESC, progress_id DESC LIMIT 100',
@@ -102,6 +102,13 @@ $progress = $selectedMember
 $goal = $selectedMember
     ? row('SELECT * FROM member_progress_goals WHERE member_id = ?', [$selectedId])
     : null;
+$liftingLogs = $selectedMember
+    ? rows(
+        'SELECT * FROM member_lifting_logs
+          WHERE member_id = ? ORDER BY logged_date DESC, lifting_log_id DESC LIMIT 100',
+        [$selectedId]
+    )
+    : [];
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -186,6 +193,30 @@ include __DIR__ . '/../includes/header.php';
           <td><?= $check['waist_cm'] !== null ? e($check['waist_cm']) . ' cm' : '—' ?></td>
           <td><?= $check['hips_cm'] !== null ? e($check['hips_cm']) . ' cm' : '—' ?></td>
           <td><?= e($check['notes'] ?: '—') ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table></div>
+  <?php endif; ?>
+</div>
+<div class="panel glass">
+  <h2><i class="fa-solid fa-dumbbell"></i> Strength training logs · <?= e($selectedMember['member_name']) ?></h2>
+  <?php if (!$liftingLogs): ?>
+    <div class="empty"><i class="fa-solid fa-dumbbell"></i>No strength workouts have been logged.</div>
+  <?php else: ?>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Exercise</th><th>Sets × reps</th><th>External load</th><th>Total reps</th><th>Notes</th></tr></thead>
+      <tbody>
+      <?php foreach ($liftingLogs as $liftingLog): ?>
+        <tr>
+          <td><?= dt($liftingLog['logged_date']) ?></td>
+          <td><?= e($liftingLog['exercise_name']) ?></td>
+          <td><?= (int) $liftingLog['sets_count'] ?> × <?= (int) $liftingLog['reps_per_set'] ?></td>
+          <td><?= (float) $liftingLog['weight_kg'] > 0
+              ? e(number_format((float) $liftingLog['weight_kg'], 2)) . ' kg'
+              : 'Bodyweight' ?></td>
+          <td><?= (int) $liftingLog['sets_count'] * (int) $liftingLog['reps_per_set'] ?></td>
+          <td><?= e($liftingLog['notes'] ?: '—') ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>

@@ -174,11 +174,12 @@ no framework or frontend build step.
    existing BeFitFlex database, back it up first and apply
    `database/upgrade.sql` to the database configured by `MYSQLDATABASE` (or
    `DB_NAME`). This upgrade adds schema required by current features, including
-   the day-pass/member link. Ensure the script's `USE` statement targets that
-   same database. Do not rerun the destructive seed to fix a schema mismatch.
+   the day-pass/member link and fitness/strength progress tables. Ensure the
+   script's `USE` statement targets that same database. Do not rerun the
+   destructive seed to fix a schema mismatch.
 
    To initialize a fresh database and then add the 100 dummy members, payments,
-   and clearly labeled sample fitness progress from
+   and synthetic sample fitness and lifting progress from
    `tools/seed-dummy-members.php`, open the web service's Railway shell and run
    this once:
 
@@ -194,7 +195,8 @@ no framework or frontend build step.
    need. The dummy-member seeder also intentionally exits with an error if
    dummy accounts already exist. To load only the schema and built-in demo
    records, run `composer db:reset` instead. The synthetic progress belongs to
-   the generated dummy members and must not be used as real member data.
+   the generated dummy members and must not be used as real member data or
+   workout history.
 
 3. Add persistent storage for announcement media. Create a Railway volume for
    the web service and mount it at `/var/www/html/assets/uploads`. Without a

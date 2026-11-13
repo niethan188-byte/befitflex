@@ -80,6 +80,22 @@ CREATE TABLE member_progress_goals (
     FOREIGN KEY (updated_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE member_lifting_logs (
+    lifting_log_id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id VARCHAR(50) NOT NULL,
+    logged_by_user_id INT NOT NULL,
+    exercise_name VARCHAR(100) NOT NULL,
+    logged_date DATE NOT NULL,
+    sets_count TINYINT UNSIGNED NOT NULL,
+    reps_per_set SMALLINT UNSIGNED NOT NULL,
+    weight_kg DECIMAL(6,2) NOT NULL DEFAULT 0,
+    notes VARCHAR(500) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
+    FOREIGN KEY (logged_by_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_member_lifting_exercise_date (member_id, exercise_name, logged_date)
+) ENGINE=InnoDB;
+
 CREATE TABLE gyms (
     gym_id VARCHAR(50) PRIMARY KEY,
     gym_branch VARCHAR(255) NOT NULL,
@@ -274,6 +290,25 @@ INSERT INTO members (member_id,user_id,member_name,contact_number,email,membersh
 ('MEM0002',6,'Ben Reyes','09211234567','ben@example.com','Monthly','2026-03-02','Active'),
 ('MEM0003',7,'Carla Diaz','09221234567','carla@example.com','Monthly','2026-05-20','Active'),
 ('MEM0004',8,'Dan Torres','09231234567','dan@example.com','Monthly','2025-11-11','Expired');
+
+INSERT INTO member_lifting_logs
+    (member_id,logged_by_user_id,exercise_name,logged_date,sets_count,reps_per_set,weight_kg,notes) VALUES
+('MEM0001',5,'Squat','2026-07-07',3,8,35.00,'Steady 3 × 8, focusing on consistent depth.'),
+('MEM0001',5,'Squat','2026-07-21',3,8,37.50,'Added a small load increase after completing all reps.'),
+('MEM0001',5,'Squat','2026-08-04',3,8,37.50,'Held the load steady and kept the reps controlled.'),
+('MEM0001',5,'Squat','2026-08-18',3,8,40.00,'Completed all sets with consistent depth.'),
+('MEM0002',6,'Bench Press','2026-07-08',3,8,40.00,'Working on a consistent bar path.'),
+('MEM0002',6,'Bench Press','2026-07-22',3,8,40.00,'Maintained the same load for smooth reps.'),
+('MEM0002',6,'Bench Press','2026-08-05',3,9,42.50,'Completed an extra rep on each set.'),
+('MEM0002',6,'Bench Press','2026-08-19',3,9,42.50,'Kept the load steady and reps controlled.'),
+('MEM0003',7,'Deadlift','2026-07-09',3,6,60.00,'Focused on bracing and a consistent setup.'),
+('MEM0003',7,'Deadlift','2026-07-23',3,6,62.50,'Added a small increase after the previous session.'),
+('MEM0003',7,'Deadlift','2026-08-06',3,7,62.50,'Maintained the load and added a rep per set.'),
+('MEM0003',7,'Deadlift','2026-08-20',3,7,65.00,'Completed all sets with controlled reps.'),
+('MEM0004',8,'Pull-up','2026-07-10',3,4,0.00,'Controlled reps with a full range of motion.'),
+('MEM0004',8,'Pull-up','2026-07-24',3,5,0.00,'Added one rep per set while keeping form steady.'),
+('MEM0004',8,'Pull-up','2026-08-07',3,6,0.00,'Maintained a controlled tempo throughout.'),
+('MEM0004',8,'Pull-up','2026-08-21',3,7,0.00,'Completed all reps with consistent form.');
 
 INSERT INTO gyms (gym_id,gym_branch,gym_name,location,description,contact_number) VALUES
 ('GYM001','Santa Rosa','Be Fit Flex Gym — Santa Rosa','Brgy. Dita, City of Santa Rosa, Laguna','Main branch: complete free-weight area, personal training and physique coaching.','09171234567'),
