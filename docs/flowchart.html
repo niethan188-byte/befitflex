@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Be Fit Flex — Application Flowchart</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: #111;
+      background: #fff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; }
+    .page { width: min(1000px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+    h1 { margin: 0; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; }
+    .subtitle { margin: 5px 0 0; color: #444; font-size: 15px; }
+    .print-button { border: 1px solid #111; border-radius: 6px; background: #fff; color: #111; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .print-button:hover { background: #f1f1f1; }
+    .diagram { border: 2px solid #111; border-radius: 8px; padding: 24px; background: #fff; }
+    .flow { display: flex; flex-direction: column; align-items: center; }
+    .node { display: flex; min-height: 52px; width: min(100%, 340px); align-items: center; justify-content: center; padding: 10px 16px; border: 2px solid #111; border-radius: 6px; background: #fff; text-align: center; font-size: 17px; font-weight: 700; }
+    .start, .end { width: min(100%, 220px); border-radius: 999px; }
+    .decision { width: min(100%, 300px); border-style: dashed; }
+    .arrow { min-height: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #111; font-size: 22px; line-height: 1; }
+    .arrow span { font-size: 12px; font-weight: 700; line-height: 1.2; }
+    .branches { display: grid; width: min(100%, 720px); grid-template-columns: 1fr 1fr; gap: 24px; }
+    .branch { display: flex; min-width: 0; flex-direction: column; align-items: center; }
+    .branch .node { width: 100%; }
+    .sign-in { margin-top: 20px; }
+    .retry { width: min(100%, 600px); margin-top: 12px; padding: 10px 14px; border: 1px solid #111; border-radius: 6px; text-align: center; font-size: 14px; }
+    .role-branches { display: grid; width: min(100%, 720px); grid-template-columns: 1fr 1fr; gap: 24px; }
+    .role-branches .node { min-height: 82px; }
+    .role-name { display: block; margin-bottom: 4px; font-size: 17px; }
+    .role-detail { font-size: 14px; font-weight: 400; }
+    .footer { margin: 10px 0 0; color: #444; text-align: center; font-size: 13px; }
+    @media (max-width: 560px) {
+      .page { width: calc(100% - 20px); padding: 16px 0; }
+      header { align-items: flex-start; flex-direction: column; }
+      .diagram { padding: 16px 10px; }
+      .branches, .role-branches { gap: 10px; }
+      .node { padding: 9px 7px; font-size: 15px; }
+      .role-detail { font-size: 12px; }
+      .retry { font-size: 13px; }
+    }
+    @page { size: portrait; margin: 10mm; }
+    @media print {
+      .page { width: 100%; padding: 0; }
+      .print-button { display: none; }
+      .diagram { border-radius: 0; }
+      .node, .diagram, .retry { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>Be Fit Flex — Application Flowchart</h1>
+        <p class="subtitle">Register, sign in, and go to the right dashboard.</p>
+      </div>
+      <button class="print-button" type="button" onclick="window.print()" aria-label="Print or save the flowchart as a PDF">Print / Save PDF</button>
+    </header>
+
+    <section class="diagram" aria-label="Application flow from registration and sign-in to role-based dashboards">
+      <div class="flow">
+        <div class="node start">START</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node decision">Already have an account?</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+
+        <div class="branches">
+          <div class="branch">
+            <div class="arrow"><span>NO</span>↓</div>
+            <div class="node">Register</div>
+            <div class="arrow" aria-hidden="true">↓</div>
+            <div class="node">Verify email</div>
+          </div>
+          <div class="branch">
+            <div class="arrow"><span>YES</span>↓</div>
+            <div class="node">Continue to sign in</div>
+          </div>
+        </div>
+
+        <div class="node sign-in">Sign in</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node decision">Credentials valid?</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="retry"><strong>NO:</strong> Show error and try signing in again.</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node">Start session</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node decision">Choose dashboard by user role</div>
+        <div class="arrow" aria-hidden="true">↓</div>
+
+        <div class="role-branches">
+          <div class="branch">
+            <div class="arrow"><span>ADMIN</span>↓</div>
+            <div class="node"><span><span class="role-name">Admin dashboard</span><span class="role-detail">Members · classes · payments</span></span></div>
+          </div>
+          <div class="branch">
+            <div class="arrow"><span>MEMBER</span>↓</div>
+            <div class="node"><span><span class="role-name">Member dashboard</span><span class="role-detail">Classes · attendance · profile</span></span></div>
+          </div>
+        </div>
+
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node end">SIGN OUT · End session</div>
+      </div>
+    </section>
+    <p class="footer">Black and white · Simple layout · Use Print / Save PDF for a clean copy</p>
+  </main>
+</body>
+</html>
