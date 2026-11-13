@@ -174,6 +174,7 @@ include __DIR__ . '/../includes/header.php';
         <td><?= dt($p['payment_date']) ?></td>
         <td><?= badge($p['payment_status']) ?></td>
         <td class="payment-actions" data-label="Actions">
+          <a class="btn sm" href="../invoice.php?payment_id=<?= urlencode($p['payment_id']) ?>"><i class="fa-solid fa-file-invoice"></i> View receipt</a>
           <?php if ($p['payment_status'] !== 'Paid'): ?>
             <?php if (!empty($p['maya_checkout_id'])): ?>
               <a class="btn sm" href="../api/maya-return.php?payment_id=<?= urlencode($p['payment_id']) ?>" title="Check Maya status"><i class="fa-solid fa-rotate"></i> Check status</a>

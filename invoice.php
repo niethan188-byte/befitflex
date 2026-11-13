@@ -5,8 +5,8 @@ require __DIR__ . '/includes/auth.php';
 $u = require_role('admin', 'member');
 $paymentId = trim((string) ($_GET['payment_id'] ?? ''));
 $payment = row(
-    'SELECT p.*, m.member_name, m.email, m.member_id, m.membership_type
-       FROM payments p JOIN members m ON m.member_id = p.member_id
+    'SELECT p.*, m.member_name, m.email, m.membership_type
+       FROM payments p LEFT JOIN members m ON m.member_id = p.member_id
       WHERE p.payment_id = ?',
     [$paymentId]
 );
@@ -15,6 +15,7 @@ if (!$payment || ($u['type'] === 'member' && $payment['member_id'] !== ($_SESSIO
     http_response_code(404);
     exit('Invoice not found.');
 }
+$payment['member_name'] = $payment['member_name'] ?: ($payment['customer_name'] ?? 'Walk-in customer');
 
 $isPdf = ($_GET['format'] ?? '') === 'pdf';
 $status = (string) $payment['payment_status'];
@@ -133,7 +134,7 @@ ob_start();
         </td>
         <td>
           <div class="document-title">Payment receipt</div>
-          <div class="document-type">Membership invoice</div>
+          <div class="document-type">Payment receipt</div>
         </td>
       </tr>
     </table>
@@ -143,15 +144,15 @@ ob_start();
       Payment status: <?= e($status) ?>
     </div>
 
-    <h2 class="section-title">Member and payment details</h2>
+    <h2 class="section-title">Customer and payment details</h2>
     <table class="details">
       <tr>
-        <td><span class="detail-label">Member</span><span class="detail-value"><?= e($payment['member_name']) ?></span></td>
+        <td><span class="detail-label">Customer</span><span class="detail-value"><?= e($payment['member_name']) ?></span></td>
         <td><span class="detail-label">Invoice reference</span><span class="detail-value"><?= e($payment['payment_id']) ?></span></td>
       </tr>
       <tr>
-        <td><span class="detail-label">Member ID</span><span class="detail-value"><?= e($payment['member_id']) ?></span></td>
-        <td><span class="detail-label">Membership plan</span><span class="detail-value"><?= e($payment['membership_type']) ?></span></td>
+        <td><span class="detail-label">Member ID</span><span class="detail-value"><?= e($payment['member_id'] ?? '-') ?></span></td>
+        <td><span class="detail-label">Membership plan</span><span class="detail-value"><?= e($payment['membership_type'] ?? '-') ?></span></td>
       </tr>
       <tr>
         <td><span class="detail-label">Payment method</span><span class="detail-value"><?= e($payment['payment_method']) ?></span></td>
