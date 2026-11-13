@@ -63,6 +63,31 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="grid c2">
   <div class="panel glass">
+    <h2><i class="fa-solid fa-chart-simple"></i> Fitness progress
+      <span class="spacer"></span><a class="btn sm" href="progress.php">View progress</a></h2>
+    <?php $latestProgress = row('SELECT * FROM member_progress WHERE member_id = ? ORDER BY check_date DESC, progress_id DESC LIMIT 1', [$mid]); ?>
+    <?php if ($latestProgress): ?>
+      <p class="note">Latest check · <?= dt($latestProgress['check_date']) ?></p>
+      <div class="stats">
+        <?php if ($latestProgress['weight_kg'] !== null): ?>
+          <div class="stat"><div class="label">Weight</div><div class="value"><?= e($latestProgress['weight_kg']) ?> <small>kg</small></div></div>
+        <?php endif; ?>
+        <?php if ($latestProgress['body_fat_percent'] !== null): ?>
+          <div class="stat"><div class="label">Body fat</div><div class="value"><?= e($latestProgress['body_fat_percent']) ?> <small>%</small></div></div>
+        <?php endif; ?>
+        <?php if ($latestProgress['waist_cm'] !== null): ?>
+          <div class="stat"><div class="label">Waist</div><div class="value"><?= e($latestProgress['waist_cm']) ?> <small>cm</small></div></div>
+        <?php endif; ?>
+        <?php if ($latestProgress['hips_cm'] !== null): ?>
+          <div class="stat"><div class="label">Hips</div><div class="value"><?= e($latestProgress['hips_cm']) ?> <small>cm</small></div></div>
+        <?php endif; ?>
+      </div>
+    <?php else: ?>
+      <p class="note">No fitness checks yet. Record your first check-in to start tracking.</p>
+    <?php endif; ?>
+  </div>
+
+  <div class="panel glass">
     <h2><i class="fa-solid fa-calendar-day"></i> Coming up</h2>
     <?php if (!$upcoming): ?>
       <div class="empty"><i class="fa-solid fa-calendar"></i>Nothing scheduled.</div>

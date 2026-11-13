@@ -13,6 +13,7 @@ $menus = [
     ],
     'People' => [
       ['members',     'Members',          'fa-users',             'admin/members.php'],
+      ['progress',    'Member Progress',  'fa-chart-simple',      'admin/progress.php'],
       ['day-passes',  'Day Passes',       'fa-ticket',             'admin/day-passes.php'],
     ],
     'Operations' => [
@@ -34,6 +35,7 @@ $menus = [
     'Training' => [
     ['dashboard',   'Dashboard',        'fa-gauge-high',        'member/dashboard.php'],
     ['classes',     'Classes',          'fa-people-group',      'member/classes.php'],
+    ['progress',    'My Progress',      'fa-chart-simple',      'member/progress.php'],
     ],
     'Records' => [
       ['attendance',  'My Attendance',    'fa-clipboard-user',    'member/attendance.php'],

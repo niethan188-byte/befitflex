@@ -26,6 +26,11 @@ $contactColumn = array_values(array_filter(
 ))[0] ?? null;
 $checks['member contact column supports encrypted values'] = $contactColumn !== null
     && strtolower((string) $contactColumn['Type']) === 'text';
+$progressTables = [
+    db()->query("SHOW TABLES LIKE 'member_progress'")->fetchColumn(),
+    db()->query("SHOW TABLES LIKE 'member_progress_goals'")->fetchColumn(),
+];
+$checks['member progress schema'] = $progressTables[0] !== false && $progressTables[1] !== false;
 $checks['admin/member roles only'] = (int) scalar(
     "SELECT COUNT(*) FROM users WHERE user_type NOT IN ('admin','member')"
 ) === 0 && (int) scalar("SELECT COUNT(*) FROM users WHERE user_type IN ('admin','member')") > 0;

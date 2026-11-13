@@ -54,6 +54,32 @@ CREATE TABLE members (
     INDEX idx_status (status), INDEX idx_member_name (member_name), INDEX idx_email (email)
 ) ENGINE=InnoDB;
 
+CREATE TABLE member_progress (
+    progress_id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id VARCHAR(50) NOT NULL,
+    recorded_by_user_id INT NULL,
+    check_date DATE NOT NULL,
+    weight_kg DECIMAL(5,2) NULL,
+    body_fat_percent DECIMAL(5,2) NULL,
+    waist_cm DECIMAL(5,2) NULL,
+    hips_cm DECIMAL(5,2) NULL,
+    notes VARCHAR(1000) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
+    FOREIGN KEY (recorded_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    INDEX idx_member_progress_date (member_id, check_date)
+) ENGINE=InnoDB;
+
+CREATE TABLE member_progress_goals (
+    member_id VARCHAR(50) PRIMARY KEY,
+    target_weight_kg DECIMAL(5,2) NOT NULL,
+    target_date DATE NOT NULL,
+    updated_by_user_id INT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
+    FOREIGN KEY (updated_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE gyms (
     gym_id VARCHAR(50) PRIMARY KEY,
     gym_branch VARCHAR(255) NOT NULL,

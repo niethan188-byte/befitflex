@@ -32,7 +32,8 @@ $u = current_user();
 
     <h2>What we collect</h2>
     <p class="note">Your name, email address, contact number, membership type and dates,
-    attendance records, class enrollments, and payment records.</p>
+    attendance records, class enrollments, payment records, and any fitness progress
+    measurements or goals you choose to record.</p>
 
     <h2>Why we collect it</h2>
     <p class="note">To administer your membership, schedule sessions and classes,
@@ -42,7 +43,8 @@ $u = current_user();
     <h2>How long we keep it</h2>
     <p class="note">Membership and payment records are retained for the duration of
     your membership and for five years afterward for accounting and audit purposes.
-    Attendance logs are retained for two years.</p>
+    Attendance logs are retained for two years. Fitness progress records are kept
+    only as long as needed to support your membership.</p>
 
     <h2>Your rights as a data subject</h2>
     <p class="note">You have the right to be informed, to object, to access, to
@@ -52,7 +54,9 @@ $u = current_user();
 
     <h2>Security</h2>
     <p class="note">Passwords are stored as one-way bcrypt hashes. Access to member
-    records is limited by role: administrators manage the roster, and members see only their own records.</p>
+    records is limited by role: administrators manage member records, and members
+    see only their own records. Fitness progress is available only to the member
+    and authorized administrators.</p>
 
     <div class="privacy-actions">
       <a class="btn red" href="<?= $u ? home_for($u['type']) : 'index.php' ?>">

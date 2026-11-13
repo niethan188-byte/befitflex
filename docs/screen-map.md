@@ -17,6 +17,7 @@
 | `analytics.php` | Revenue, retention, traffic, utilization, and churn risk. | most |
 | `reports.php` | Printable revenue, payment mix, retention, and member reports. | payments, members, attendance, sessions |
 | `members.php` | Create, edit, delete, filter, message, and bulk-update members. | users, members |
+| `progress.php` | Record and review fitness measurements and goals for a selected member. | members, member_progress, member_progress_goals |
 | `classes.php` | Manage weekly group classes and capacity. | classes, class_attendance |
 | `attendance.php` | Check members in and out and view attendance records. | attendance, class_attendance |
 | `payments.php` | Record dues, mark paid, and delete payments. | payments, notifications |
@@ -32,7 +33,8 @@
 
 | File | Purpose | Tables |
 |---|---|---|
-| `dashboard.php` | Membership, visits, balance, scheduled sessions, and notifications. | members, attendance, payments, sessions, notifications |
+| `dashboard.php` | Membership, visits, balance, latest fitness check, scheduled sessions, and notifications. | members, attendance, payments, sessions, notifications, member_progress |
+| `progress.php` | Record and review personal fitness measurements and target weight. | member_progress, member_progress_goals |
 | `classes.php` | Browse the group schedule, enroll, and view class history. | classes, class_attendance |
 | `attendance.php` | View attendance and check-in history. | attendance |
 | `payments.php` | View dues and payment history. | payments |

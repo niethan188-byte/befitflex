@@ -280,6 +280,15 @@ Accessibility: skip link, visible focus rings, focus trapped and restored in
 dialogs, live regions on toasts, keyboard-operable table sorting, and
 `prefers-reduced-motion` honoured throughout.
 
+### Member fitness progress
+
+Members can record their weight, body-fat percentage, waist and hip measurements,
+set a target weight and date, and review their check-in history from **My Progress**.
+Administrators can add progress checks and update a member's target from **Member
+Progress**. Members can see only their own records; authorized administrators can
+view and manage member progress. Fitness measurements and goals are optional.
+Existing installations must apply `database/upgrade.sql` before using this feature.
+
 ### Additional screens
 
 | Screen | Purpose |
